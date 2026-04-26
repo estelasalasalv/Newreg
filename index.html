@@ -10,7 +10,6 @@
       --bg: #f4f6f9;
       --card: #ffffff;
       --primary: #1a56a3;
-      --primary-dark: #143f7a;
       --accent: #e8f0fe;
       --border: #dde3ec;
       --text: #1f2937;
@@ -27,16 +26,9 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      /* evita scroll horizontal accidental en móvil */
-      overflow-x: hidden;
-    }
-
-    /* ── HEADER ─────────────────────────────────────────────────────── */
+    /* ── HEADER ── */
     header {
       background: var(--primary);
       color: #fff;
@@ -46,45 +38,22 @@
       gap: 0.75rem;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
-    header h1 {
-      font-size: 1rem;
-      font-weight: 700;
-      line-height: 1.2;
-      flex: 1;
-    }
-    /* en pantallas ≥ 480px el título puede crecer */
+    header h1 { font-size: 1rem; font-weight: 700; line-height: 1.2; flex: 1; }
     @media (min-width: 480px) { header h1 { font-size: 1.2rem; } }
     @media (min-width: 768px) { header h1 { font-size: 1.35rem; } }
 
-    #last-updated {
-      font-size: 0.72rem;
-      opacity: 0.8;
-      text-align: right;
-      white-space: nowrap;
-      /* oculto en móvil muy pequeño para no amontonar */
-      display: none;
-    }
+    #last-updated { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; display: none; }
     @media (min-width: 400px) { #last-updated { display: block; } }
 
-    /* ── BOTÓN ACTUALIZAR ───────────────────────────────────────────── */
     #btn-refresh {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: var(--refresh-size);
-      height: var(--refresh-size);
-      min-width: var(--refresh-size);
-      background: rgba(255,255,255,0.15);
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      color: #fff;
-      font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      width: var(--refresh-size); height: var(--refresh-size); min-width: var(--refresh-size);
+      background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+      cursor: pointer; color: #fff; font-size: 1.1rem;
       transition: background 0.2s, transform 0.3s;
-      /* accesibilidad táctil */
       -webkit-tap-highlight-color: transparent;
     }
     #btn-refresh:hover  { background: rgba(255,255,255,0.25); }
@@ -92,7 +61,38 @@
     #btn-refresh.spinning { animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── TOOLBAR ────────────────────────────────────────────────────── */
+    /* ── PESTAÑAS ── */
+    .tabs {
+      background: var(--card);
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      position: sticky;
+      top: 56px;   /* altura del header */
+      z-index: 15;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      background: transparent;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 44px;
+    }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+
+    /* ── TOOLBAR (pestaña Todas) ── */
     .toolbar {
       background: var(--card);
       border-bottom: 1px solid var(--border);
@@ -103,189 +103,238 @@
       align-items: center;
     }
     .toolbar input {
-      flex: 1 1 100%;          /* ocupa toda la fila en móvil */
+      flex: 1 1 100%;
       min-width: 0;
       padding: 0.55rem 0.75rem;
       border: 1px solid var(--border);
       border-radius: 8px;
-      font-size: 1rem;         /* ≥16px evita zoom automático en iOS */
+      font-size: 1rem;
       background: var(--bg);
     }
-    /* en pantallas mayores el buscador comparte fila con filtros */
     @media (min-width: 560px) { .toolbar input { flex: 1 1 200px; } }
 
-    .filters {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
+    .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
     .filter-btn {
       padding: 0.45rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      background: #fff;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 500;
-      transition: background 0.15s, border-color 0.15s;
-      /* área táctil mínima */
+      border: 1px solid var(--border); border-radius: 20px;
+      background: #fff; cursor: pointer;
+      font-size: 0.85rem; font-weight: 500;
       min-height: 36px;
+      transition: background 0.15s, border-color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
     .filter-btn.active, .filter-btn:hover { background: var(--accent); border-color: var(--primary); }
     .filter-btn[data-source="BOE"].active  { background: var(--tag-bg-boe);  border-color: var(--boe); }
     .filter-btn[data-source="CNMC"].active { background: var(--tag-bg-cnmc); border-color: var(--cnmc); }
 
-    #count {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-left: auto;
-      white-space: nowrap;
-      align-self: center;
-    }
+    #count { font-size: 0.8rem; color: var(--muted); margin-left: auto; white-space: nowrap; align-self: center; }
 
-    /* ── LISTA DE ENTRADAS ──────────────────────────────────────────── */
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0.75rem 0.75rem 2rem;
-    }
+    /* ── MAIN ── */
+    main { max-width: 900px; margin: 0 auto; padding: 0.75rem 0.75rem 2rem; }
     @media (min-width: 768px) { main { padding: 1.25rem 1rem 2rem; } }
 
+    /* ── TARJETA GENERAL ── */
     .entry {
       background: var(--card);
       border: 1px solid var(--border);
+      border-left-width: 4px;
       border-radius: 10px;
       padding: 0.9rem 1rem;
       margin-bottom: 0.6rem;
       transition: box-shadow 0.15s;
-      /* borde de color izquierdo según fuente */
-      border-left-width: 4px;
     }
     .entry.src-BOE  { border-left-color: var(--boe); }
     .entry.src-CNMC { border-left-color: var(--cnmc); }
     .entry:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
 
-    .entry-meta {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4rem;
-      margin-bottom: 0.4rem;
-    }
-    .tag {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 0.15rem 0.5rem;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+    .entry-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; }
+    .tag { font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
     .tag-BOE  { background: var(--tag-bg-boe);  color: var(--boe); }
     .tag-CNMC { background: var(--tag-bg-cnmc); color: var(--cnmc); }
     .date { font-size: 0.78rem; color: var(--muted); }
     .dept { font-size: 0.76rem; color: var(--muted); }
-
-    .entry h2 {
-      font-size: 0.92rem;
-      font-weight: 600;
-      line-height: 1.45;
-      margin-bottom: 0.3rem;
-    }
-    /* títulos algo mayores en pantallas grandes */
+    .entry h2 { font-size: 0.92rem; font-weight: 600; line-height: 1.45; margin-bottom: 0.3rem; }
     @media (min-width: 600px) { .entry h2 { font-size: 1rem; } }
-
     .entry h2 a { color: var(--text); text-decoration: none; }
     .entry h2 a:hover { color: var(--primary); text-decoration: underline; }
-
-    .summary {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.5;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      margin-bottom: 0.25rem;
-    }
+    .summary { font-size: 0.82rem; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.25rem; }
     .section-badge { font-size: 0.73rem; color: var(--muted); font-style: italic; }
-
     .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
-    .badge {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.15rem 0.55rem;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
+    .badge { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 4px; white-space: nowrap; }
     .badge-imp { background: var(--tag-bg-imp); color: var(--tag-imp); }
     .badge-acc { background: var(--tag-bg-acc); color: var(--tag-acc); }
 
-    /* ── ESTADOS ────────────────────────────────────────────────────── */
-    #empty, #loading {
-      text-align: center;
-      color: var(--muted);
-      padding: 3rem 1rem;
-      font-size: 0.95rem;
+    /* ── TARJETA BOE DETALLADA (pestaña BOE Último Mes) ── */
+    .boe-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--boe);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      transition: box-shadow 0.15s;
     }
-    #empty { display: none; }
+    .boe-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
 
-    /* ── TOAST "actualizando" ───────────────────────────────────────── */
-    #toast {
-      position: fixed;
-      bottom: 1.25rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #1f2937;
-      color: #fff;
-      padding: 0.6rem 1.2rem;
-      border-radius: 24px;
-      font-size: 0.85rem;
-      pointer-events: none;
-      transition: transform 0.25s ease, opacity 0.25s ease;
-      opacity: 0;
-      white-space: nowrap;
-      z-index: 100;
+    .boe-card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
     }
-    #toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    /* ── FOOTER ─────────────────────────────────────────────────────── */
-    footer {
-      text-align: center;
+    .boe-date {
       font-size: 0.78rem;
-      color: var(--muted);
-      padding: 1.5rem 1rem;
+      font-weight: 600;
+      color: var(--boe);
+      background: var(--tag-bg-boe);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
     }
+    .boe-card h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 0.6rem;
+      flex: 1 1 100%;
+    }
+    @media (min-width: 600px) { .boe-card h2 { font-size: 1.05rem; } }
+    .boe-card h2 a { color: var(--text); text-decoration: none; }
+    .boe-card h2 a:hover { color: var(--primary); text-decoration: underline; }
+
+    .boe-fields {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.3rem;
+    }
+    @media (min-width: 560px) { .boe-fields { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 800px) { .boe-fields { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .boe-field { font-size: 0.8rem; line-height: 1.4; }
+    .boe-field-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.1rem;
+    }
+    .boe-field-value { color: var(--text); }
+    .boe-field-empty { color: var(--muted); font-style: italic; }
+
+    .boe-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+
+    /* ── Barra de búsqueda pestaña BOE ── */
+    .boe-toolbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .boe-toolbar input {
+      flex: 1 1 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: var(--bg);
+    }
+    @media (min-width: 560px) { .boe-toolbar input { flex: 1 1 200px; } }
+
+    /* Filtro Importante */
+    #boe-filter-imp {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    #boe-filter-imp input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+    #boe-count { font-size: 0.8rem; color: var(--muted); margin-left: auto; white-space: nowrap; align-self: center; }
+
+    /* ── ESTADOS ── */
+    .state-msg { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 0.95rem; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 1.25rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1f2937; color: #fff;
+      padding: 0.6rem 1.2rem; border-radius: 24px;
+      font-size: 0.85rem; pointer-events: none;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      opacity: 0; white-space: nowrap; z-index: 100;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; font-size: 0.78rem; color: var(--muted); padding: 1.5rem 1rem; }
     footer a { color: var(--primary); }
+
+    /* ── Ocultar paneles inactivos ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
   </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
   <h1>⚡ Monitor Regulatorio Energético</h1>
   <span id="last-updated">Cargando…</span>
   <button id="btn-refresh" title="Actualizar datos" aria-label="Actualizar datos">&#8635;</button>
 </header>
 
-<div class="toolbar">
-  <input type="search" id="search" placeholder="Buscar por título, organismo…"
-         autocomplete="off" autocorrect="off" spellcheck="false" />
-  <div class="filters">
-    <button class="filter-btn active" data-source="ALL">Todos</button>
-    <button class="filter-btn" data-source="BOE">BOE</button>
-    <button class="filter-btn" data-source="CNMC">CNMC</button>
+<!-- PESTAÑAS -->
+<nav class="tabs" role="tablist">
+  <button class="tab-btn active" data-tab="todas" role="tab">Todas las fuentes</button>
+  <button class="tab-btn"        data-tab="boe"   role="tab">📋 BOE Último Mes</button>
+</nav>
+
+<!-- ══════════════════════ PANEL: TODAS ══════════════════════ -->
+<div id="panel-todas" class="tab-panel active">
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Buscar por título, organismo…"
+           autocomplete="off" autocorrect="off" spellcheck="false" />
+    <div class="filters">
+      <button class="filter-btn active" data-source="ALL">Todos</button>
+      <button class="filter-btn" data-source="BOE">BOE</button>
+      <button class="filter-btn" data-source="CNMC">CNMC</button>
+    </div>
+    <span id="count"></span>
   </div>
-  <span id="count"></span>
+  <main>
+    <div id="loading" class="state-msg">Cargando datos…</div>
+    <div id="entries"></div>
+    <div id="empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
+  </main>
 </div>
 
-<main>
-  <div id="loading">Cargando datos…</div>
-  <div id="entries"></div>
-  <div id="empty">No se encontraron resultados.</div>
-</main>
+<!-- ══════════════════════ PANEL: BOE ÚLTIMO MES ══════════════════════ -->
+<div id="panel-boe" class="tab-panel">
+  <div class="boe-toolbar">
+    <input type="search" id="boe-search" placeholder="Buscar en BOE del último mes…"
+           autocomplete="off" autocorrect="off" spellcheck="false" />
+    <label id="boe-filter-imp">
+      <input type="checkbox" id="chk-importante" />
+      Solo importantes (Ley / RD / Circular)
+    </label>
+    <span id="boe-count"></span>
+  </div>
+  <main>
+    <div id="boe-loading" class="state-msg">Cargando datos…</div>
+    <div id="boe-entries"></div>
+    <div id="boe-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
+  </main>
+</div>
 
 <footer>
   Fuentes: <a href="https://www.boe.es/datosabiertos/" target="_blank" rel="noopener">API BOE</a> ·
@@ -295,10 +344,17 @@
 <div id="toast"></div>
 
 <script>
-  let allEntries = [];
+  let allEntries   = [];
   let activeSource = 'ALL';
+  let activeTab    = 'todas';
 
-  // ── Toast ──────────────────────────────────────────────────────────
+  // ── Utilidades ─────────────────────────────────────────────────────
+  function escHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   function showToast(msg, duration = 2200) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -306,7 +362,21 @@
     setTimeout(() => t.classList.remove('show'), duration);
   }
 
-  // ── Cargar / actualizar datos ──────────────────────────────────────
+  // Devuelve fecha ISO (YYYY-MM-DD) de hace N días
+  function daysAgo(n) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Convierte DD/MM/YYYY → YYYY-MM-DD para comparar
+  function toISO(ddmmyyyy) {
+    if (!ddmmyyyy) return '';
+    const [d, m, y] = ddmmyyyy.split('/');
+    return `${y}-${m}-${d}`;
+  }
+
+  // ── Carga de datos ─────────────────────────────────────────────────
   async function loadData(isRefresh = false) {
     const btn = document.getElementById('btn-refresh');
     btn.classList.add('spinning');
@@ -316,47 +386,36 @@
       const r = await fetch('data.json?v=' + Date.now());
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const json = await r.json();
-
-      document.getElementById('last-updated').textContent =
-        'Act.: ' + (json.updated_at || '—');
+      document.getElementById('last-updated').textContent = 'Act.: ' + (json.updated_at || '—');
       allEntries = json.entries || [];
-      render();
-
+      renderTodas();
+      renderBoe();
       if (isRefresh) showToast('✓ Datos actualizados');
     } catch (e) {
-      document.getElementById('loading').textContent =
-        'Error cargando datos: ' + e.message;
+      document.getElementById('loading').textContent    = 'Error: ' + e.message;
+      document.getElementById('boe-loading').textContent = 'Error: ' + e.message;
       if (isRefresh) showToast('Error al actualizar');
     } finally {
       btn.classList.remove('spinning');
     }
   }
 
-  // ── Renderizar lista filtrada ──────────────────────────────────────
-  function render() {
-    const query   = document.getElementById('search').value.toLowerCase().trim();
+  // ── RENDER: pestaña Todas ──────────────────────────────────────────
+  function renderTodas() {
+    const query     = document.getElementById('search').value.toLowerCase().trim();
     const container = document.getElementById('entries');
-    const loading   = document.getElementById('loading');
-    const empty     = document.getElementById('empty');
-    loading.style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
 
     const filtered = allEntries.filter(e => {
       if (activeSource !== 'ALL' && e.source !== activeSource) return false;
       if (!query) return true;
-      return (e.title + ' ' + (e.department || '') + ' ' +
-              (e.section || '') + ' ' + (e.summary || ''))
+      return (e.title + ' ' + (e.department||'') + ' ' + (e.section||'') + ' ' + (e.summary||''))
         .toLowerCase().includes(query);
     });
 
     document.getElementById('count').textContent =
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
-
-    if (!filtered.length) {
-      container.innerHTML = '';
-      empty.style.display = 'block';
-      return;
-    }
-    empty.style.display = 'none';
+    document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
 
     container.innerHTML = filtered.map(e => `
       <div class="entry src-${e.source}">
@@ -366,13 +425,11 @@
           ${e.department && e.department !== e.source
             ? `<span class="dept">· ${escHtml(e.department)}</span>` : ''}
         </div>
-        <h2>
-          ${e.url
-            ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
-            : escHtml(e.title)}
-        </h2>
-        ${e.summary  ? `<p class="summary">${escHtml(e.summary)}</p>` : ''}
-        ${e.section  ? `<p class="section-badge">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
+        <h2>${e.url
+          ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
+          : escHtml(e.title)}</h2>
+        ${e.summary ? `<p class="summary">${escHtml(e.summary)}</p>` : ''}
+        ${e.section ? `<p class="section-badge">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
         <div class="badges">
           ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
           ${e.acceso_conexion ? `<span class="badge badge-acc">🔌 ${escHtml(e.acceso_conexion)}</span>` : ''}
@@ -381,27 +438,92 @@
     `).join('');
   }
 
-  function escHtml(s) {
-    if (!s) return '';
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // ── RENDER: pestaña BOE Último Mes ────────────────────────────────
+  function renderBoe() {
+    const query     = document.getElementById('boe-search').value.toLowerCase().trim();
+    const soloImp   = document.getElementById('chk-importante').checked;
+    const container = document.getElementById('boe-entries');
+    document.getElementById('boe-loading').style.display = 'none';
+
+    const cutoff = daysAgo(31);
+
+    const filtered = allEntries.filter(e => {
+      if (e.source !== 'BOE') return false;
+      if (toISO(e.published_date) < cutoff) return false;
+      if (soloImp && !e.importante) return false;
+      if (!query) return true;
+      return (e.title + ' ' + (e.department||'') + ' ' + (e.section||'') + ' ' + (e.tipo||''))
+        .toLowerCase().includes(query);
+    });
+
+    document.getElementById('boe-count').textContent =
+      filtered.length + ' entrada' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('boe-empty').style.display = filtered.length ? 'none' : 'block';
+
+    container.innerHTML = filtered.map(e => `
+      <div class="boe-card">
+        <div class="boe-card-header">
+          <span class="boe-date">📅 ${e.published_date || '—'}</span>
+        </div>
+        <h2>${e.url
+          ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
+          : escHtml(e.title)}</h2>
+        <div class="boe-fields">
+          <div class="boe-field">
+            <span class="boe-field-label">Sección</span>
+            <span class="boe-field-value ${e.section ? '' : 'boe-field-empty'}">
+              ${e.section ? escHtml(e.section) : 'Sin sección'}
+            </span>
+          </div>
+          <div class="boe-field">
+            <span class="boe-field-label">Departamento</span>
+            <span class="boe-field-value ${e.department ? '' : 'boe-field-empty'}">
+              ${e.department ? escHtml(e.department) : '—'}
+            </span>
+          </div>
+          <div class="boe-field">
+            <span class="boe-field-label">Tipo</span>
+            <span class="boe-field-value ${e.tipo ? '' : 'boe-field-empty'}">
+              ${e.tipo ? escHtml(e.tipo) : '—'}
+            </span>
+          </div>
+        </div>
+        ${(e.importante || e.acceso_conexion) ? `
+        <div class="boe-badges">
+          ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
+          ${e.acceso_conexion ? `<span class="badge badge-acc">🔌 ${escHtml(e.acceso_conexion)}</span>` : ''}
+        </div>` : ''}
+      </div>
+    `).join('');
   }
 
-  // ── Eventos ────────────────────────────────────────────────────────
-  document.getElementById('search').addEventListener('input', render);
+  // ── Navegación entre pestañas ──────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      activeTab = btn.dataset.tab;
+    });
+  });
+
+  // ── Eventos de filtro ──────────────────────────────────────────────
+  document.getElementById('search').addEventListener('input', renderTodas);
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeSource = btn.dataset.source;
-      render();
+      renderTodas();
     });
   });
 
-  document.getElementById('btn-refresh').addEventListener('click', () => loadData(true));
+  document.getElementById('boe-search').addEventListener('input', renderBoe);
+  document.getElementById('chk-importante').addEventListener('change', renderBoe);
 
-  // Recarga automática al volver a la pestaña (útil en móvil)
+  document.getElementById('btn-refresh').addEventListener('click', () => loadData(true));
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') loadData(false);
   });
