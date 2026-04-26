@@ -1,5 +1,5 @@
 {
-  "updated_at": "27/04/2026 00:32",
+  "updated_at": "27/04/2026 00:35",
   "total": 241,
   "entries": [
     {
@@ -823,9 +823,35 @@
     },
     {
       "source": "CNMC",
+      "title": "Acuerdo de la Dirección - Incoación: SNC/DE/079/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente IBERDROLA S.A. PRESUNTA INFRACCIÓN ARTÍCULO 65.8 (SNC/DE/079/26)",
+      "published_date": "24/04/2026",
+      "url": "https://www.cnmc.es/node/420006",
+      "section": "CNMC RSS",
+      "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
+      "summary": "Ref: SNC/DE/079/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
+      "scraped_at": "27/04/2026 00:29"
+    },
+    {
+      "source": "CNMC",
       "title": "Acuerdo de la Dirección - Incoación: IBERDROLA S.A. PRESUNTA INFRACCIÓN DEL ARTÍCULO 65.8 LSE",
       "published_date": "24/04/2026",
-      "url": "https://www.cnmc.es/node/420014",
+      "url": "https://www.cnmc.es/node/420012",
+      "section": "CNMC RSS",
+      "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
+      "summary": "Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáticamente en un Acceso al expediente Sucesos que permiten incorporar documentación de otro expediente Sucesos que son Acuerdos de la Dirección Sucesos que si se publican en la web se considerarán acuerd",
+      "scraped_at": "27/04/2026 00:29"
+    },
+    {
+      "source": "CNMC",
+      "title": "Acuerdo de la Dirección - Incoación: IBERDROLA S.A. PRESUNTA INFRACCIÓN DEL ARTÍCULO 65.8 LSE",
+      "published_date": "24/04/2026",
+      "url": "https://www.cnmc.es/node/420010",
       "section": "CNMC RSS",
       "department": "CNMC",
       "tipo": null,
@@ -845,32 +871,6 @@
       "importante": null,
       "acceso_conexion": null,
       "summary": "Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáticamente en un Acceso al expediente Sucesos que permiten incorporar documentación de otro expediente Sucesos que son Acuerdos de la Dirección Sucesos que si se publican en la web se considerarán acuerd",
-      "scraped_at": "27/04/2026 00:29"
-    },
-    {
-      "source": "CNMC",
-      "title": "Acuerdo de la Dirección - Incoación: SNC/DE/079/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente IBERDROLA S.A. PRESUNTA INFRACCIÓN ARTÍCULO 65.8 (SNC/DE/079/26)",
-      "published_date": "24/04/2026",
-      "url": "https://www.cnmc.es/node/420006",
-      "section": "CNMC RSS",
-      "department": "CNMC",
-      "tipo": null,
-      "importante": null,
-      "acceso_conexion": null,
-      "summary": "Ref: SNC/DE/079/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
-      "scraped_at": "27/04/2026 00:29"
-    },
-    {
-      "source": "CNMC",
-      "title": "Acuerdo de la Dirección - Incoación: SNC/DE/048/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente CENTRALES NUCLEARES ALMARAZ-TRILLO A.I.E. PRESUNTA INFRACCIÓN DEL ARTÍCULO 64.37 LSE-. (SNC/DE/048/26)",
-      "published_date": "24/04/2026",
-      "url": "https://www.cnmc.es/node/419963",
-      "section": "CNMC RSS",
-      "department": "CNMC",
-      "tipo": null,
-      "importante": null,
-      "acceso_conexion": null,
-      "summary": "Ref: SNC/DE/048/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
       "scraped_at": "27/04/2026 00:29"
     },
     {
@@ -927,22 +927,22 @@
     },
     {
       "source": "CNMC",
-      "title": "Acuerdo de la Dirección - Incoación: IBERDROLA S.A. PRESUNTA INFRACCIÓN DEL ARTÍCULO 65.8 LSE",
+      "title": "Acuerdo de la Dirección - Incoación: SNC/DE/048/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente CENTRALES NUCLEARES ALMARAZ-TRILLO A.I.E. PRESUNTA INFRACCIÓN DEL ARTÍCULO 64.37 LSE-. (SNC/DE/048/26)",
       "published_date": "24/04/2026",
-      "url": "https://www.cnmc.es/node/420012",
+      "url": "https://www.cnmc.es/node/419963",
       "section": "CNMC RSS",
       "department": "CNMC",
       "tipo": null,
       "importante": null,
       "acceso_conexion": null,
-      "summary": "Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáticamente en un Acceso al expediente Sucesos que permiten incorporar documentación de otro expediente Sucesos que son Acuerdos de la Dirección Sucesos que si se publican en la web se considerarán acuerd",
+      "summary": "Ref: SNC/DE/048/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
       "scraped_at": "27/04/2026 00:29"
     },
     {
       "source": "CNMC",
       "title": "Acuerdo de la Dirección - Incoación: IBERDROLA S.A. PRESUNTA INFRACCIÓN DEL ARTÍCULO 65.8 LSE",
       "published_date": "24/04/2026",
-      "url": "https://www.cnmc.es/node/420010",
+      "url": "https://www.cnmc.es/node/420014",
       "section": "CNMC RSS",
       "department": "CNMC",
       "tipo": null,
@@ -9922,6 +9922,26 @@
     "cnmc": [
       {
         "source": "CNMC",
+        "title": "Acuerdo de la Dirección - Incoación: SNC/DE/079/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente IBERDROLA S.A. PRESUNTA INFRACCIÓN ARTÍCULO 65.8 (SNC/DE/079/26)",
+        "published_date": "24/04/2026",
+        "url": "https://www.cnmc.es/node/420006",
+        "section": "CNMC RSS",
+        "department": "CNMC",
+        "summary": "Ref: SNC/DE/079/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
+        "es_circular": false
+      },
+      {
+        "source": "CNMC",
+        "title": "Acuerdo de la Dirección - Incoación: SNC/DE/048/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente CENTRALES NUCLEARES ALMARAZ-TRILLO A.I.E. PRESUNTA INFRACCIÓN DEL ARTÍCULO 64.37 LSE-. (SNC/DE/048/26)",
+        "published_date": "24/04/2026",
+        "url": "https://www.cnmc.es/node/419963",
+        "section": "CNMC RSS",
+        "department": "CNMC",
+        "summary": "Ref: SNC/DE/048/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
+        "es_circular": false
+      },
+      {
+        "source": "CNMC",
         "title": "Acuerdo de la Dirección - Incoación: IBERDROLA S.A. PRESUNTA INFRACCIÓN DEL ARTÍCULO 65.8 LSE",
         "published_date": "24/04/2026",
         "url": "https://www.cnmc.es/node/420014",
@@ -9958,26 +9978,6 @@
         "section": "CNMC RSS",
         "department": "CNMC",
         "summary": "Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáticamente en un Acceso al expediente Sucesos que permiten incorporar documentación de otro expediente Sucesos que son Acuerdos de la Dirección Sucesos que si se publican en la web se considerarán acuerd",
-        "es_circular": false
-      },
-      {
-        "source": "CNMC",
-        "title": "Acuerdo de la Dirección - Incoación: SNC/DE/079/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente IBERDROLA S.A. PRESUNTA INFRACCIÓN ARTÍCULO 65.8 (SNC/DE/079/26)",
-        "published_date": "24/04/2026",
-        "url": "https://www.cnmc.es/node/420006",
-        "section": "CNMC RSS",
-        "department": "CNMC",
-        "summary": "Ref: SNC/DE/079/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
-        "es_circular": false
-      },
-      {
-        "source": "CNMC",
-        "title": "Acuerdo de la Dirección - Incoación: SNC/DE/048/26 Ámbito Energía Tipo DE - competencia CNMC Fecha 23 Abr 2026 Expediente CENTRALES NUCLEARES ALMARAZ-TRILLO A.I.E. PRESUNTA INFRACCIÓN DEL ARTÍCULO 64.37 LSE-. (SNC/DE/048/26)",
-        "published_date": "24/04/2026",
-        "url": "https://www.cnmc.es/node/419963",
-        "section": "CNMC RSS",
-        "department": "CNMC",
-        "summary": "Ref: SNC/DE/048/26 | Fecha: 23 Abr 2026 | Ámbito: Energía | Acuerdo de la Dirección - Incoación api etiquetas Sucesos que permiten adjuntar documentos genéricos Sucesos que amplían plazo Sucesos en los que hay que controlar los Acuses de Recibo -notificaciones- Sucesos con plazo según metadato para alegaciones desde Acuse recibo Sucesos que se crean automáti",
         "es_circular": false
       },
       {
@@ -10031,9 +10031,65 @@
       "scraped_at": "27/04/2026 00:14"
     },
     {
+      "title": "Consulta pública segundo trámite audiencia - Propuesta P.O 7.6. servicio de arranque autónomo",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/segundo-tramite-audiencia-propuesta-po-76-servicio-de-arranque-autonomo",
+      "plazo": "Desde 13 de Feb del 2026 hasta 13 de Mar del 2026",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública de modificación de los  P.O. 3.1, 3.2 y 7.2 del sistema eléctrico",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/consulta-publica-de-modificacion-de-los-po-31-32-y-72-del-sistema",
+      "plazo": "Desde 29 de Dic del 2025 hasta 14 de Ene del 2026",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
       "title": "Consulta pública Solicitud exención CAM-NC",
       "url": "https://www.cnmc.es/consultas-publicas/energia/solicitud-exencion-cam-nc",
       "plazo": "Desde 19 de Dic del 2025 hasta 07 de Ene del 2026",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública Segunda prórroga proyecto piloto control tensión",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
+      "plazo": "Desde 19 de Dic del 2025 hasta 14 de Ene del 2026",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública plataformas web infraestructuras recarga vehículo eléctrico e instalaciones autoconsumo",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/plataformas-web-infraestructuras-recarga-vehiculo",
+      "plazo": "Desde 12 de Dic del 2025 hasta 14 de Ene del 2026",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta Pública Informe evaluación modelo retributivo transporte gas y plantas GNL",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/informe-evaluacion-modelo-retributivo-transporte-gas-y-plantas-gnl",
+      "plazo": "Desde 01 de Dic del 2025 hasta 31 de Dic del 2025",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública retribución transporte electricidad 2023",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-transporte-electricidad-2023",
+      "plazo": "Desde 26 de Nov del 2025 hasta 26 de Dic del 2025",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública ajuste fibra óptica 2026",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/ajuste-fibra-optica-2026",
+      "plazo": "Desde 24 de Nov del 2025 hasta 09 de Dic del 2025",
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública retribución del operador del sistema eléctrico para 2026",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-del-operador-del-sistema-electrico-para-2026",
+      "plazo": "Desde 21 de Nov del 2025 hasta 05 de Dic del 2025",
       "section": "Consultas públicas CNMC",
       "scraped_at": "27/04/2026 00:14"
     },
@@ -10101,65 +10157,9 @@
       "scraped_at": "27/04/2026 00:14"
     },
     {
-      "title": "Consulta pública segundo trámite audiencia - Propuesta P.O 7.6. servicio de arranque autónomo",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/segundo-tramite-audiencia-propuesta-po-76-servicio-de-arranque-autonomo",
-      "plazo": "Desde 13 de Feb del 2026 hasta 13 de Mar del 2026",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
       "title": "Trámite audiencia proyecto piloto Soluciones de flexibilidad en redes (S2F)",
       "url": "https://www.cnmc.es/consultas-publicas/energia/proyecto-piloto-s2f",
       "plazo": "Desde 16 de Ene del 2026 hasta 13 de Feb del 2026",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta pública de modificación de los  P.O. 3.1, 3.2 y 7.2 del sistema eléctrico",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/consulta-publica-de-modificacion-de-los-po-31-32-y-72-del-sistema",
-      "plazo": "Desde 29 de Dic del 2025 hasta 14 de Ene del 2026",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta pública Segunda prórroga proyecto piloto control tensión",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
-      "plazo": "Desde 19 de Dic del 2025 hasta 14 de Ene del 2026",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta pública plataformas web infraestructuras recarga vehículo eléctrico e instalaciones autoconsumo",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/plataformas-web-infraestructuras-recarga-vehiculo",
-      "plazo": "Desde 12 de Dic del 2025 hasta 14 de Ene del 2026",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta Pública Informe evaluación modelo retributivo transporte gas y plantas GNL",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/informe-evaluacion-modelo-retributivo-transporte-gas-y-plantas-gnl",
-      "plazo": "Desde 01 de Dic del 2025 hasta 31 de Dic del 2025",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta pública retribución transporte electricidad 2023",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-transporte-electricidad-2023",
-      "plazo": "Desde 26 de Nov del 2025 hasta 26 de Dic del 2025",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta pública ajuste fibra óptica 2026",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/ajuste-fibra-optica-2026",
-      "plazo": "Desde 24 de Nov del 2025 hasta 09 de Dic del 2025",
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "title": "Consulta pública retribución del operador del sistema eléctrico para 2026",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-del-operador-del-sistema-electrico-para-2026",
-      "plazo": "Desde 21 de Nov del 2025 hasta 05 de Dic del 2025",
       "section": "Consultas públicas CNMC",
       "scraped_at": "27/04/2026 00:14"
     }
