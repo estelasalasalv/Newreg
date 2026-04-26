@@ -37,7 +37,7 @@ jobs:
       # ── 3. Run scrapers ──────────────────────────────────────────────────
       - name: Scrape BOE + CNMC → PostgreSQL → web/data.json
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.BBDD }}
           BOE_KEYWORDS:  ${{ vars.BOE_KEYWORDS }}
         run: python main.py
 
