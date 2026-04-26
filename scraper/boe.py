@@ -41,7 +41,6 @@ IMPORTANT_PATTERNS = [
     (r"\breal decreto\b",        "Real Decreto"),
     (r"\bordre?n\b",             "Orden"),
     (r"\bcircular\b",            "Circular CNMC"),
-    (r"\bresoluc[ií][oó]n\b",    "Resolución"),
 ]
 
 
