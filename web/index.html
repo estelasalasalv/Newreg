@@ -1,943 +1,781 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1a56a3" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#002b45"/>
   <title>Monitor Regulatorio Energético</title>
   <style>
     :root {
-      --bg: #f4f6f9;
-      --card: #ffffff;
-      --primary: #1a56a3;
-      --accent: #e8f0fe;
-      --border: #dde3ec;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --boe: #1a56a3;
-      --cnmc: #0f7b55;
-      --tag-bg-boe: #dbeafe;
-      --tag-bg-cnmc: #d1fae5;
-      --tag-bg-imp: #fef3c7;
-      --tag-imp: #92400e;
-      --tag-bg-acc: #ede9fe;
-      --tag-acc: #5b21b6;
+      --navy:   #002b45;
+      --teal:   #00b8b0;
+      --teal2:  #009990;
+      --gray1:  #f4f6f8;
+      --gray2:  #e8ecf0;
+      --gray3:  #b0bec5;
+      --gray4:  #607d8b;
+      --text:   #1a2e3b;
+      --white:  #ffffff;
+      --yellow: #f9a825;
+      --green:  #2e7d32;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,43,69,.10);
+      --sidebar-w: 230px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--gray1);
+      overflow-x: hidden;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-
-    /* ── HEADER ── */
-    header {
-      background: var(--primary);
-      color: #fff;
-      padding: 0.9rem 1rem;
+    /* ── TOPBAR ────────────────────────────────────────────────── */
+    .topbar {
+      background: var(--navy);
+      color: var(--white);
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 54px;
       position: sticky;
       top: 0;
-      z-index: 20;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      flex-shrink: 0;
     }
-    header h1 { font-size: 1rem; font-weight: 700; line-height: 1.2; flex: 1; }
-    @media (min-width: 480px) { header h1 { font-size: 1.2rem; } }
-    @media (min-width: 768px) { header h1 { font-size: 1.35rem; } }
-
-    #last-updated { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; display: none; }
-    @media (min-width: 400px) { #last-updated { display: block; } }
-
-
-    /* ── PESTAÑAS ── */
-    .tabs {
-      background: var(--card);
-      border-bottom: 2px solid var(--border);
-      display: flex;
-      position: sticky;
-      top: 56px;   /* altura del header */
-      z-index: 15;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .tabs::-webkit-scrollbar { display: none; }
-
-    .tab-btn {
-      padding: 0.75rem 1.25rem;
-      border: none;
-      background: transparent;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-      transition: color 0.15s, border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-      min-height: 44px;
-    }
-    .tab-btn:hover { color: var(--primary); }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
-
-    /* ── TOOLBAR (pestaña Todas) ── */
-    .toolbar {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 0.6rem 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-    }
-    .toolbar input {
-      flex: 1 1 100%;
-      min-width: 0;
-      padding: 0.55rem 0.75rem;
-      border: 1px solid var(--border);
+    .topbar-brand { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      background: var(--teal);
       border-radius: 8px;
-      font-size: 1rem;
-      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px; color: var(--navy);
+      flex-shrink: 0;
     }
-    @media (min-width: 560px) { .toolbar input { flex: 1 1 200px; } }
+    .topbar-title { font-size: 14px; font-weight: 700; line-height: 1.2; }
+    .topbar-sub   { font-size: 10px; opacity: .65; letter-spacing: .3px; }
+    .topbar-meta  { font-size: 11px; opacity: .7; white-space: nowrap; }
+    @media (max-width: 420px) { .topbar-sub, .topbar-meta { display: none; } }
 
-    .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .filter-btn {
-      padding: 0.45rem 0.9rem;
-      border: 1px solid var(--border); border-radius: 20px;
-      background: #fff; cursor: pointer;
-      font-size: 0.85rem; font-weight: 500;
-      min-height: 36px;
-      transition: background 0.15s, border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .filter-btn.active, .filter-btn:hover { background: var(--accent); border-color: var(--primary); }
-    .filter-btn[data-source="BOE"].active  { background: var(--tag-bg-boe);  border-color: var(--boe); }
-    .filter-btn[data-source="CNMC"].active { background: var(--tag-bg-cnmc); border-color: var(--cnmc); }
-
-    #count { font-size: 0.8rem; color: var(--muted); margin-left: auto; white-space: nowrap; align-self: center; }
-
-    /* ── MAIN ── */
-    main { max-width: 900px; margin: 0 auto; padding: 0.75rem 0.75rem 2rem; }
-    @media (min-width: 768px) { main { padding: 1.25rem 1rem 2rem; } }
-
-    /* ── TARJETA GENERAL ── */
-    .entry {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left-width: 4px;
-      border-radius: 10px;
-      padding: 0.9rem 1rem;
-      margin-bottom: 0.6rem;
-      transition: box-shadow 0.15s;
-    }
-    .entry.src-BOE  { border-left-color: var(--boe); }
-    .entry.src-CNMC { border-left-color: var(--cnmc); }
-    .entry:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
-
-    .entry-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; }
-    .tag { font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .tag-BOE  { background: var(--tag-bg-boe);  color: var(--boe); }
-    .tag-CNMC { background: var(--tag-bg-cnmc); color: var(--cnmc); }
-    .date { font-size: 0.78rem; color: var(--muted); }
-    .dept { font-size: 0.76rem; color: var(--muted); }
-    .entry h2 { font-size: 0.92rem; font-weight: 600; line-height: 1.45; margin-bottom: 0.3rem; }
-    @media (min-width: 600px) { .entry h2 { font-size: 1rem; } }
-    .entry h2 a { color: var(--text); text-decoration: none; }
-    .entry h2 a:hover { color: var(--primary); text-decoration: underline; }
-    .summary { font-size: 0.82rem; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.25rem; }
-    .section-badge { font-size: 0.73rem; color: var(--muted); font-style: italic; }
-    .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
-    .badge { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 4px; white-space: nowrap; }
-    .badge-imp { background: var(--tag-bg-imp); color: var(--tag-imp); }
-    .badge-acc { background: var(--tag-bg-acc); color: var(--tag-acc); }
-
-    /* ── TARJETA BOE DETALLADA (pestaña BOE Último Mes) ── */
-    .boe-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--boe);
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      transition: box-shadow 0.15s;
-    }
-    .boe-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
-
-    .boe-card-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .boe-date {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--boe);
-      background: var(--tag-bg-boe);
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      white-space: nowrap;
-    }
-    .boe-card h2 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      line-height: 1.4;
-      margin-bottom: 0.6rem;
-      flex: 1 1 100%;
-    }
-    @media (min-width: 600px) { .boe-card h2 { font-size: 1.05rem; } }
-    .boe-card h2 a { color: var(--text); text-decoration: none; }
-    .boe-card h2 a:hover { color: var(--primary); text-decoration: underline; }
-
-    .boe-fields {
+    /* ── LAYOUT ────────────────────────────────────────────────── */
+    .layout {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.3rem;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: calc(100vh - 54px);
     }
-    @media (min-width: 560px) { .boe-fields { grid-template-columns: 1fr 1fr; } }
-    @media (min-width: 800px) { .boe-fields { grid-template-columns: 1fr 1fr 1fr; } }
 
-    .boe-field { font-size: 0.8rem; line-height: 1.4; }
-    .boe-field-label {
-      font-size: 0.68rem;
+    /* ── SIDEBAR ───────────────────────────────────────────────── */
+    .sidebar {
+      background: var(--navy);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      padding: 14px 0 24px;
+      border-right: 1px solid rgba(255,255,255,.07);
+      position: sticky;
+      top: 54px;
+      height: calc(100vh - 54px);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar-section { margin-bottom: 20px; }
+    .sidebar-label {
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 0.1rem;
+      letter-spacing: 1.2px;
+      opacity: .45;
+      padding: 0 16px 6px;
     }
-    .boe-field-value { color: var(--text); }
-    .boe-field-empty { color: var(--muted); font-style: italic; }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background .15s, border-color .15s;
+      opacity: .75;
+      user-select: none;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,.07); opacity: 1; }
+    .sidebar-item.active {
+      background: rgba(0,184,176,.12);
+      border-left-color: var(--teal);
+      color: var(--teal);
+      opacity: 1;
+      font-weight: 700;
+    }
+    .sidebar-item .icon { font-size: 14px; width: 20px; text-align: center; }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.07); margin: 8px 16px; }
 
-    .boe-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+    /* Filtros de fuente en sidebar */
+    .src-filters { padding: 4px 16px 0; display: flex; flex-direction: column; gap: 4px; }
+    .src-btn {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,.15);
+      background: transparent;
+      color: rgba(255,255,255,.6);
+      text-align: left;
+      transition: background .15s, color .15s;
+    }
+    .src-btn:hover  { background: rgba(255,255,255,.08); color: var(--white); }
+    .src-btn.active { background: var(--teal); color: var(--navy); border-color: var(--teal); font-weight: 700; }
 
-    /* ── Barra de búsqueda pestaña BOE ── */
-    .boe-toolbar {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 0.6rem 1rem;
+    /* ── MOBILE NAV (reemplaza sidebar en ≤768px) ─────────────── */
+    .mobile-nav {
+      display: none;
+      background: var(--navy);
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .mobile-nav::-webkit-scrollbar { display: none; }
+    .mobile-nav-inner { display: flex; white-space: nowrap; }
+    .mobile-tab {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,.6);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .mobile-tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 700; }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .mobile-nav { display: block; }
+    }
+
+    /* ── MAIN CONTENT ──────────────────────────────────────────── */
+    .main { min-width: 0; padding: 20px; }
+    @media (max-width: 768px) { .main { padding: 12px; } }
+
+    /* ── SEARCH BAR ────────────────────────────────────────────── */
+    .search-bar {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 8px;
       align-items: center;
+      margin-bottom: 14px;
     }
-    .boe-toolbar input {
-      flex: 1 1 100%;
-      padding: 0.55rem 0.75rem;
-      border: 1px solid var(--border);
+    .search-bar input {
+      flex: 1 1 200px;
+      padding: 7px 12px;
+      border: 1px solid var(--gray2);
       border-radius: 8px;
-      font-size: 0.9rem;
-      background: var(--bg);
-    }
-    @media (min-width: 560px) { .boe-toolbar input { flex: 1 1 200px; } }
-
-    /* Filtro Importante */
-    #boe-filter-imp {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      white-space: nowrap;
-    }
-    #boe-filter-imp input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
-
-    #boe-count { font-size: 0.8rem; color: var(--muted); margin-left: auto; white-space: nowrap; align-self: center; }
-
-    /* ── ESTADOS ── */
-    .state-msg { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 0.95rem; }
-
-    /* ── TOAST ── */
-    #toast {
-      position: fixed; bottom: 1.25rem; left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #1f2937; color: #fff;
-      padding: 0.6rem 1.2rem; border-radius: 24px;
-      font-size: 0.85rem; pointer-events: none;
-      transition: transform 0.25s ease, opacity 0.25s ease;
-      opacity: 0; white-space: nowrap; z-index: 100;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-    /* ── FOOTER ── */
-    footer { text-align: center; font-size: 0.78rem; color: var(--muted); padding: 1.5rem 1rem; }
-    footer a { color: var(--primary); }
-
-    /* ── Ocultar paneles inactivos ── */
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    /* ── Tarjeta CNMC Q1 (más compacta que BOE) ── */
-    .cnmc-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--cnmc);
-      border-radius: 10px;
-      padding: 0.8rem 1rem;
-      margin-bottom: 0.55rem;
-      transition: box-shadow 0.15s;
-    }
-    .cnmc-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
-    .cnmc-card h2 { font-size: 0.9rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.35rem; }
-    @media (min-width: 600px) { .cnmc-card h2 { font-size: 0.97rem; } }
-    .cnmc-card h2 a { color: var(--text); text-decoration: none; }
-    .cnmc-card h2 a:hover { color: var(--cnmc); text-decoration: underline; }
-    .cnmc-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; }
-    .cnmc-date { font-size: 0.75rem; font-weight: 600; color: var(--cnmc); background: var(--tag-bg-cnmc); padding: .12rem .45rem; border-radius: 4px; }
-    .cnmc-summary { font-size: 0.8rem; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-    /* ── Etiquetas de recencia CNMC ── */
-    .recency {
-      font-size: 0.68rem; font-weight: 700;
-      padding: 0.12rem 0.45rem; border-radius: 4px;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-    .rec-hoy       { background: #dcfce7; color: #15803d; }
-    .rec-semana    { background: #d1fae5; color: #047857; }
-    .rec-mes       { background: #dbeafe; color: #1d4ed8; }
-    .rec-trimestre { background: #e0f2fe; color: #0369a1; }
-    .rec-semestre  { background: #fef3c7; color: #b45309; }
-    .rec-anio      { background: #f3f4f6; color: #374151; }
-
-    /* ── Resumen e impacto REE ── */
-    .ai-block {
-      margin-top: 0.5rem;
-      padding: 0.5rem 0.7rem;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      line-height: 1.5;
-    }
-    .ai-resumen {
-      background: #f8fafc;
-      border-left: 3px solid var(--border);
+      font-size: 12.5px;
+      font-family: inherit;
+      background: var(--white);
       color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .search-bar input:focus { border-color: var(--teal); }
+    .result-count { font-size: 11px; color: var(--gray4); margin-left: auto; white-space: nowrap; }
+
+    /* Filtro importante */
+    .imp-label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11.5px; color: rgba(255,255,255,.7);
+      cursor: pointer; white-space: nowrap;
+    }
+    .imp-label input { accent-color: var(--teal); width: 14px; height: 14px; cursor: pointer; }
+
+    /* ── NORM CARD (BOE) ───────────────────────────────────────── */
+    .norm-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      border-left: 3px solid var(--teal);
+      margin-bottom: 10px;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .norm-card:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,43,69,.13); }
+
+    .norm-header {
+      display: flex; flex-wrap: wrap;
+      align-items: flex-start; gap: 6px;
+      margin-bottom: 6px;
+    }
+    .norm-title { flex: 1; font-size: 13px; font-weight: 600; line-height: 1.45; min-width: 0; }
+    .norm-title a { color: var(--text); text-decoration: none; }
+    .norm-title a:hover { color: var(--teal2); }
+
+    .norm-meta {
+      display: flex; flex-wrap: wrap;
+      align-items: center; gap: 6px;
+      margin-bottom: 8px; font-size: 11px; color: var(--gray4);
+    }
+    .type-chip {
+      font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; padding: 2px 7px; border-radius: 10px;
+      background: rgba(0,43,69,.08); color: var(--navy);
+    }
+    .type-chip.imp { background: rgba(249,168,37,.2); color: #b45309; }
+    .org-chip {
+      font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; padding: 2px 7px; border-radius: 10px;
+      background: rgba(0,184,176,.12); color: var(--teal2);
+    }
+    .norm-section { font-size: 10.5px; color: var(--gray3); font-style: italic; }
+
+    /* Resumen e impacto */
+    .ai-resumen {
+      font-size: 11.5px; color: var(--gray4); line-height: 1.55;
+      padding: 6px 10px; background: var(--gray1);
+      border-left: 3px solid var(--gray2); border-radius: 0 6px 6px 0;
+      margin-bottom: 6px;
     }
     .ai-ree {
-      background: #fff7ed;
-      border-left: 3px solid #f59e0b;
-      color: #78350f;
+      font-size: 11.5px; color: #78350f; line-height: 1.55;
+      padding: 6px 10px; background: #fff7ed;
+      border-left: 3px solid var(--yellow); border-radius: 0 6px 6px 0;
+      margin-bottom: 6px;
     }
     .ai-label {
-      font-size: 0.67rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      opacity: 0.65;
-      display: block;
-      margin-bottom: 0.15rem;
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; opacity: .6; display: block; margin-bottom: 2px;
     }
 
-    /* ── Tarjetas Consultas CNMC ── */
-    .con-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--cnmc);
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 0.6rem;
+    /* Badges de recencia */
+    .badge {
+      font-size: 9.5px; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: .3px;
+    }
+    .badge-hoy       { background: rgba(46,125,50,.2);   color: #2e7d32; }
+    .badge-semana    { background: rgba(0,184,176,.2);   color: var(--teal2); }
+    .badge-mes       { background: rgba(25,118,210,.15); color: #1565c0; }
+    .badge-trimestre { background: rgba(123,31,162,.15); color: #6a1b9a; }
+    .badge-semestre  { background: rgba(249,168,37,.2);  color: #b45309; }
+    .badge-anio      { background: var(--gray2);         color: var(--gray4); }
+    .badge-acc       { background: rgba(0,184,176,.12);  color: var(--teal2); }
+    .badge-imp       { background: rgba(249,168,37,.2);  color: #b45309; }
+
+    /* ── CONSULTA CARD (CNMC) ──────────────────────────────────── */
+    .consulta-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      box-shadow: var(--shadow);
+      border-left: 3px solid var(--teal2);
+      margin-bottom: 8px;
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.4rem;
-      transition: box-shadow 0.15s;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
     }
-    @media (min-width: 640px) {
-      .con-card { grid-template-columns: 1fr auto; align-items: start; }
+    .consulta-card:hover { box-shadow: 0 4px 16px rgba(0,43,69,.13); }
+    .consulta-title { font-size: 12.5px; font-weight: 600; line-height: 1.4; margin-bottom: 5px; }
+    .consulta-title a { color: var(--text); text-decoration: none; }
+    .consulta-title a:hover { color: var(--teal2); }
+    .consulta-plazo { font-size: 11px; color: var(--gray4); }
+    .days-badge {
+      font-size: 20px; font-weight: 800; color: var(--teal2);
+      text-align: center; line-height: 1;
     }
-    .con-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
-    .con-card h2 { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
-    @media (min-width: 600px) { .con-card h2 { font-size: 1rem; } }
-    .con-card h2 a { color: var(--text); text-decoration: none; }
-    .con-card h2 a:hover { color: var(--cnmc); text-decoration: underline; }
-    .con-plazo {
-      background: var(--tag-bg-cnmc);
-      color: var(--cnmc);
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.3rem 0.7rem;
-      border-radius: 6px;
-      white-space: nowrap;
-      align-self: start;
-      margin-top: 0.1rem;
-    }
-    .con-plazo-empty { color: var(--muted); font-size: 0.75rem; font-style: italic; }
+    .days-label { font-size: 9px; color: var(--gray3); text-align: center; text-transform: uppercase; }
+    @media (max-width: 480px) { .consulta-card { grid-template-columns: 1fr; } }
 
-    /* ── Columnas Regulación Española ── */
-    #esp-cols {
+    /* ── COLUMNAS Q1 ───────────────────────────────────────────── */
+    .col-grid {
       display: grid;
-      grid-template-columns: 1fr;          /* móvil: una columna */
-      gap: 0;
-      max-width: 1400px;
-      margin: 0 auto;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--gray2);
     }
-    @media (min-width: 700px) {
-      #esp-cols {
-        grid-template-columns: 1fr 1fr;    /* tablet+: dos columnas */
-        gap: 0 1px;                        /* separador vertical */
-        background: var(--border);         /* el gap se ve como línea */
-        align-items: start;
-      }
+    @media (max-width: 720px) { .col-grid { grid-template-columns: 1fr; } }
+    .col-panel { background: var(--gray1); min-width: 0; }
+    .col-header {
+      position: sticky; top: 54px; z-index: 5;
+      font-size: 10px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .9px;
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 6px;
     }
+    .col-header-boe  { background: rgba(0,43,69,.06);  color: var(--navy);  border-bottom: 2px solid var(--navy); }
+    .col-header-cnmc { background: rgba(0,184,176,.08); color: var(--teal2); border-bottom: 2px solid var(--teal); }
+    .col-count { font-weight: 400; opacity: .7; margin-left: auto; }
+    .col-body { padding: 10px 12px 24px; overflow-y: auto; }
+    @media (min-width: 721px) { .col-body { max-height: calc(100vh - 160px); } }
 
-    .esp-col {
-      background: var(--bg);
-      min-width: 0;
-    }
+    /* ── ESTADOS ───────────────────────────────────────────────── */
+    .state-msg { text-align: center; color: var(--gray3); padding: 40px 20px; font-size: 12px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
 
-    .esp-col-header {
-      position: sticky;
-      top: 96px;                           /* bajo header + tabs */
-      z-index: 5;
-      font-size: .82rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      padding: .6rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      border-bottom: 3px solid transparent;
+    /* ── FOOTER ────────────────────────────────────────────────── */
+    footer {
+      text-align: center; font-size: 10.5px; color: var(--gray3);
+      padding: 16px; border-top: 1px solid var(--gray2); margin-top: 12px;
     }
-    .esp-col-boe  { background: var(--tag-bg-boe);  color: var(--boe);  border-bottom-color: var(--boe); }
-    .esp-col-cnmc { background: var(--tag-bg-cnmc); color: var(--cnmc); border-bottom-color: var(--cnmc); }
-
-    .esp-col-count {
-      font-weight: 400;
-      font-size: .75rem;
-      opacity: .8;
-      margin-left: auto;
-    }
-
-    .esp-col-body {
-      padding: .6rem .75rem 2rem;
-      overflow-y: auto;
-    }
-    @media (min-width: 700px) {
-      .esp-col-body {
-        max-height: calc(100vh - 180px);   /* scroll independiente por columna */
-      }
-    }
+    footer a { color: var(--teal2); text-decoration: none; }
   </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <h1>⚡ Monitor Regulatorio Energético</h1>
-  <span id="last-updated">Cargando…</span>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">R</div>
+    <div>
+      <div class="topbar-title">Monitor Regulatorio Energético</div>
+      <div class="topbar-sub">Sector Eléctrico Español · BOE + CNMC</div>
+    </div>
+  </div>
+  <div class="topbar-meta" id="last-updated">Cargando…</div>
 </header>
 
-<!-- PESTAÑAS -->
-<nav class="tabs" role="tablist">
-  <button class="tab-btn active" data-tab="todas" role="tab">Todas las fuentes</button>
-  <button class="tab-btn"        data-tab="boe"   role="tab">📋 BOE Último Trimestre</button>
-  <button class="tab-btn"        data-tab="esp"   role="tab">🇪🇸 Regulación Española</button>
-  <button class="tab-btn"        data-tab="con"   role="tab">📬 Consultas CNMC</button>
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mobile-tab active"  data-panel="todas">📋 Todas</div>
+    <div class="mobile-tab"         data-panel="boe"  >📅 BOE Trimestre</div>
+    <div class="mobile-tab"         data-panel="esp"  >🇪🇸 Q1</div>
+    <div class="mobile-tab"         data-panel="con"  >📬 Consultas</div>
+  </div>
 </nav>
 
-<!-- ══════════════════════ PANEL: TODAS ══════════════════════ -->
-<div id="panel-todas" class="tab-panel active">
-  <div class="toolbar">
-    <input type="search" id="search" placeholder="Buscar por título, organismo…"
-           autocomplete="off" autocorrect="off" spellcheck="false" />
-    <div class="filters">
-      <button class="filter-btn active" data-source="ALL">Todos</button>
-      <button class="filter-btn" data-source="BOE">BOE</button>
-      <button class="filter-btn" data-source="CNMC">CNMC</button>
-    </div>
-    <span id="count"></span>
-  </div>
-  <main>
-    <div id="loading" class="state-msg">Cargando datos…</div>
-    <div id="entries"></div>
-    <div id="empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
-  </main>
-</div>
+<!-- LAYOUT -->
+<div class="layout">
 
-<!-- ══════════════════════ PANEL: BOE ÚLTIMO MES ══════════════════════ -->
-<div id="panel-boe" class="tab-panel">
-  <div class="boe-toolbar">
-    <input type="search" id="boe-search" placeholder="Buscar en BOE del último mes…"
-           autocomplete="off" autocorrect="off" spellcheck="false" />
-    <label id="boe-filter-imp">
-      <input type="checkbox" id="chk-importante" />
-      Solo importantes (Ley / RD / Circular)
-    </label>
-    <span id="boe-count"></span>
-  </div>
-  <main>
-    <div id="boe-loading" class="state-msg">Cargando datos…</div>
-    <div id="boe-entries"></div>
-    <div id="boe-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
-  </main>
-</div>
-
-<!-- ══════════════════════ PANEL: REGULACIÓN ESPAÑOLA ══════════════════════ -->
-<div id="panel-esp" class="tab-panel">
-  <div class="boe-toolbar" style="flex-wrap:wrap; gap:0.6rem 1rem;">
-    <input type="search" id="esp-search" placeholder="Buscar en regulación española del Q1…"
-           autocomplete="off" spellcheck="false" />
-    <label id="esp-filter-imp" style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer;white-space:nowrap">
-      <input type="checkbox" id="chk-esp-importante" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer" />
-      Solo importantes
-    </label>
-    <span id="esp-range" style="font-size:.78rem;color:var(--muted);white-space:nowrap"></span>
-    <span id="esp-count" style="font-size:.8rem;color:var(--muted);margin-left:auto;white-space:nowrap"></span>
-  </div>
-  <div id="esp-loading" class="state-msg">Cargando datos…</div>
-  <div id="esp-cols">
-    <!-- Columna BOE -->
-    <div class="esp-col">
-      <div class="esp-col-header esp-col-boe">
-        📄 BOE
-        <span id="esp-boe-count" class="esp-col-count"></span>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Normativa</div>
+      <div class="sidebar-item active" data-panel="todas">
+        <span class="icon">📋</span> Todas las fuentes
       </div>
-      <div id="esp-boe-entries" class="esp-col-body"></div>
-    </div>
-
-    <!-- Columna CNMC -->
-    <div class="esp-col">
-      <div class="esp-col-header esp-col-cnmc">
-        🏛️ CNMC
-        <span id="esp-cnmc-count" class="esp-col-count"></span>
+      <div class="sidebar-item" data-panel="boe">
+        <span class="icon">📅</span> BOE Último Trimestre
       </div>
-      <div id="esp-cnmc-entries" class="esp-col-body"></div>
+      <div class="sidebar-item" data-panel="esp">
+        <span class="icon">🇪🇸</span> Regulación Española Q1
+      </div>
+      <div class="sidebar-item" data-panel="con">
+        <span class="icon">📬</span> Consultas CNMC
+      </div>
     </div>
-  </div>
-  <div id="esp-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
-</div>
 
-<!-- ══════════════════════ PANEL: CONSULTAS CNMC ══════════════════════ -->
-<div id="panel-con" class="tab-panel">
-  <div class="boe-toolbar">
-    <input type="search" id="con-search" placeholder="Buscar consulta CNMC…"
-           autocomplete="off" spellcheck="false" />
-    <span id="con-count" style="font-size:.8rem;color:var(--muted);margin-left:auto;white-space:nowrap"></span>
-  </div>
-  <main>
-    <div id="con-loading" class="state-msg">Cargando…</div>
-    <div id="con-entries"></div>
-    <div id="con-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
-  </main>
-</div>
+    <div class="sidebar-divider"></div>
 
-<footer>
-  Fuentes: <a href="https://www.boe.es/datosabiertos/" target="_blank" rel="noopener">API BOE</a> ·
-  <a href="https://www.cnmc.es/consultas-publicas/energia" target="_blank" rel="noopener">CNMC Energía</a>
-</footer>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Filtrar fuente</div>
+      <div class="src-filters">
+        <button class="src-btn active" data-source="ALL">Todos</button>
+        <button class="src-btn" data-source="BOE">BOE</button>
+        <button class="src-btn" data-source="CNMC">CNMC</button>
+      </div>
+    </div>
 
-<div id="toast"></div>
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Solo importantes</div>
+      <div style="padding:4px 16px">
+        <label class="imp-label">
+          <input type="checkbox" id="chk-importante"/>
+          BOE (Ley / RD / Circular)
+        </label>
+        <label class="imp-label" style="margin-top:6px">
+          <input type="checkbox" id="chk-esp-importante"/>
+          Q1 importantes
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ══ PANEL: TODAS ══ -->
+    <div id="panel-todas" class="panel active">
+      <div class="search-bar">
+        <input type="search" id="search" placeholder="Buscar por título, organismo, palabras clave…"
+               autocomplete="off" spellcheck="false"/>
+        <span class="result-count" id="count"></span>
+      </div>
+      <div id="loading" class="state-msg">Cargando datos…</div>
+      <div id="entries"></div>
+      <div id="empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
+    <!-- ══ PANEL: BOE TRIMESTRE ══ -->
+    <div id="panel-boe" class="panel">
+      <div class="search-bar">
+        <input type="search" id="boe-search" placeholder="Buscar en BOE del último trimestre…"
+               autocomplete="off" spellcheck="false"/>
+        <span class="result-count" id="boe-count"></span>
+      </div>
+      <div id="boe-loading" class="state-msg">Cargando…</div>
+      <div id="boe-entries"></div>
+      <div id="boe-empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
+    <!-- ══ PANEL: REGULACIÓN ESPAÑOLA Q1 ══ -->
+    <div id="panel-esp" class="panel">
+      <div class="search-bar">
+        <input type="search" id="esp-search" placeholder="Buscar en Regulación Española Q1…"
+               autocomplete="off" spellcheck="false"/>
+        <span id="esp-range" style="font-size:11px;color:var(--gray3)"></span>
+        <span class="result-count" id="esp-count"></span>
+      </div>
+      <div id="esp-loading" class="state-msg">Cargando…</div>
+      <div class="col-grid">
+        <div class="col-panel">
+          <div class="col-header col-header-boe">
+            📄 BOE <span class="col-count" id="esp-boe-count"></span>
+          </div>
+          <div class="col-body" id="esp-boe-entries"></div>
+        </div>
+        <div class="col-panel">
+          <div class="col-header col-header-cnmc">
+            🏛️ CNMC <span class="col-count" id="esp-cnmc-count"></span>
+          </div>
+          <div class="col-body" id="esp-cnmc-entries"></div>
+        </div>
+      </div>
+      <div id="esp-empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
+    <!-- ══ PANEL: CONSULTAS CNMC ══ -->
+    <div id="panel-con" class="panel">
+      <div class="search-bar">
+        <input type="search" id="con-search" placeholder="Buscar consulta CNMC…"
+               autocomplete="off" spellcheck="false"/>
+        <span class="result-count" id="con-count"></span>
+      </div>
+      <div id="con-loading" class="state-msg">Cargando…</div>
+      <div id="con-entries"></div>
+      <div id="con-empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
+    <footer>
+      Fuentes: <a href="https://www.boe.es/datosabiertos/" target="_blank" rel="noopener">API BOE</a> ·
+      <a href="https://www.cnmc.es/consultas-publicas/energia" target="_blank" rel="noopener">CNMC Energía</a> ·
+      <a href="https://www.cnmc.es/rss.xml" target="_blank" rel="noopener">CNMC RSS</a>
+    </footer>
+  </div><!-- /.main -->
+</div><!-- /.layout -->
 
 <script>
-  let allEntries   = [];
-  let activeSource = 'ALL';
-  let activeTab    = 'todas';
+  /* ── Estado ────────────────────────────────────────────────── */
+  let allEntries    = [];
+  let boeTrimestre  = [];
+  let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
+  let cnmcConsultas = [];
+  let activeSource  = 'ALL';
+  let activePanel   = 'todas';
 
-  // ── Utilidades ─────────────────────────────────────────────────────
-  // ── Etiqueta de recencia para entradas CNMC ──────────────────────
-  // ── Resumen automático desde el título (sin API) ─────────────────
+  /* ── Utilidades ─────────────────────────────────────────────── */
+  function esc(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   function autoSummary(title) {
     if (!title) return '';
-    // Extrae "por el/la que se ACCIÓN..." del título BOE
-    const m = title.match(/por (?:el|la|los|las) que se (.{10,120}?)(?:\.|,\s*de conformidad|$)/i);
+    const m = title.match(/por (?:el|la|los|las) que se (.{10,140}?)(?:\.|,\s*de conformidad|$)/i);
     if (m) return m[1].trim().replace(/\.$/, '') + '.';
-    // Fallback: primera frase significativa
     const parts = title.split(',');
     if (parts.length >= 3) return parts.slice(2).join(',').trim().replace(/^\s*por\s*/i,'').trim();
     return '';
   }
 
-  // ── Impacto en REE desde palabras clave (sin API) ─────────────────
-  const _REE_MAP = [
-    [/red de transporte/i,        "Afecta a la red de transporte de electricidad gestionada por REE."],
-    [/operador del sistema/i,     "Impacta en las funciones de REE como Operador del Sistema Eléctrico."],
-    [/retribuci[oó]n.*transporte|retribuci[oó]n.*operador/i,
-                                  "Puede modificar la retribución económica de la actividad de transporte de REE."],
-    [/planificaci[oó]n.*red/i,    "Afecta a los planes de inversión y desarrollo de la red de transporte de REE."],
-    [/liquidaci[oó]n.*sistema/i,  "Incide en la liquidación del sistema eléctrico donde REE actúa como operador."],
-    [/servicio.*ajuste|ajuste.*sistema/i,
-                                  "Relacionado con los servicios de ajuste del sistema que coordina REE."],
-    [/interconex[ií][oó]n.*internacional/i,
-                                  "Afecta a las interconexiones internacionales de la red española gestionadas por REE."],
-    [/ciberseguridad/i,           "Impacta en la ciberseguridad de infraestructuras críticas, incluida la red de REE."],
-    [/subestaci[oó]n|l[ií]nea.*transporte|l[ií]nea.*transmisi[oó]n|LAT\b/i,
-                                  "Afecta directamente a instalaciones de la red de transporte de REE."],
-    [/peaje.*acceso|tarifa.*el[eé]ctrica/i,
-                                  "Relacionado con los peajes de transporte que forman parte de los ingresos de REE."],
-    [/mercado.*el[eé]ctrico|mercado.*diario|mercado.*intradiario/i,
-                                  "Afecta al mercado eléctrico en el que REE participa como operador del sistema."],
-    [/renovable|fotovoltaic|generaci[oó]n.*distribuid/i,
-                                  "Impacta en la integración de energías renovables en la red de transporte de REE."],
-    [/veh[ií]culo.*el[eé]ctrico/i,"Puede incrementar la demanda en la red de REE por el auge del vehículo eléctrico."],
-    [/sistema.*el[eé]ctrico/i,    "Regula aspectos del sistema eléctrico en el que REE opera como gestor de la red."],
+  const _REE = [
+    [/red de transporte/i,       "Afecta a la red de transporte de electricidad gestionada por REE."],
+    [/operador del sistema/i,    "Impacta en las funciones de REE como Operador del Sistema Eléctrico."],
+    [/retribuci[oó]n.*transporte|retribuci[oó]n.*operador/i, "Puede modificar la retribución económica del transporte de REE."],
+    [/planificaci[oó]n.*red/i,   "Afecta a los planes de inversión y desarrollo de la red de REE."],
+    [/liquidaci[oó]n.*sistema/i, "Incide en la liquidación del sistema eléctrico donde REE opera."],
+    [/servicio.*ajuste/i,        "Relacionado con los servicios de ajuste del sistema que coordina REE."],
+    [/interconex[ií][oó]n.*internacional/i, "Afecta a las interconexiones internacionales de REE."],
+    [/ciberseguridad/i,          "Impacta en la ciberseguridad de infraestructuras críticas de REE."],
+    [/subestaci[oó]n|l[ií]nea.*transporte|LAT\b/i, "Afecta a instalaciones de la red de transporte de REE."],
+    [/peaje.*acceso|tarifa.*el[eé]ctrica/i, "Relacionado con los peajes de transporte en los ingresos de REE."],
+    [/mercado.*el[eé]ctrico|mercado.*diario|mercado.*intradiario/i, "Afecta al mercado eléctrico donde REE actúa como operador."],
+    [/renovable|fotovoltaic/i,   "Impacta en la integración de renovables en la red de REE."],
+    [/veh[ií]culo.*el[eé]ctrico/i, "Puede incrementar la demanda en la red de REE."],
+    [/sistema.*el[eé]ctrico/i,   "Regula aspectos del sistema eléctrico gestionado por REE."],
   ];
-
-  function reeImpact(keywords, title) {
-    const text = (keywords || '') + ' ' + (title || '');
-    for (const [pat, msg] of _REE_MAP) {
-      if (pat.test(text)) return msg;
-    }
+  function reeImpact(kw, title) {
+    const t = (kw||'') + ' ' + (title||'');
+    for (const [p,m] of _REE) if (p.test(t)) return m;
     return '';
   }
 
   function recencyLabel(dateStr) {
     if (!dateStr) return '';
-    // dateStr puede ser DD/MM/YYYY o YYYY-MM-DD
     let d;
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-      const [day, mon, yr] = dateStr.split('/');
-      d = new Date(+yr, +mon - 1, +day);
-    } else {
-      d = new Date(dateStr);
-    }
+      const [day,mon,yr] = dateStr.split('/');
+      d = new Date(+yr, +mon-1, +day);
+    } else { d = new Date(dateStr); }
     if (isNaN(d)) return '';
-
     const now   = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const diffMs   = today - dDate;
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    // Inicio de la semana actual (lunes)
-    const dayOfWeek   = (today.getDay() + 6) % 7;  // 0=lunes
-    const weekStart   = new Date(today); weekStart.setDate(today.getDate() - dayOfWeek);
-
-    const yr  = now.getFullYear();
-    const mon = now.getMonth();  // 0-based
-    const q   = Math.floor(mon / 3);
-    const sem = Math.floor(mon / 6);
-
-    if (diffDays === 0)
-      return '<span class="recency rec-hoy">Hoy</span>';
-    if (dDate >= weekStart)
-      return '<span class="recency rec-semana">Esta semana</span>';
-    if (d.getFullYear() === yr && d.getMonth() === mon)
-      return '<span class="recency rec-mes">Este mes</span>';
-    if (d.getFullYear() === yr && Math.floor(d.getMonth() / 3) === q)
-      return '<span class="recency rec-trimestre">Este trimestre</span>';
-    if (d.getFullYear() === yr && Math.floor(d.getMonth() / 6) === sem)
-      return '<span class="recency rec-semestre">Este semestre</span>';
-    if (d.getFullYear() === yr)
-      return '<span class="recency rec-anio">Este año</span>';
+    const diff  = Math.floor((today - dDate) / 86400000);
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - (today.getDay()+6)%7);
+    const yr = now.getFullYear(), mon = now.getMonth();
+    if (diff === 0)            return '<span class="badge badge-hoy">Hoy</span>';
+    if (dDate >= weekStart)    return '<span class="badge badge-semana">Esta semana</span>';
+    if (d.getFullYear()===yr && d.getMonth()===mon)
+                               return '<span class="badge badge-mes">Este mes</span>';
+    if (d.getFullYear()===yr && Math.floor(d.getMonth()/3)===Math.floor(mon/3))
+                               return '<span class="badge badge-trimestre">Este trimestre</span>';
+    if (d.getFullYear()===yr && Math.floor(d.getMonth()/6)===Math.floor(mon/6))
+                               return '<span class="badge badge-semestre">Este semestre</span>';
+    if (d.getFullYear()===yr)  return '<span class="badge badge-anio">Este año</span>';
     return '';
   }
 
-  function escHtml(s) {
-    if (!s) return '';
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function daysRemaining(plazoStr) {
+    if (!plazoStr) return null;
+    const m = plazoStr.match(/hasta\s+(\d{1,2})\s+de\s+(\w+)\s+del?\s+(\d{4})/i);
+    if (!m) return null;
+    const months = {enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,
+                    julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11};
+    const mon = months[m[2].toLowerCase()];
+    if (mon === undefined) return null;
+    const end  = new Date(+m[3], mon, +m[1]);
+    const diff = Math.ceil((end - new Date()) / 86400000);
+    return diff;
   }
 
-  function showToast(msg, duration = 2200) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), duration);
-  }
-
-  // Devuelve fecha ISO (YYYY-MM-DD) de hace N días
-  function daysAgo(n) {
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    return d.toISOString().slice(0, 10);
-  }
-
-  // Convierte DD/MM/YYYY → YYYY-MM-DD para comparar
-  function toISO(ddmmyyyy) {
-    if (!ddmmyyyy) return '';
-    const [d, m, y] = ddmmyyyy.split('/');
-    return `${y}-${m}-${d}`;
-  }
-
-  let boeTrimestre  = [];
-  let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
-  let cnmcConsultas = [];
-
-  // ── Carga de datos ─────────────────────────────────────────────────
+  /* ── Carga de datos ─────────────────────────────────────────── */
   async function loadData() {
     try {
       const r = await fetch('data.json?v=' + Date.now());
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const json = await r.json();
       document.getElementById('last-updated').textContent = 'Act.: ' + (json.updated_at || '—');
-      allEntries   = json.entries        || [];
-      boeTrimestre = json.boe_trimestre  || [];
-      regEspanola  = json.reg_espanola    || { boe: [], cnmc: [], year: '', rango: '' };
+      allEntries    = json.entries        || [];
+      boeTrimestre  = json.boe_trimestre  || [];
+      regEspanola   = json.reg_espanola   || { boe:[], cnmc:[], year:'', rango:'' };
       cnmcConsultas = json.cnmc_consultas || [];
-      renderTodas();
-      renderBoe();
-      renderEsp();
-      renderConsultas();
-    } catch (e) {
-      document.getElementById('loading').textContent     = 'Error: ' + e.message;
-      document.getElementById('boe-loading').textContent = 'Error: ' + e.message;
+      renderAll();
+    } catch(e) {
+      ['loading','boe-loading','esp-loading','con-loading'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = 'Error: ' + e.message;
+      });
     }
   }
 
-  // ── RENDER: pestaña Todas ──────────────────────────────────────────
-  function renderTodas() {
-    const query     = document.getElementById('search').value.toLowerCase().trim();
-    const container = document.getElementById('entries');
-    document.getElementById('loading').style.display = 'none';
+  function renderAll() {
+    renderTodas(); renderBoe(); renderEsp(); renderConsultas();
+  }
 
+  /* ── Templates ──────────────────────────────────────────────── */
+  function normCardBOE(e, titleField, fechaField, kwField, secField, orgField, subField, enlaceField) {
+    const title  = e[titleField]  || '';
+    const fecha  = e[fechaField]  || '';
+    const kw     = e[kwField]     || '';
+    const sec    = e[secField]    || '';
+    const org    = e[orgField]    || '';
+    const sub    = e[subField]    || '';
+    const enlace = e[enlaceField] || '';
+    const tipo   = e.tipo || '';
+    const imp    = e.importante === 'Sí';
+    const summ   = autoSummary(title);
+    const ree    = reeImpact(kw, title);
+    return `
+    <div class="norm-card">
+      <div class="norm-header">
+        <div class="norm-title">
+          ${enlace ? `<a href="${esc(enlace)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}
+        </div>
+        ${recencyLabel(fecha)}
+      </div>
+      <div class="norm-meta">
+        ${tipo ? `<span class="type-chip ${imp?'imp':''}">${esc(tipo)}</span>` : ''}
+        ${fecha ? `<span>${fecha}</span>` : ''}
+        ${org   ? `<span class="org-chip">${esc(org.length>40?org.slice(0,40)+'…':org)}</span>` : ''}
+        ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
+      </div>
+      ${sec||sub ? `<div class="norm-section">${esc(sec)}${sub?' › '+esc(sub):''}</div>` : ''}
+      ${kw  ? `<div style="font-size:10.5px;color:var(--gray3);margin:4px 0 6px">🔑 ${esc(kw)}</div>` : ''}
+      ${summ? `<div class="ai-resumen"><span class="ai-label">Resumen</span>${esc(summ)}</div>` : ''}
+      ${ree ? `<div class="ai-ree"><span class="ai-label">⚡ Impacto en REE</span>${esc(ree)}</div>` : ''}
+    </div>`;
+  }
+
+  function cnmcRegCard(e) {
+    const ree = reeImpact('', e.title||'');
+    return `
+    <div class="norm-card" style="border-left-color:var(--teal2)">
+      <div class="norm-header">
+        <div class="norm-title">
+          ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
+        </div>
+        ${recencyLabel(e.published_date)}
+      </div>
+      <div class="norm-meta">
+        <span class="org-chip">CNMC</span>
+        ${e.published_date ? `<span>${e.published_date}</span>` : ''}
+        ${e.es_circular ? '<span class="badge badge-trimestre">📋 Circular</span>' : ''}
+      </div>
+      ${ree ? `<div class="ai-ree"><span class="ai-label">⚡ Impacto en REE</span>${esc(ree)}</div>` : ''}
+    </div>`;
+  }
+
+  function consultaCard(e) {
+    const days = daysRemaining(e.plazo);
+    const ree  = reeImpact('', e.title||'');
+    return `
+    <div class="consulta-card">
+      <div>
+        <div class="consulta-title">
+          ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
+        </div>
+        ${e.plazo ? `<div class="consulta-plazo">📅 ${esc(e.plazo)}</div>` : ''}
+        ${e.summary ? `<div class="ai-resumen" style="margin-top:6px"><span class="ai-label">Descripción</span>${esc(e.summary.slice(0,200))}</div>` : ''}
+        ${ree ? `<div class="ai-ree"><span class="ai-label">⚡ Impacto en REE</span>${esc(ree)}</div>` : ''}
+      </div>
+      ${days !== null ? `
+      <div style="text-align:center;min-width:44px">
+        <div class="days-badge" style="color:${days<7?'#e53935':days<30?'#f9a825':'var(--teal2)'}">${days<0?'0':days}</div>
+        <div class="days-label">días</div>
+      </div>` : ''}
+    </div>`;
+  }
+
+  /* ── Renders ─────────────────────────────────────────────────── */
+  function renderTodas() {
+    const q  = document.getElementById('search').value.toLowerCase().trim();
+    const el = document.getElementById('entries');
+    document.getElementById('loading').style.display = 'none';
     const filtered = allEntries.filter(e => {
       if (activeSource !== 'ALL' && e.source !== activeSource) return false;
-      if (!query) return true;
-      return (e.title + ' ' + (e.department||'') + ' ' + (e.section||'') + ' ' + (e.summary||''))
-        .toLowerCase().includes(query);
+      if (!q) return true;
+      return (e.title+' '+(e.department||'')+' '+(e.section||'')+' '+(e.summary||'')).toLowerCase().includes(q);
     });
-
-    document.getElementById('count').textContent =
-      filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('count').textContent = filtered.length + ' resultado' + (filtered.length!==1?'s':'');
     document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
-
-    container.innerHTML = filtered.map(e => `
-      <div class="entry src-${e.source}">
-        <div class="entry-meta">
-          <span class="tag tag-${e.source}">${e.source}</span>
-          ${e.published_date ? `<span class="date">${e.published_date}</span>` : ''}
-          ${recencyLabel(e.published_date)}
-          ${e.department && e.department !== e.source
-            ? `<span class="dept">· ${escHtml(e.department)}</span>` : ''}
-        </div>
-        <h2>${e.url
-          ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
-          : escHtml(e.title)}</h2>
-        ${(() => { const s = e.source==='BOE' ? autoSummary(e.title) : (e.summary||''); return s ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
-        ${(() => { const r = reeImpact(e.summary, e.title); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
-        ${e.section ? `<p class="section-badge" style="margin-top:.3rem">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
-        <div class="badges">
-          ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
-          ${e.acceso_conexion ? `<span class="badge badge-acc">🔌 ${escHtml(e.acceso_conexion)}</span>` : ''}
-        </div>
-      </div>
-    `).join('');
+    el.innerHTML = filtered.map(e => {
+      if (e.source === 'BOE') {
+        return normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url');
+      }
+      return cnmcRegCard(e);
+    }).join('');
   }
 
-  // ── RENDER: pestaña BOE Último Trimestre ─────────────────────────
   function renderBoe() {
-    const query     = document.getElementById('boe-search').value.toLowerCase().trim();
-    const soloImp   = document.getElementById('chk-importante').checked;
-    const container = document.getElementById('boe-entries');
+    const q        = document.getElementById('boe-search').value.toLowerCase().trim();
+    const soloImp  = document.getElementById('chk-importante').checked;
+    const el       = document.getElementById('boe-entries');
     document.getElementById('boe-loading').style.display = 'none';
-
     const filtered = boeTrimestre.filter(e => {
       if (soloImp && e.importante !== 'Sí') return false;
-      if (!query) return true;
-      return (
-        (e.texto       || '') + ' ' +
-        (e.organismo   || '') + ' ' +
-        (e.seccion     || '') + ' ' +
-        (e.tipo        || '') + ' ' +
-        (e.palabras_clave || '')
-      ).toLowerCase().includes(query);
+      if (!q) return true;
+      return (e.texto+' '+(e.organismo||'')+' '+(e.seccion||'')+' '+(e.palabras_clave||'')).toLowerCase().includes(q);
     });
-
-    document.getElementById('boe-count').textContent =
-      filtered.length + ' entrada' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('boe-count').textContent = filtered.length + ' entrada' + (filtered.length!==1?'s':'');
     document.getElementById('boe-empty').style.display = filtered.length ? 'none' : 'block';
-
-    container.innerHTML = filtered.map(e => `
-      <div class="boe-card">
-        <div class="boe-card-header">
-          <span class="boe-date">📅 ${e.fecha || '—'}</span>
-            ${recencyLabel(e.fecha)}
-          ${e.tipo ? `<span class="badge badge-imp" style="font-size:.72rem">${escHtml(e.tipo)}</span>` : ''}
-        </div>
-        <h2>${e.enlace
-          ? `<a href="${e.enlace}" target="_blank" rel="noopener">${escHtml(e.texto)}</a>`
-          : escHtml(e.texto)}</h2>
-        <div class="boe-fields">
-          <div class="boe-field">
-            <span class="boe-field-label">Sección</span>
-            <span class="boe-field-value ${e.seccion ? '' : 'boe-field-empty'}">
-              ${escHtml(e.seccion) || '—'}
-            </span>
-          </div>
-          <div class="boe-field">
-            <span class="boe-field-label">Organismo</span>
-            <span class="boe-field-value ${e.organismo ? '' : 'boe-field-empty'}">
-              ${escHtml(e.organismo) || '—'}
-            </span>
-          </div>
-          <div class="boe-field">
-            <span class="boe-field-label">Subsección</span>
-            <span class="boe-field-value ${e.subseccion ? '' : 'boe-field-empty'}">
-              ${escHtml(e.subseccion) || '—'}
-            </span>
-          </div>
-          ${e.palabras_clave ? `
-          <div class="boe-field" style="grid-column:1/-1">
-            <span class="boe-field-label">Palabras clave</span>
-            <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
-          </div>` : ''}
-        </div>
-        ${(() => { const s = autoSummary(e.texto||''); return s ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
-        ${(() => { const r = reeImpact(e.palabras_clave, e.texto); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
-        <div class="boe-badges">
-          ${e.importante === 'Sí'     ? `<span class="badge badge-imp">⚖️ Importante</span>` : ''}
-          ${e.acceso_conexion === 'Sí'? `<span class="badge badge-acc">🔌 Acceso/Conexión</span>` : ''}
-          <span class="badge" style="background:#f3f4f6;color:#6b7280;font-size:.65rem">
-            Publicable: ${escHtml(e.publicable || 'NO')}
-          </span>
-        </div>
-      </div>
-    `).join('');
+    el.innerHTML = filtered.map(e =>
+      normCardBOE(e, 'texto', 'fecha', 'palabras_clave', 'seccion', 'organismo', 'subseccion', 'enlace')
+    ).join('');
   }
 
-  // ── RENDER: pestaña Consultas CNMC ───────────────────────────────
-  function renderConsultas() {
-    const query     = document.getElementById('con-search').value.toLowerCase().trim();
-    const container = document.getElementById('con-entries');
-    document.getElementById('con-loading').style.display = 'none';
-
-    const filtered = cnmcConsultas.filter(e =>
-      !query || (e.title + ' ' + (e.plazo || '')).toLowerCase().includes(query)
-    );
-
-    document.getElementById('con-count').textContent =
-      filtered.length + ' consulta' + (filtered.length !== 1 ? 's' : '');
-    document.getElementById('con-empty').style.display =
-      filtered.length ? 'none' : 'block';
-
-    container.innerHTML = filtered.map(e => `
-      <div class="con-card">
-        <div>
-          <h2>${e.url
-            ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
-            : escHtml(e.title)}</h2>
-          ${(() => { const s = autoSummary(e.title||''); return s ? `<div class="ai-block ai-resumen" style="margin-top:.4rem"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
-          ${(() => { const r = reeImpact('', e.title); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
-        </div>
-        ${e.plazo
-          ? `<span class="con-plazo">📅 ${escHtml(e.plazo)}</span>`
-          : `<span class="con-plazo-empty">Plazo no disponible</span>`}
-      </div>
-    `).join('');
-  }
-
-  // ── RENDER: pestaña Regulación Española Q1 ───────────────────────
   function renderEsp() {
-    const query    = document.getElementById('esp-search').value.toLowerCase().trim();
-    const soloImp  = document.getElementById('chk-esp-importante').checked;
+    const q       = document.getElementById('esp-search').value.toLowerCase().trim();
+    const soloImp = document.getElementById('chk-esp-importante').checked;
     document.getElementById('esp-loading').style.display = 'none';
-    document.getElementById('esp-range').textContent     = regEspanola.rango || '';
+    document.getElementById('esp-range').textContent = regEspanola.rango || '';
 
-    // ─ BOE Q1 ─
-    const boeFiltered = (regEspanola.boe || []).filter(e => {
+    const boeF = (regEspanola.boe||[]).filter(e => {
       if (soloImp && e.importante !== 'Sí') return false;
-      if (!query) return true;
-      return ((e.texto||'') + ' ' + (e.organismo||'') + ' ' + (e.seccion||'') +
-              ' ' + (e.tipo||'') + ' ' + (e.palabras_clave||'')).toLowerCase().includes(query);
+      if (!q) return true;
+      return (e.texto+' '+(e.organismo||'')+' '+(e.palabras_clave||'')).toLowerCase().includes(q);
     });
+    document.getElementById('esp-boe-count').textContent = '('+boeF.length+')';
+    document.getElementById('esp-boe-entries').innerHTML = boeF.length
+      ? boeF.map(e => normCardBOE(e,'texto','fecha','palabras_clave','seccion','organismo','subseccion','enlace')).join('')
+      : '<p class="state-msg">Sin resultados BOE.</p>';
 
-    document.getElementById('esp-boe-count').textContent =
-      '(' + boeFiltered.length + ' entrada' + (boeFiltered.length !== 1 ? 's' : '') + ')';
-
-    document.getElementById('esp-boe-entries').innerHTML = boeFiltered.length
-      ? boeFiltered.map(e => `
-        <div class="boe-card">
-          <div class="boe-card-header">
-            <span class="boe-date">📅 ${e.fecha || '—'}</span>
-            ${recencyLabel(e.fecha)}
-            ${e.tipo ? `<span class="badge badge-imp" style="font-size:.72rem">${escHtml(e.tipo)}</span>` : ''}
-          </div>
-          <h2>${e.enlace
-            ? `<a href="${e.enlace}" target="_blank" rel="noopener">${escHtml(e.texto)}</a>`
-            : escHtml(e.texto)}</h2>
-          <div class="boe-fields">
-            <div class="boe-field">
-              <span class="boe-field-label">Sección</span>
-              <span class="boe-field-value">${escHtml(e.seccion) || '—'}</span>
-            </div>
-            <div class="boe-field">
-              <span class="boe-field-label">Organismo</span>
-              <span class="boe-field-value">${escHtml(e.organismo) || '—'}</span>
-            </div>
-            <div class="boe-field">
-              <span class="boe-field-label">Subsección</span>
-              <span class="boe-field-value">${escHtml(e.subseccion) || '—'}</span>
-            </div>
-            ${e.palabras_clave ? `
-            <div class="boe-field" style="grid-column:1/-1">
-              <span class="boe-field-label">Palabras clave</span>
-              <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
-            </div>` : ''}
-          </div>
-          ${(() => { const s = autoSummary(e.texto||''); return s ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
-          ${(() => { const r = reeImpact(e.palabras_clave, e.texto); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
-          <div class="boe-badges">
-            ${e.importante === 'Sí'      ? '<span class="badge badge-imp">⚖️ Importante</span>' : ''}
-            ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
-          </div>
-        </div>`).join('')
-      : '<p class="state-msg" style="padding:1rem">Sin resultados BOE para este filtro.</p>';
-
-    // ─ CNMC Q1 ─
-    const cnmcFiltered = (regEspanola.cnmc || []).filter(e => {
+    const cnmcF = (regEspanola.cnmc||[]).filter(e => {
       if (soloImp && !e.es_circular) return false;
-      if (!query) return true;
-      return ((e.title||'') + ' ' + (e.department||'') + ' ' + (e.summary||'')).toLowerCase().includes(query);
+      if (!q) return true;
+      return ((e.title||'')+' '+(e.department||'')).toLowerCase().includes(q);
     });
+    document.getElementById('esp-cnmc-count').textContent = '('+cnmcF.length+')';
+    document.getElementById('esp-cnmc-entries').innerHTML = cnmcF.length
+      ? cnmcF.map(cnmcRegCard).join('')
+      : '<p class="state-msg">Sin resultados CNMC.</p>';
 
-    document.getElementById('esp-cnmc-count').textContent =
-      '(' + cnmcFiltered.length + ' entrada' + (cnmcFiltered.length !== 1 ? 's' : '') + ')';
-
-    document.getElementById('esp-cnmc-entries').innerHTML = cnmcFiltered.length
-      ? cnmcFiltered.map(e => `
-        <div class="cnmc-card">
-          <div class="cnmc-meta">
-            ${e.published_date ? `<span class="cnmc-date">📅 ${e.published_date}</span>` : ''}
-            ${recencyLabel(e.published_date)}
-            ${e.es_circular ? '<span class="badge badge-acc" style="font-size:.7rem">📋 Circular</span>' : ''}
-          </div>
-          <h2>${e.url
-            ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
-            : escHtml(e.title)}</h2>
-          ${(() => { const r = reeImpact('', e.title); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
-        </div>`).join('')
-      : '<p class="state-msg" style="padding:1rem">Sin resultados CNMC para este filtro.</p>';
-
-    // Vacío global
-    const total = boeFiltered.length + cnmcFiltered.length;
-    document.getElementById('esp-count').textContent =
-      total + ' entrada' + (total !== 1 ? 's' : '');
-    document.getElementById('esp-empty').style.display =
-      (total === 0 && query) ? 'block' : 'none';
+    const total = boeF.length + cnmcF.length;
+    document.getElementById('esp-count').textContent = total + ' entrada' + (total!==1?'s':'');
+    document.getElementById('esp-empty').style.display = (total===0&&q) ? 'block' : 'none';
   }
 
-  // ── Navegación entre pestañas ──────────────────────────────────────
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-      activeTab = btn.dataset.tab;
+  function renderConsultas() {
+    const q  = document.getElementById('con-search').value.toLowerCase().trim();
+    const el = document.getElementById('con-entries');
+    document.getElementById('con-loading').style.display = 'none';
+    const filtered = cnmcConsultas.filter(e =>
+      !q || (e.title+' '+(e.plazo||'')).toLowerCase().includes(q)
+    );
+    document.getElementById('con-count').textContent = filtered.length + ' consulta' + (filtered.length!==1?'s':'');
+    document.getElementById('con-empty').style.display = filtered.length ? 'none' : 'block';
+    el.innerHTML = filtered.map(consultaCard).join('');
+  }
+
+  /* ── Navegación ─────────────────────────────────────────────── */
+  function switchPanel(panel) {
+    activePanel = panel;
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.panel === panel);
     });
-  });
+    document.querySelectorAll('.mobile-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.panel === panel);
+    });
+    document.querySelectorAll('.panel').forEach(el => {
+      el.classList.toggle('active', el.id === 'panel-' + panel);
+    });
+  }
 
-  // ── Eventos de filtro ──────────────────────────────────────────────
-  document.getElementById('search').addEventListener('input', renderTodas);
+  document.querySelectorAll('.sidebar-item[data-panel]').forEach(el =>
+    el.addEventListener('click', () => switchPanel(el.dataset.panel))
+  );
+  document.querySelectorAll('.mobile-tab[data-panel]').forEach(el =>
+    el.addEventListener('click', () => switchPanel(el.dataset.panel))
+  );
 
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+  /* ── Filtros de fuente ───────────────────────────────────────── */
+  document.querySelectorAll('.src-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeSource = btn.dataset.source;
       renderTodas();
     });
   });
 
+  /* ── Búsquedas ──────────────────────────────────────────────── */
+  document.getElementById('search').addEventListener('input', renderTodas);
   document.getElementById('boe-search').addEventListener('input', renderBoe);
-  document.getElementById('chk-importante').addEventListener('change', renderBoe);
-  document.getElementById('con-search').addEventListener('input', renderConsultas);
   document.getElementById('esp-search').addEventListener('input', renderEsp);
+  document.getElementById('con-search').addEventListener('input', renderConsultas);
+  document.getElementById('chk-importante').addEventListener('change', renderBoe);
   document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
 
+  /* ── Recarga al volver a la pestaña ─────────────────────────── */
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') loadData();
   });
