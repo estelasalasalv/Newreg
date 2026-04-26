@@ -209,7 +209,7 @@ def _dept_is_approved(dept_norm: str) -> bool:
 
 
 # Subsecciones/títulos excluidos explícitamente
-_EXCLUDED_SUBSECTIONS = re.compile(r"\brtve\b", re.IGNORECASE)
+_EXCLUDED_SUBSECTIONS = re.compile(r"\brtve\b|convenio", re.IGNORECASE)
 _EXCLUDED_TITLES = [
     re.compile(r"certificado profesional.*intercambio geoterm", re.IGNORECASE),
     re.compile(r"instituto geogr[aá]fico nacional", re.IGNORECASE),
