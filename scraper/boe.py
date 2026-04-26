@@ -196,8 +196,21 @@ def _detect_tipo(titulo: str, epigrafe: str = "") -> str:
     return epigrafe.strip() or "—"
 
 
-def _is_importante(tipo: str) -> str:
-    return "Sí" if tipo in _IMPORTANTES else "No"
+_NOM_IMP_DEPTS = [
+    "presidencia del gobierno",
+    "ministerio para la transicion ecologica y el reto demografico",
+]
+_NOM_TITLE_RE = re.compile(r"\b(nombra|nombramiento|cese|dispone el cese)\b", re.IGNORECASE)
+
+def _is_importante(tipo: str, organismo: str = "", titulo: str = "") -> str:
+    if tipo not in _IMPORTANTES:
+        return "No"
+    # Si el documento es un nombramiento/cese, solo importante
+    # si viene de Presidencia del Gobierno o Transición Ecológica
+    if _NOM_TITLE_RE.search(titulo):
+        org_norm = _norm(organismo)
+        return "Sí" if any(d in org_norm for d in _NOM_IMP_DEPTS) else "No"
+    return "Sí"
 
 
 def _detect_acceso(titulo: str) -> str:
@@ -264,7 +277,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
 
                             kw      = _find_keywords(titulo, ep_nombre)
                             tipo    = _detect_tipo(titulo, ep_nombre)
-                            imp     = _is_importante(tipo)
+                            imp     = _is_importante(tipo, dept_nombre, titulo)
                             acceso  = _detect_acceso(titulo)
 
                             items.append({
