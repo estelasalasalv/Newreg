@@ -5,19 +5,37 @@ import logging
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
 
 def get_connection():
-    url = os.environ["DATABASE_URL"]
-    return psycopg2.connect(url, cursor_factory=RealDictCursor)
+    return psycopg2.connect(os.environ["DATABASE_URL"], cursor_factory=RealDictCursor)
 
 
 def init_db():
-    """Create tables if they don't exist."""
+    """Create/migrate tables."""
     sql = """
+    CREATE TABLE IF NOT EXISTS boe_entries (
+        id               SERIAL PRIMARY KEY,
+        external_id      VARCHAR(200) UNIQUE NOT NULL,
+        fecha            DATE,
+        fuente           VARCHAR(20)  DEFAULT 'BOE',
+        seccion          TEXT,
+        departamento     TEXT,
+        tipo             TEXT,
+        titulo           TEXT NOT NULL,
+        url              TEXT,
+        importante       TEXT,
+        acceso_conexion  TEXT,
+        scraped_at       TIMESTAMPTZ  DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_boe_fecha      ON boe_entries(fecha DESC);
+    CREATE INDEX IF NOT EXISTS idx_boe_importante ON boe_entries(importante) WHERE importante <> '';
+    CREATE INDEX IF NOT EXISTS idx_boe_acceso     ON boe_entries(acceso_conexion) WHERE acceso_conexion <> '';
+
+    -- Tabla legacy para CNMC (mantiene compatibilidad)
     CREATE TABLE IF NOT EXISTS regulatory_entries (
         id              SERIAL PRIMARY KEY,
         source          VARCHAR(20)  NOT NULL,
@@ -30,9 +48,8 @@ def init_db():
         summary         TEXT,
         scraped_at      TIMESTAMPTZ  DEFAULT NOW()
     );
-    CREATE INDEX IF NOT EXISTS idx_source     ON regulatory_entries(source);
-    CREATE INDEX IF NOT EXISTS idx_date       ON regulatory_entries(published_date DESC);
-    CREATE INDEX IF NOT EXISTS idx_scraped_at ON regulatory_entries(scraped_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_reg_source ON regulatory_entries(source);
+    CREATE INDEX IF NOT EXISTS idx_reg_date   ON regulatory_entries(published_date DESC);
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -41,11 +58,33 @@ def init_db():
     logger.info("Database initialised.")
 
 
-def upsert_entries(entries: List[Dict]) -> int:
-    """Insert new entries; skip duplicates. Returns count of new rows inserted."""
+def upsert_boe(entries: List[Dict]) -> int:
+    """Insert BOE entries; skip duplicates. Returns count of new rows."""
     if not entries:
         return 0
+    sql = """
+    INSERT INTO boe_entries
+        (external_id, fecha, fuente, seccion, departamento, tipo,
+         titulo, url, importante, acceso_conexion)
+    VALUES
+        (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(departamento)s, %(tipo)s,
+         %(titulo)s, %(url)s, %(importante)s, %(acceso_conexion)s)
+    ON CONFLICT (external_id) DO NOTHING
+    """
+    inserted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for e in entries:
+                cur.execute(sql, e)
+                inserted += cur.rowcount
+        conn.commit()
+    return inserted
 
+
+def upsert_entries(entries: List[Dict]) -> int:
+    """Insert CNMC / generic entries; skip duplicates."""
+    if not entries:
+        return 0
     sql = """
     INSERT INTO regulatory_entries
         (source, external_id, title, published_date, url, section, department, summary)
@@ -57,23 +96,50 @@ def upsert_entries(entries: List[Dict]) -> int:
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
-            for entry in entries:
-                cur.execute(sql, entry)
+            for e in entries:
+                cur.execute(sql, e)
                 inserted += cur.rowcount
         conn.commit()
     return inserted
 
 
-def fetch_recent(limit: int = 200) -> List[Dict]:
-    """Return the most recent entries for web export."""
+def fetch_recent(limit: int = 300) -> List[Dict]:
+    """Return merged BOE + CNMC entries ordered by date for web export."""
     sql = """
-    SELECT source, external_id, title,
-           TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
-           url, section, department, summary,
-           TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
-    FROM   regulatory_entries
-    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
-    LIMIT  %(limit)s
+    SELECT
+        'BOE'                                                   AS source,
+        external_id,
+        titulo                                                  AS title,
+        TO_CHAR(fecha, 'DD/MM/YYYY')                           AS published_date,
+        url,
+        seccion                                                 AS section,
+        departamento                                            AS department,
+        tipo,
+        importante,
+        acceso_conexion,
+        NULL::text                                              AS summary,
+        TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
+    FROM boe_entries
+
+    UNION ALL
+
+    SELECT
+        source,
+        external_id,
+        title,
+        TO_CHAR(published_date, 'DD/MM/YYYY')                  AS published_date,
+        url,
+        section,
+        department,
+        NULL::text                                              AS tipo,
+        NULL::text                                              AS importante,
+        NULL::text                                              AS acceso_conexion,
+        summary,
+        TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
+    FROM regulatory_entries
+
+    ORDER BY published_date DESC NULLS LAST, scraped_at DESC
+    LIMIT %(limit)s
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -82,8 +148,7 @@ def fetch_recent(limit: int = 200) -> List[Dict]:
     return [dict(r) for r in rows]
 
 
-def export_to_json(path: str = "web/data.json", limit: int = 200):
-    """Dump recent entries to a JSON file consumed by the static web."""
+def export_to_json(path: str = "web/data.json", limit: int = 300):
     rows = fetch_recent(limit)
     payload = {
         "updated_at": datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),

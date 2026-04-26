@@ -15,31 +15,30 @@ logger = logging.getLogger("main")
 
 
 def main():
-    # Lazy import so dotenv is loaded first
-    from db.database import init_db, upsert_entries, export_to_json
+    from db.database import init_db, upsert_boe, upsert_entries, export_to_json
     from scraper import boe, cnmc
 
     if not os.environ.get("DATABASE_URL"):
-        logger.error("DATABASE_URL not set. Copy .env.example to .env and configure it.")
+        logger.error("DATABASE_URL no configurado.")
         sys.exit(1)
 
-    logger.info("=== Initialising database ===")
+    logger.info("=== Iniciando base de datos ===")
     init_db()
 
     logger.info("=== Scraping BOE ===")
     boe_entries = boe.scrape(days_back=2)
-    boe_new = upsert_entries(boe_entries)
-    logger.info("BOE: %d entries scraped, %d new in DB", len(boe_entries), boe_new)
+    boe_new = upsert_boe(boe_entries)
+    logger.info("BOE: %d entradas scrapeadas, %d nuevas en BD", len(boe_entries), boe_new)
 
     logger.info("=== Scraping CNMC ===")
     cnmc_entries = cnmc.scrape(max_pages=5)
     cnmc_new = upsert_entries(cnmc_entries)
-    logger.info("CNMC: %d entries scraped, %d new in DB", len(cnmc_entries), cnmc_new)
+    logger.info("CNMC: %d entradas scrapeadas, %d nuevas en BD", len(cnmc_entries), cnmc_new)
 
-    logger.info("=== Exporting to web/data.json ===")
+    logger.info("=== Exportando a web/data.json ===")
     export_to_json("web/data.json", limit=300)
 
-    logger.info("=== Done. BOE new=%d  CNMC new=%d ===", boe_new, cnmc_new)
+    logger.info("=== Listo. BOE nuevas=%d  CNMC nuevas=%d ===", boe_new, cnmc_new)
 
 
 if __name__ == "__main__":

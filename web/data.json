@@ -1,5 +1,5 @@
 {
-  "updated_at": "26/04/2026 15:01 UTC",
+  "updated_at": "26/04/2026 16:19 UTC",
   "total": 20,
   "entries": [
     {
@@ -10,6 +10,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-circular-por-la-que-se-establece-la-trf-2027-2032",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Trámite audiencia de la Circular por la que se establece la tasa de retribución financiera (TRF) En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -21,6 +24,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/prop-de-resolucion-modificacion-po-electrico-75",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública Prop de resolución modificación PO eléctrico 7.5 (DCOOR/DE/003/26) En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -32,6 +38,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-de-resolucion-prorroga-para-el-gas-2027",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública Prop resolución prórroga peajes de acceso gas para el año de gas 2027 En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -43,6 +52,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/especifica-circular-precios-electricos",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta Pública específica Circular precios eléctricos En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -54,6 +66,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/cir-transporte-y-regasificacion",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Trámite audiencia CIR transporte y regasificación (CIR/DE/001/25) En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -65,6 +80,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/circular-distribucion-gas-cirde00325",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Trámite audiencia CIR Distribución Gas (CIR/DE/003/25) En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -76,6 +94,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-instalaciones-de-distribucion-energia-2023",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta Pública retribución instalaciones de distribución energía eléctrica 2023 En curso",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -87,6 +108,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-resolucion-criterios-liquidacion-operador-sistema-28y29abril2025",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Trámite audiencia - Propuesta de resolución criterios de liquidación del OS días 28 y 29 abril 2025 Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -98,6 +122,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/permisos-acceso-flexibles-demanda-red-distribucion",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública permisos de acceso flexibles de la demanda a la red de transporte y a las redes de distribución Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -109,6 +136,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/segundo-tramite-audiencia-propuesta-po-76-servicio-de-arranque-autonomo",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública segundo trámite audiencia - Propuesta P.O 7.6. servicio de arranque autónomo Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -120,6 +150,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/modificacion-eedd-demanda-transporte",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Trámite de audiencia modificación EEDD demanda transporte Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -131,6 +164,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/proyecto-piloto-s2f",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Trámite audiencia proyecto piloto Soluciones de flexibilidad en redes (S2F) Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -142,6 +178,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/consulta-publica-de-modificacion-de-los-po-31-32-y-72-del-sistema",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública de modificación de los  P.O. 3.1, 3.2 y 7.2 del sistema eléctrico Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -153,6 +192,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/solicitud-exencion-cam-nc",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública Solicitud exención CAM-NC Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -164,6 +206,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública Segunda prórroga proyecto piloto control tensión Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -175,6 +220,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/plataformas-web-infraestructuras-recarga-vehiculo",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública plataformas web infraestructuras recarga vehículo eléctrico e instalaciones autoconsumo Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -186,6 +234,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/informe-evaluacion-modelo-retributivo-transporte-gas-y-plantas-gnl",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta Pública Informe evaluación modelo retributivo transporte gas y plantas GNL Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -197,6 +248,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-transporte-electricidad-2023",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública retribución transporte electricidad 2023 Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -208,6 +262,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/ajuste-fibra-optica-2026",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública ajuste fibra óptica 2026 Finalizada",
       "scraped_at": "26/04/2026 17:01"
     },
@@ -219,6 +276,9 @@
       "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-del-operador-del-sistema-electrico-para-2026",
       "section": "Energía",
       "department": "CNMC",
+      "tipo": null,
+      "importante": null,
+      "acceso_conexion": null,
       "summary": "Consulta pública retribución del operador del sistema eléctrico para 2026 Finalizada",
       "scraped_at": "26/04/2026 17:01"
     }
