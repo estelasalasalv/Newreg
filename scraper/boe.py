@@ -89,6 +89,23 @@ def _detect_acceso_conexion(titulo: str) -> str:
     return ", ".join(found)
 
 
+def _get_nombre(obj: dict) -> str:
+    """Extrae el nombre de un nodo — la API usa 'nombre', versiones antiguas '@nombre'."""
+    return obj.get("nombre") or obj.get("@nombre") or ""
+
+
+def _get_url(item: dict) -> str:
+    """Devuelve la URL HTML del documento; cae en PDF o URL construida si no hay."""
+    html = item.get("url_html", "")
+    if isinstance(html, str) and html:
+        return html
+    pdf = item.get("url_pdf", {})
+    if isinstance(pdf, dict):
+        return pdf.get("texto", "")
+    doc_id = item.get("identificador", "")
+    return BOE_ITEM_URL.format(id=doc_id) if doc_id else ""
+
+
 def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
     """Walk the BOE JSON sumario and return flat list of items with all 9 fields."""
     items = []
@@ -96,11 +113,11 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
         sumario = data["data"]["sumario"]
         for d in _to_list(sumario.get("diario")):
             for seccion in _to_list(d.get("seccion")):
-                sec_nombre = seccion.get("@nombre", "")          # h3
+                sec_nombre = _get_nombre(seccion)               # h3
                 for dept in _to_list(seccion.get("departamento")):
-                    dept_nombre = dept.get("@nombre", "")        # h4
+                    dept_nombre = _get_nombre(dept)             # h4
                     for epigrafe in _to_list(dept.get("epigrafe")):
-                        tipo = epigrafe.get("@nombre", "")       # h5
+                        tipo = _get_nombre(epigrafe)            # h5
                         for item in _to_list(epigrafe.get("item")):
                             doc_id = item.get("identificador", "")
                             titulo = item.get("titulo", "").strip()
@@ -111,7 +128,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                                 "departamento":    dept_nombre,
                                 "tipo":            tipo,
                                 "titulo":          titulo,
-                                "url":             BOE_ITEM_URL.format(id=doc_id),
+                                "url":             _get_url(item),
                                 "external_id":     doc_id,
                                 "importante":      _detect_importante(titulo, dept_nombre),
                                 "acceso_conexion": _detect_acceso_conexion(titulo),
@@ -122,12 +139,12 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
 
 
 def _is_energy_relevant(entry: Dict, keywords: List[str]) -> bool:
-    text = " ".join([
+    text = " ".join(filter(None, [
         entry.get("titulo", ""),
         entry.get("departamento", ""),
         entry.get("seccion", ""),
         entry.get("tipo", ""),
-    ]).lower()
+    ])).lower()
     return any(kw in text for kw in keywords)
 
 
