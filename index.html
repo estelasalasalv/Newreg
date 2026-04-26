@@ -303,6 +303,34 @@
     .rec-semestre  { background: #fef3c7; color: #b45309; }
     .rec-anio      { background: #f3f4f6; color: #374151; }
 
+    /* ── Resumen e impacto REE ── */
+    .ai-block {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .ai-resumen {
+      background: #f8fafc;
+      border-left: 3px solid var(--border);
+      color: var(--text);
+    }
+    .ai-ree {
+      background: #fff7ed;
+      border-left: 3px solid #f59e0b;
+      color: #78350f;
+    }
+    .ai-label {
+      font-size: 0.67rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.65;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
     /* ── Tarjetas Consultas CNMC ── */
     .con-card {
       background: var(--card);
@@ -633,8 +661,10 @@
         <h2>${e.url
           ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
           : escHtml(e.title)}</h2>
-        ${e.summary ? `<p class="summary">${escHtml(e.summary)}</p>` : ''}
-        ${e.section ? `<p class="section-badge">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
+        ${e.summary ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(e.summary)}</div>` : ''}
+        ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
+          ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
+        ${e.section ? `<p class="section-badge" style="margin-top:.3rem">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
         <div class="badges">
           ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
           ${e.acceso_conexion ? `<span class="badge badge-acc">🔌 ${escHtml(e.acceso_conexion)}</span>` : ''}
@@ -699,12 +729,10 @@
             <span class="boe-field-label">Palabras clave</span>
             <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
           </div>` : ''}
-          ${e.resumen ? `
-          <div class="boe-field" style="grid-column:1/-1">
-            <span class="boe-field-label">Resumen</span>
-            <span class="boe-field-value">${escHtml(e.resumen)}</span>
-          </div>` : ''}
         </div>
+        ${e.resumen ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(e.resumen)}</div>` : ''}
+        ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
+          ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
         <div class="boe-badges">
           ${e.importante === 'Sí'     ? `<span class="badge badge-imp">⚖️ Importante</span>` : ''}
           ${e.acceso_conexion === 'Sí'? `<span class="badge badge-acc">🔌 Acceso/Conexión</span>` : ''}
@@ -733,9 +761,14 @@
 
     container.innerHTML = filtered.map(e => `
       <div class="con-card">
-        <h2>${e.url
-          ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
-          : escHtml(e.title)}</h2>
+        <div>
+          <h2>${e.url
+            ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
+            : escHtml(e.title)}</h2>
+          ${e.summary ? `<div class="ai-block ai-resumen" style="margin-top:.4rem"><span class="ai-label">Resumen</span>${escHtml(e.summary)}</div>` : ''}
+          ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
+            ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
+        </div>
         ${e.plazo
           ? `<span class="con-plazo">📅 ${escHtml(e.plazo)}</span>`
           : `<span class="con-plazo-empty">Plazo no disponible</span>`}
@@ -818,7 +851,9 @@
           <h2>${e.url
             ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
             : escHtml(e.title)}</h2>
-          ${e.summary ? `<p class="cnmc-summary">${escHtml(e.summary)}</p>` : ''}
+          ${e.summary ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(e.summary)}</div>` : ''}
+          ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
+            ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
         </div>`).join('')
       : '<p class="state-msg" style="padding:1rem">Sin resultados CNMC para este filtro.</p>';
 
