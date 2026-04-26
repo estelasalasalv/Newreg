@@ -1,0 +1,47 @@
+name: Regulatory Scraper
+
+on:
+  schedule:
+    # 08:00 y 20:00 hora peninsular España (UTC+1/+2)
+    # En UTC: 07:00 y 19:00 (horario invierno) — ajusta si es verano (06:00/18:00)
+    - cron: '0 7 * * 1-5'   # Lunes–Viernes 09:00 CET
+    - cron: '0 19 * * 1-5'  # Lunes–Viernes 21:00 CET
+  workflow_dispatch:          # Permite ejecución manual desde GitHub
+
+permissions:
+  contents: write   # Necesario para hacer push a gh-pages
+
+jobs:
+  scrape-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+
+      # ── 2. Python ────────────────────────────────────────────────────────
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── 3. Run scrapers ──────────────────────────────────────────────────
+      - name: Scrape BOE + CNMC → PostgreSQL → web/data.json
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BOE_KEYWORDS:  ${{ vars.BOE_KEYWORDS }}
+        run: python main.py
+
+      # ── 4. Deploy web/ to GitHub Pages ──────────────────────────────────
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web
+          publish_branch: gh-pages
+          commit_message: "chore: actualización automática de datos regulatorios"
+          force_orphan: false
