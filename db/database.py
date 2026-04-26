@@ -56,8 +56,10 @@ def init_db():
     );
     CREATE INDEX IF NOT EXISTS idx_reg_date ON regulatory_entries(published_date DESC);
     -- Añadir columnas si no existen (migraciones seguras)
-    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tipo  VARCHAR(20) DEFAULT 'regulacion';
-    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo TEXT;
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tipo       VARCHAR(20) DEFAULT 'regulacion';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo      TEXT;
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
+    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -117,7 +119,7 @@ def upsert_entries(entries: List[Dict]) -> int:
 def fetch_cnmc_consultas() -> List[Dict]:
     """Devuelve consultas públicas CNMC (scraping web)."""
     sql = """
-    SELECT title, url, plazo, section,
+    SELECT title, url, plazo, summary, impacto_ree, section,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
     FROM   regulatory_entries
     WHERE  source = 'CNMC'
@@ -137,7 +139,7 @@ def fetch_boe_trimestre(days: int = 92) -> List[Dict]:
     SELECT
         TO_CHAR(fecha, 'DD/MM/YYYY') AS fecha,
         fuente, seccion, tipo, organismo, subseccion,
-        texto, enlace, palabras_clave, resumen,
+        texto, enlace, palabras_clave, resumen, impacto_ree,
         importante, acceso_conexion, publicable,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
     FROM   boe_entries
@@ -208,7 +210,7 @@ def fetch_reg_espanola_q1() -> Dict:
     SELECT
         TO_CHAR(fecha, 'DD/MM/YYYY') AS fecha,
         fuente, seccion, tipo, organismo, subseccion,
-        texto, enlace, palabras_clave, importante, acceso_conexion, publicable
+        texto, enlace, palabras_clave, resumen, impacto_ree, importante, acceso_conexion, publicable
     FROM   boe_entries
     WHERE  fecha BETWEEN %(ini)s AND %(fin)s
     ORDER  BY fecha DESC
@@ -224,7 +226,7 @@ def fetch_reg_espanola_q1() -> Dict:
         url,
         section,
         department,
-        summary,
+        summary, impacto_ree,
         (LOWER(title) LIKE '%%circular%%') AS es_circular
     FROM   regulatory_entries
     WHERE  source = 'CNMC'

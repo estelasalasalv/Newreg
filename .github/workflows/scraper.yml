@@ -41,7 +41,15 @@ jobs:
           BOE_KEYWORDS:  ${{ vars.BOE_KEYWORDS }}
         run: python main.py
 
-      # ── 4. Deploy web/ to GitHub Pages ──────────────────────────────────
+      # ── 4. Generar resúmenes e impacto REE (solo entradas nuevas) ────────
+      - name: Generar resúmenes con Claude Haiku
+        env:
+          DATABASE_URL:      ${{ secrets.BBDD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python generate_summaries.py --limit 30
+        continue-on-error: true   # no bloquea el deploy si falla
+
+      # ── 5. Deploy web/ to GitHub Pages ──────────────────────────────────
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
