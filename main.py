@@ -1,4 +1,4 @@
-"""Entry point: run scrapers, save to PostgreSQL, export JSON for the web."""
+"""Scraper regulatorio: BOE (hoy) + CNMC → PostgreSQL → web/data.json + CSV stdout."""
 import logging
 import os
 import sys
@@ -19,26 +19,35 @@ def main():
     from scraper import boe, cnmc
 
     if not os.environ.get("DATABASE_URL"):
-        logger.error("DATABASE_URL no configurado.")
+        logger.error("DATABASE_URL no configurado. Copia .env.example a .env.")
         sys.exit(1)
 
     logger.info("=== Iniciando base de datos ===")
     init_db()
 
-    logger.info("=== Scraping BOE ===")
-    boe_entries = boe.scrape(days_back=2)
-    boe_new = upsert_boe(boe_entries)
-    logger.info("BOE: %d entradas scrapeadas, %d nuevas en BD", len(boe_entries), boe_new)
+    # ── BOE: solo el día actual ─────────────────────────────────────────
+    logger.info("=== Scraping BOE (hoy) ===")
+    boe_entries = boe.scrape(days_back=1)
+    boe_new     = upsert_boe(boe_entries)
+    logger.info("BOE: %d entradas encontradas, %d nuevas en BD", len(boe_entries), boe_new)
 
+    # ── CSV a stdout ────────────────────────────────────────────────────
+    if boe_entries:
+        print("\n" + boe.to_csv(boe_entries) + "\n")
+    else:
+        logger.info("(Sin entradas BOE hoy — puede ser fin de semana o festivo)")
+
+    # ── CNMC ────────────────────────────────────────────────────────────
     logger.info("=== Scraping CNMC ===")
     cnmc_entries = cnmc.scrape(max_pages=5)
-    cnmc_new = upsert_entries(cnmc_entries)
+    cnmc_new     = upsert_entries(cnmc_entries)
     logger.info("CNMC: %d entradas scrapeadas, %d nuevas en BD", len(cnmc_entries), cnmc_new)
 
-    logger.info("=== Exportando a web/data.json ===")
-    export_to_json("web/data.json", limit=300)
+    # ── Exportar JSON para la web ───────────────────────────────────────
+    logger.info("=== Exportando web/data.json ===")
+    export_to_json("web/data.json", limit=400)
 
-    logger.info("=== Listo. BOE nuevas=%d  CNMC nuevas=%d ===", boe_new, cnmc_new)
+    logger.info("=== Listo. BOE=%d  CNMC=%d ===", boe_new, cnmc_new)
 
 
 if __name__ == "__main__":

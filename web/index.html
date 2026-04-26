@@ -296,7 +296,7 @@
 <!-- PESTAÑAS -->
 <nav class="tabs" role="tablist">
   <button class="tab-btn active" data-tab="todas" role="tab">Todas las fuentes</button>
-  <button class="tab-btn"        data-tab="boe"   role="tab">📋 BOE Último Mes</button>
+  <button class="tab-btn"        data-tab="boe"   role="tab">📋 BOE Último Trimestre</button>
 </nav>
 
 <!-- ══════════════════════ PANEL: TODAS ══════════════════════ -->
@@ -376,6 +376,8 @@
     return `${y}-${m}-${d}`;
   }
 
+  let boeTrimestre = [];
+
   // ── Carga de datos ─────────────────────────────────────────────────
   async function loadData(isRefresh = false) {
     const btn = document.getElementById('btn-refresh');
@@ -387,12 +389,13 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const json = await r.json();
       document.getElementById('last-updated').textContent = 'Act.: ' + (json.updated_at || '—');
-      allEntries = json.entries || [];
+      allEntries   = json.entries        || [];
+      boeTrimestre = json.boe_trimestre  || [];
       renderTodas();
       renderBoe();
       if (isRefresh) showToast('✓ Datos actualizados');
     } catch (e) {
-      document.getElementById('loading').textContent    = 'Error: ' + e.message;
+      document.getElementById('loading').textContent     = 'Error: ' + e.message;
       document.getElementById('boe-loading').textContent = 'Error: ' + e.message;
       if (isRefresh) showToast('Error al actualizar');
     } finally {
@@ -438,22 +441,23 @@
     `).join('');
   }
 
-  // ── RENDER: pestaña BOE Último Mes ────────────────────────────────
+  // ── RENDER: pestaña BOE Último Trimestre ─────────────────────────
   function renderBoe() {
     const query     = document.getElementById('boe-search').value.toLowerCase().trim();
     const soloImp   = document.getElementById('chk-importante').checked;
     const container = document.getElementById('boe-entries');
     document.getElementById('boe-loading').style.display = 'none';
 
-    const cutoff = daysAgo(31);
-
-    const filtered = allEntries.filter(e => {
-      if (e.source !== 'BOE') return false;
-      if (toISO(e.published_date) < cutoff) return false;
-      if (soloImp && !e.importante) return false;
+    const filtered = boeTrimestre.filter(e => {
+      if (soloImp && e.importante !== 'Sí') return false;
       if (!query) return true;
-      return (e.title + ' ' + (e.department||'') + ' ' + (e.section||'') + ' ' + (e.tipo||''))
-        .toLowerCase().includes(query);
+      return (
+        (e.texto       || '') + ' ' +
+        (e.organismo   || '') + ' ' +
+        (e.seccion     || '') + ' ' +
+        (e.tipo        || '') + ' ' +
+        (e.palabras_clave || '')
+      ).toLowerCase().includes(query);
     });
 
     document.getElementById('boe-count').textContent =
@@ -463,36 +467,49 @@
     container.innerHTML = filtered.map(e => `
       <div class="boe-card">
         <div class="boe-card-header">
-          <span class="boe-date">📅 ${e.published_date || '—'}</span>
+          <span class="boe-date">📅 ${e.fecha || '—'}</span>
+          ${e.tipo ? `<span class="badge badge-imp" style="font-size:.72rem">${escHtml(e.tipo)}</span>` : ''}
         </div>
-        <h2>${e.url
-          ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
-          : escHtml(e.title)}</h2>
+        <h2>${e.enlace
+          ? `<a href="${e.enlace}" target="_blank" rel="noopener">${escHtml(e.texto)}</a>`
+          : escHtml(e.texto)}</h2>
         <div class="boe-fields">
           <div class="boe-field">
             <span class="boe-field-label">Sección</span>
-            <span class="boe-field-value ${e.section ? '' : 'boe-field-empty'}">
-              ${e.section ? escHtml(e.section) : 'Sin sección'}
+            <span class="boe-field-value ${e.seccion ? '' : 'boe-field-empty'}">
+              ${escHtml(e.seccion) || '—'}
             </span>
           </div>
           <div class="boe-field">
-            <span class="boe-field-label">Departamento</span>
-            <span class="boe-field-value ${e.department ? '' : 'boe-field-empty'}">
-              ${e.department ? escHtml(e.department) : '—'}
+            <span class="boe-field-label">Organismo</span>
+            <span class="boe-field-value ${e.organismo ? '' : 'boe-field-empty'}">
+              ${escHtml(e.organismo) || '—'}
             </span>
           </div>
           <div class="boe-field">
-            <span class="boe-field-label">Tipo</span>
-            <span class="boe-field-value ${e.tipo ? '' : 'boe-field-empty'}">
-              ${e.tipo ? escHtml(e.tipo) : '—'}
+            <span class="boe-field-label">Subsección</span>
+            <span class="boe-field-value ${e.subseccion ? '' : 'boe-field-empty'}">
+              ${escHtml(e.subseccion) || '—'}
             </span>
           </div>
+          ${e.palabras_clave ? `
+          <div class="boe-field" style="grid-column:1/-1">
+            <span class="boe-field-label">Palabras clave</span>
+            <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
+          </div>` : ''}
+          ${e.resumen ? `
+          <div class="boe-field" style="grid-column:1/-1">
+            <span class="boe-field-label">Resumen</span>
+            <span class="boe-field-value">${escHtml(e.resumen)}</span>
+          </div>` : ''}
         </div>
-        ${(e.importante || e.acceso_conexion) ? `
         <div class="boe-badges">
-          ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
-          ${e.acceso_conexion ? `<span class="badge badge-acc">🔌 ${escHtml(e.acceso_conexion)}</span>` : ''}
-        </div>` : ''}
+          ${e.importante === 'Sí'     ? `<span class="badge badge-imp">⚖️ Importante</span>` : ''}
+          ${e.acceso_conexion === 'Sí'? `<span class="badge badge-acc">🔌 Acceso/Conexión</span>` : ''}
+          <span class="badge" style="background:#f3f4f6;color:#6b7280;font-size:.65rem">
+            Publicable: ${escHtml(e.publicable || 'NO')}
+          </span>
+        </div>
       </div>
     `).join('');
   }

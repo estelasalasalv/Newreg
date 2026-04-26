@@ -15,27 +15,33 @@ def get_connection():
 
 
 def init_db():
-    """Create/migrate tables."""
+    """Recrea las tablas desde cero con el nuevo esquema."""
     sql = """
-    CREATE TABLE IF NOT EXISTS boe_entries (
+    -- Tabla BOE con esquema completo de 13 campos
+    DROP TABLE IF EXISTS boe_entries CASCADE;
+    CREATE TABLE boe_entries (
         id               SERIAL PRIMARY KEY,
         external_id      VARCHAR(200) UNIQUE NOT NULL,
         fecha            DATE,
-        fuente           VARCHAR(20)  DEFAULT 'BOE',
+        fuente           VARCHAR(10)   DEFAULT 'BOE',
         seccion          TEXT,
-        departamento     TEXT,
         tipo             TEXT,
-        titulo           TEXT NOT NULL,
-        url              TEXT,
-        importante       TEXT,
-        acceso_conexion  TEXT,
-        scraped_at       TIMESTAMPTZ  DEFAULT NOW()
+        organismo        TEXT,
+        subseccion       TEXT,
+        texto            TEXT NOT NULL,
+        enlace           TEXT,
+        palabras_clave   TEXT,
+        resumen          TEXT,
+        importante       VARCHAR(3)    DEFAULT 'No',
+        acceso_conexion  VARCHAR(3)    DEFAULT 'No',
+        publicable       VARCHAR(3)    DEFAULT 'NO',
+        scraped_at       TIMESTAMPTZ   DEFAULT NOW()
     );
-    CREATE INDEX IF NOT EXISTS idx_boe_fecha      ON boe_entries(fecha DESC);
-    CREATE INDEX IF NOT EXISTS idx_boe_importante ON boe_entries(importante) WHERE importante <> '';
-    CREATE INDEX IF NOT EXISTS idx_boe_acceso     ON boe_entries(acceso_conexion) WHERE acceso_conexion <> '';
+    CREATE INDEX idx_boe_fecha      ON boe_entries(fecha DESC);
+    CREATE INDEX idx_boe_importante ON boe_entries(importante);
+    CREATE INDEX idx_boe_acceso     ON boe_entries(acceso_conexion);
 
-    -- Tabla legacy para CNMC (mantiene compatibilidad)
+    -- Tabla CNMC (sin cambios)
     CREATE TABLE IF NOT EXISTS regulatory_entries (
         id              SERIAL PRIMARY KEY,
         source          VARCHAR(20)  NOT NULL,
@@ -48,27 +54,27 @@ def init_db():
         summary         TEXT,
         scraped_at      TIMESTAMPTZ  DEFAULT NOW()
     );
-    CREATE INDEX IF NOT EXISTS idx_reg_source ON regulatory_entries(source);
-    CREATE INDEX IF NOT EXISTS idx_reg_date   ON regulatory_entries(published_date DESC);
+    CREATE INDEX IF NOT EXISTS idx_reg_date ON regulatory_entries(published_date DESC);
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql)
         conn.commit()
-    logger.info("Database initialised.")
+    logger.info("Base de datos inicializada (esquema nuevo).")
 
 
 def upsert_boe(entries: List[Dict]) -> int:
-    """Insert BOE entries; skip duplicates. Returns count of new rows."""
+    """Inserta entradas BOE; ignora duplicados. Devuelve nº de filas nuevas."""
     if not entries:
         return 0
     sql = """
     INSERT INTO boe_entries
-        (external_id, fecha, fuente, seccion, departamento, tipo,
-         titulo, url, importante, acceso_conexion)
+        (external_id, fecha, fuente, seccion, tipo, organismo, subseccion,
+         texto, enlace, palabras_clave, resumen, importante, acceso_conexion, publicable)
     VALUES
-        (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(departamento)s, %(tipo)s,
-         %(titulo)s, %(url)s, %(importante)s, %(acceso_conexion)s)
+        (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(tipo)s,
+         %(organismo)s, %(subseccion)s, %(texto)s, %(enlace)s, %(palabras_clave)s,
+         %(resumen)s, %(importante)s, %(acceso_conexion)s, %(publicable)s)
     ON CONFLICT (external_id) DO NOTHING
     """
     inserted = 0
@@ -82,7 +88,7 @@ def upsert_boe(entries: List[Dict]) -> int:
 
 
 def upsert_entries(entries: List[Dict]) -> int:
-    """Insert CNMC / generic entries; skip duplicates."""
+    """Inserta entradas CNMC/genéricas; ignora duplicados."""
     if not entries:
         return 0
     sql = """
@@ -103,29 +109,48 @@ def upsert_entries(entries: List[Dict]) -> int:
     return inserted
 
 
+def fetch_boe_trimestre(days: int = 92) -> List[Dict]:
+    """Devuelve entradas BOE del último trimestre con todos los campos."""
+    sql = """
+    SELECT
+        TO_CHAR(fecha, 'DD/MM/YYYY') AS fecha,
+        fuente, seccion, tipo, organismo, subseccion,
+        texto, enlace, palabras_clave, resumen,
+        importante, acceso_conexion, publicable,
+        TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
+    FROM   boe_entries
+    WHERE  fecha >= CURRENT_DATE - %(days)s
+    ORDER  BY fecha DESC, scraped_at DESC
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, {"days": days})
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
 def fetch_recent(limit: int = 300) -> List[Dict]:
-    """Return merged BOE + CNMC entries ordered by date for web export."""
+    """Devuelve entradas combinadas BOE+CNMC para la pestaña Todas."""
     sql = """
     SELECT
         'BOE'                                                   AS source,
-        external_id,
-        titulo                                                  AS title,
+        texto                                                   AS title,
         TO_CHAR(fecha, 'DD/MM/YYYY')                           AS published_date,
-        url,
+        enlace                                                  AS url,
         seccion                                                 AS section,
-        departamento                                            AS department,
+        organismo                                               AS department,
         tipo,
         importante,
         acceso_conexion,
-        NULL::text                                              AS summary,
+        palabras_clave                                          AS summary,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM boe_entries
+    WHERE fecha >= CURRENT_DATE - 92
 
     UNION ALL
 
     SELECT
         source,
-        external_id,
         title,
         TO_CHAR(published_date, 'DD/MM/YYYY')                  AS published_date,
         url,
@@ -137,6 +162,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         summary,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM regulatory_entries
+    WHERE (published_date IS NULL OR published_date >= CURRENT_DATE - 92)
 
     ORDER BY published_date DESC NULLS LAST, scraped_at DESC
     LIMIT %(limit)s
@@ -149,12 +175,16 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
 
 
 def export_to_json(path: str = "web/data.json", limit: int = 300):
-    rows = fetch_recent(limit)
+    """Exporta datos al JSON que consume la web estática."""
+    entries        = fetch_recent(limit)
+    boe_trimestre  = fetch_boe_trimestre(92)
     payload = {
-        "updated_at": datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),
-        "total": len(rows),
-        "entries": rows,
+        "updated_at":     datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),
+        "total":          len(entries),
+        "entries":        entries,        # pestaña Todas
+        "boe_trimestre":  boe_trimestre,  # pestaña BOE Trimestre
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
-    logger.info("Exported %d entries to %s", len(rows), path)
+    logger.info("Exportadas %d entradas totales / %d BOE trimestre → %s",
+                len(entries), len(boe_trimestre), path)
