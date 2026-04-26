@@ -22,7 +22,6 @@
       --tag-imp: #92400e;
       --tag-bg-acc: #ede9fe;
       --tag-acc: #5b21b6;
-      --refresh-size: 44px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,18 +47,6 @@
     #last-updated { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; display: none; }
     @media (min-width: 400px) { #last-updated { display: block; } }
 
-    #btn-refresh {
-      display: flex; align-items: center; justify-content: center;
-      width: var(--refresh-size); height: var(--refresh-size); min-width: var(--refresh-size);
-      background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
-      cursor: pointer; color: #fff; font-size: 1.1rem;
-      transition: background 0.2s, transform 0.3s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    #btn-refresh:hover  { background: rgba(255,255,255,0.25); }
-    #btn-refresh:active { background: rgba(255,255,255,0.35); }
-    #btn-refresh.spinning { animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── PESTAÑAS ── */
     .tabs {
@@ -309,7 +296,6 @@
 <header>
   <h1>⚡ Monitor Regulatorio Energético</h1>
   <span id="last-updated">Cargando…</span>
-  <button id="btn-refresh" title="Actualizar datos" aria-label="Actualizar datos">&#8635;</button>
 </header>
 
 <!-- PESTAÑAS -->
@@ -439,11 +425,7 @@
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
 
   // ── Carga de datos ─────────────────────────────────────────────────
-  async function loadData(isRefresh = false) {
-    const btn = document.getElementById('btn-refresh');
-    btn.classList.add('spinning');
-    if (isRefresh) showToast('Actualizando datos…', 3000);
-
+  async function loadData() {
     try {
       const r = await fetch('data.json?v=' + Date.now());
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -455,13 +437,9 @@
       renderTodas();
       renderBoe();
       renderEsp();
-      if (isRefresh) showToast('✓ Datos actualizados');
     } catch (e) {
       document.getElementById('loading').textContent     = 'Error: ' + e.message;
       document.getElementById('boe-loading').textContent = 'Error: ' + e.message;
-      if (isRefresh) showToast('Error al actualizar');
-    } finally {
-      btn.classList.remove('spinning');
     }
   }
 
@@ -690,9 +668,8 @@
   document.getElementById('esp-search').addEventListener('input', renderEsp);
   document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
 
-  document.getElementById('btn-refresh').addEventListener('click', () => loadData(true));
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') loadData(false);
+    if (document.visibilityState === 'visible') loadData();
   });
 
   loadData();
