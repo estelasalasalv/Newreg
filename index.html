@@ -228,7 +228,7 @@
       padding: 0.55rem 0.75rem;
       border: 1px solid var(--border);
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 0.9rem;
       background: var(--bg);
     }
     @media (min-width: 560px) { .boe-toolbar input { flex: 1 1 200px; } }
@@ -538,6 +538,51 @@
 
   // ── Utilidades ─────────────────────────────────────────────────────
   // ── Etiqueta de recencia para entradas CNMC ──────────────────────
+  // ── Resumen automático desde el título (sin API) ─────────────────
+  function autoSummary(title) {
+    if (!title) return '';
+    // Extrae "por el/la que se ACCIÓN..." del título BOE
+    const m = title.match(/por (?:el|la|los|las) que se (.{10,120}?)(?:\.|,\s*de conformidad|$)/i);
+    if (m) return m[1].trim().replace(/\.$/, '') + '.';
+    // Fallback: primera frase significativa
+    const parts = title.split(',');
+    if (parts.length >= 3) return parts.slice(2).join(',').trim().replace(/^\s*por\s*/i,'').trim();
+    return '';
+  }
+
+  // ── Impacto en REE desde palabras clave (sin API) ─────────────────
+  const _REE_MAP = [
+    [/red de transporte/i,        "Afecta a la red de transporte de electricidad gestionada por REE."],
+    [/operador del sistema/i,     "Impacta en las funciones de REE como Operador del Sistema Eléctrico."],
+    [/retribuci[oó]n.*transporte|retribuci[oó]n.*operador/i,
+                                  "Puede modificar la retribución económica de la actividad de transporte de REE."],
+    [/planificaci[oó]n.*red/i,    "Afecta a los planes de inversión y desarrollo de la red de transporte de REE."],
+    [/liquidaci[oó]n.*sistema/i,  "Incide en la liquidación del sistema eléctrico donde REE actúa como operador."],
+    [/servicio.*ajuste|ajuste.*sistema/i,
+                                  "Relacionado con los servicios de ajuste del sistema que coordina REE."],
+    [/interconex[ií][oó]n.*internacional/i,
+                                  "Afecta a las interconexiones internacionales de la red española gestionadas por REE."],
+    [/ciberseguridad/i,           "Impacta en la ciberseguridad de infraestructuras críticas, incluida la red de REE."],
+    [/subestaci[oó]n|l[ií]nea.*transporte|l[ií]nea.*transmisi[oó]n|LAT\b/i,
+                                  "Afecta directamente a instalaciones de la red de transporte de REE."],
+    [/peaje.*acceso|tarifa.*el[eé]ctrica/i,
+                                  "Relacionado con los peajes de transporte que forman parte de los ingresos de REE."],
+    [/mercado.*el[eé]ctrico|mercado.*diario|mercado.*intradiario/i,
+                                  "Afecta al mercado eléctrico en el que REE participa como operador del sistema."],
+    [/renovable|fotovoltaic|generaci[oó]n.*distribuid/i,
+                                  "Impacta en la integración de energías renovables en la red de transporte de REE."],
+    [/veh[ií]culo.*el[eé]ctrico/i,"Puede incrementar la demanda en la red de REE por el auge del vehículo eléctrico."],
+    [/sistema.*el[eé]ctrico/i,    "Regula aspectos del sistema eléctrico en el que REE opera como gestor de la red."],
+  ];
+
+  function reeImpact(keywords, title) {
+    const text = (keywords || '') + ' ' + (title || '');
+    for (const [pat, msg] of _REE_MAP) {
+      if (pat.test(text)) return msg;
+    }
+    return '';
+  }
+
   function recencyLabel(dateStr) {
     if (!dateStr) return '';
     // dateStr puede ser DD/MM/YYYY o YYYY-MM-DD
@@ -661,9 +706,8 @@
         <h2>${e.url
           ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
           : escHtml(e.title)}</h2>
-        ${e.summary ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(e.summary)}</div>` : ''}
-        ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
-          ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
+        ${(() => { const s = e.source==='BOE' ? autoSummary(e.title) : (e.summary||''); return s ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
+        ${(() => { const r = reeImpact(e.summary, e.title); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
         ${e.section ? `<p class="section-badge" style="margin-top:.3rem">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
         <div class="badges">
           ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
@@ -730,9 +774,8 @@
             <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
           </div>` : ''}
         </div>
-        ${e.resumen ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(e.resumen)}</div>` : ''}
-        ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
-          ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
+        ${(() => { const s = autoSummary(e.texto||''); return s ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
+        ${(() => { const r = reeImpact(e.palabras_clave, e.texto); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
         <div class="boe-badges">
           ${e.importante === 'Sí'     ? `<span class="badge badge-imp">⚖️ Importante</span>` : ''}
           ${e.acceso_conexion === 'Sí'? `<span class="badge badge-acc">🔌 Acceso/Conexión</span>` : ''}
@@ -765,9 +808,8 @@
           <h2>${e.url
             ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
             : escHtml(e.title)}</h2>
-          ${e.summary ? `<div class="ai-block ai-resumen" style="margin-top:.4rem"><span class="ai-label">Resumen</span>${escHtml(e.summary)}</div>` : ''}
-          ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
-            ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
+          ${(() => { const s = autoSummary(e.title||''); return s ? `<div class="ai-block ai-resumen" style="margin-top:.4rem"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
+          ${(() => { const r = reeImpact('', e.title); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
         </div>
         ${e.plazo
           ? `<span class="con-plazo">📅 ${escHtml(e.plazo)}</span>`
@@ -823,6 +865,8 @@
               <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
             </div>` : ''}
           </div>
+          ${(() => { const s = autoSummary(e.texto||''); return s ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(s)}</div>` : ''; })()}
+          ${(() => { const r = reeImpact(e.palabras_clave, e.texto); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
           <div class="boe-badges">
             ${e.importante === 'Sí'      ? '<span class="badge badge-imp">⚖️ Importante</span>' : ''}
             ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
@@ -851,9 +895,7 @@
           <h2>${e.url
             ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
             : escHtml(e.title)}</h2>
-          ${e.summary ? `<div class="ai-block ai-resumen"><span class="ai-label">Resumen</span>${escHtml(e.summary)}</div>` : ''}
-          ${e.impacto_ree && e.impacto_ree !== 'Sin impacto directo identificado.'
-            ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(e.impacto_ree)}</div>` : ''}
+          ${(() => { const r = reeImpact('', e.title); return r ? `<div class="ai-block ai-ree"><span class="ai-label">⚡ Impacto en Red Eléctrica</span>${escHtml(r)}</div>` : ''; })()}
         </div>`).join('')
       : '<p class="state-msg" style="padding:1rem">Sin resultados CNMC para este filtro.</p>';
 
