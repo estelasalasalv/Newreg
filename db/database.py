@@ -50,9 +50,14 @@ def init_db():
         section         TEXT,
         department      TEXT,
         summary         TEXT,
+        tipo            VARCHAR(20)  DEFAULT 'regulacion',
+        plazo           TEXT,
         scraped_at      TIMESTAMPTZ  DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_reg_date ON regulatory_entries(published_date DESC);
+    -- Añadir columnas si no existen (migraciones seguras)
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tipo  VARCHAR(20) DEFAULT 'regulacion';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo TEXT;
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -86,25 +91,44 @@ def upsert_boe(entries: List[Dict]) -> int:
 
 
 def upsert_entries(entries: List[Dict]) -> int:
-    """Inserta entradas CNMC/genéricas; ignora duplicados."""
+    """Inserta entradas CNMC/genéricas; actualiza plazo si cambia."""
     if not entries:
         return 0
     sql = """
     INSERT INTO regulatory_entries
-        (source, external_id, title, published_date, url, section, department, summary)
+        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo)
     VALUES
         (%(source)s, %(external_id)s, %(title)s, %(published_date)s,
-         %(url)s, %(section)s, %(department)s, %(summary)s)
-    ON CONFLICT (external_id) DO NOTHING
+         %(url)s, %(section)s, %(department)s, %(summary)s,
+         %(tipo)s, %(plazo)s)
+    ON CONFLICT (external_id) DO UPDATE SET plazo = EXCLUDED.plazo
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                cur.execute(sql, e)
+                row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo")}
+                cur.execute(sql, row)
                 inserted += cur.rowcount
         conn.commit()
     return inserted
+
+
+def fetch_cnmc_consultas() -> List[Dict]:
+    """Devuelve consultas públicas CNMC (scraping web)."""
+    sql = """
+    SELECT title, url, plazo, section,
+           TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
+    FROM   regulatory_entries
+    WHERE  source = 'CNMC'
+      AND  tipo   = 'consulta'
+    ORDER  BY scraped_at DESC
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
 
 
 def fetch_boe_trimestre(days: int = 92) -> List[Dict]:
@@ -161,6 +185,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM regulatory_entries
     WHERE (published_date IS NULL OR published_date >= CURRENT_DATE - 92)
+      AND (tipo = 'regulacion' OR tipo IS NULL)
 
     ORDER BY published_date DESC NULLS LAST, scraped_at DESC
     LIMIT %(limit)s
@@ -203,6 +228,7 @@ def fetch_reg_espanola_q1() -> Dict:
         (LOWER(title) LIKE '%%circular%%') AS es_circular
     FROM   regulatory_entries
     WHERE  source = 'CNMC'
+      AND  (tipo = 'regulacion' OR tipo IS NULL)
     ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
     """
     with get_connection() as conn:
@@ -225,12 +251,14 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     entries        = fetch_recent(limit)
     boe_trimestre  = fetch_boe_trimestre(92)
     reg_espanola   = fetch_reg_espanola_q1()
+    consultas      = fetch_cnmc_consultas()
     payload = {
         "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
         "total":         len(entries),
         "entries":       entries,        # pestaña Todas
         "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre
         "reg_espanola":  reg_espanola,   # pestaña Regulación Española (Q1)
+        "cnmc_consultas": consultas,     # pestaña Consultas CNMC
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
