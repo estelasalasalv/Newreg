@@ -188,6 +188,9 @@ def fetch_reg_espanola_q1() -> Dict:
     WHERE  fecha BETWEEN %(ini)s AND %(fin)s
     ORDER  BY fecha DESC
     """
+    # CNMC: la web de CNMC no expone fechas por consulta, así que
+    # mostramos todas las entradas disponibles (consultas activas/recientes).
+    # Las fechadas se ordenan primero; las sin fecha (web scraping) al final.
     cnmc_sql = """
     SELECT
         source,
@@ -200,15 +203,13 @@ def fetch_reg_espanola_q1() -> Dict:
         (LOWER(title) LIKE '%%circular%%') AS es_circular
     FROM   regulatory_entries
     WHERE  source = 'CNMC'
-      AND  published_date BETWEEN %(ini)s AND %(fin)s
-    ORDER  BY published_date DESC
+    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
     """
-    params = {"ini": q1_ini, "fin": q1_fin}
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(boe_sql, params)
+            cur.execute(boe_sql, {"ini": q1_ini, "fin": q1_fin})
             boe_rows = [dict(r) for r in cur.fetchall()]
-            cur.execute(cnmc_sql, params)
+            cur.execute(cnmc_sql)
             cnmc_rows = [dict(r) for r in cur.fetchall()]
 
     return {
