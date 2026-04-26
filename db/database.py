@@ -4,7 +4,7 @@ import json
 import logging
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict
 
 logger = logging.getLogger(__name__)
@@ -226,7 +226,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     boe_trimestre  = fetch_boe_trimestre(92)
     reg_espanola   = fetch_reg_espanola_q1()
     payload = {
-        "updated_at":    datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),
+        "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
         "total":         len(entries),
         "entries":       entries,        # pestaña Todas
         "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre
