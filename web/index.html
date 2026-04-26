@@ -282,6 +282,25 @@
     /* ── Ocultar paneles inactivos ── */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
+
+    /* ── Tarjeta CNMC Q1 (más compacta que BOE) ── */
+    .cnmc-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cnmc);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.55rem;
+      transition: box-shadow 0.15s;
+    }
+    .cnmc-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
+    .cnmc-card h2 { font-size: 0.9rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.35rem; }
+    @media (min-width: 600px) { .cnmc-card h2 { font-size: 0.97rem; } }
+    .cnmc-card h2 a { color: var(--text); text-decoration: none; }
+    .cnmc-card h2 a:hover { color: var(--cnmc); text-decoration: underline; }
+    .cnmc-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; }
+    .cnmc-date { font-size: 0.75rem; font-weight: 600; color: var(--cnmc); background: var(--tag-bg-cnmc); padding: .12rem .45rem; border-radius: 4px; }
+    .cnmc-summary { font-size: 0.8rem; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   </style>
 </head>
 <body>
@@ -297,6 +316,7 @@
 <nav class="tabs" role="tablist">
   <button class="tab-btn active" data-tab="todas" role="tab">Todas las fuentes</button>
   <button class="tab-btn"        data-tab="boe"   role="tab">📋 BOE Último Trimestre</button>
+  <button class="tab-btn"        data-tab="esp"   role="tab">🇪🇸 Regulación Española</button>
 </nav>
 
 <!-- ══════════════════════ PANEL: TODAS ══════════════════════ -->
@@ -333,6 +353,45 @@
     <div id="boe-loading" class="state-msg">Cargando datos…</div>
     <div id="boe-entries"></div>
     <div id="boe-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
+  </main>
+</div>
+
+<!-- ══════════════════════ PANEL: REGULACIÓN ESPAÑOLA ══════════════════════ -->
+<div id="panel-esp" class="tab-panel">
+  <div class="boe-toolbar" style="flex-wrap:wrap; gap:0.6rem 1rem;">
+    <input type="search" id="esp-search" placeholder="Buscar en regulación española del Q1…"
+           autocomplete="off" spellcheck="false" />
+    <label id="esp-filter-imp" style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer;white-space:nowrap">
+      <input type="checkbox" id="chk-esp-importante" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer" />
+      Solo importantes
+    </label>
+    <span id="esp-range" style="font-size:.78rem;color:var(--muted);white-space:nowrap"></span>
+    <span id="esp-count" style="font-size:.8rem;color:var(--muted);margin-left:auto;white-space:nowrap"></span>
+  </div>
+  <main>
+    <div id="esp-loading" class="state-msg">Cargando datos…</div>
+
+    <!-- BOE Q1 -->
+    <div id="esp-boe-section">
+      <h3 style="font-size:.85rem;font-weight:700;color:var(--boe);text-transform:uppercase;
+                 letter-spacing:.06em;padding:.75rem 0 .4rem;border-bottom:2px solid var(--tag-bg-boe);
+                 margin-bottom:.6rem">
+        📄 BOE — Disposiciones energéticas <span id="esp-boe-count" style="font-weight:400;font-size:.8rem;color:var(--muted)"></span>
+      </h3>
+      <div id="esp-boe-entries"></div>
+    </div>
+
+    <!-- CNMC Q1 -->
+    <div id="esp-cnmc-section" style="margin-top:1.5rem">
+      <h3 style="font-size:.85rem;font-weight:700;color:var(--cnmc);text-transform:uppercase;
+                 letter-spacing:.06em;padding:.75rem 0 .4rem;border-bottom:2px solid var(--tag-bg-cnmc);
+                 margin-bottom:.6rem">
+        🏛️ CNMC — Consultas y resoluciones <span id="esp-cnmc-count" style="font-weight:400;font-size:.8rem;color:var(--muted)"></span>
+      </h3>
+      <div id="esp-cnmc-entries"></div>
+    </div>
+
+    <div id="esp-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
   </main>
 </div>
 
@@ -376,7 +435,8 @@
     return `${y}-${m}-${d}`;
   }
 
-  let boeTrimestre = [];
+  let boeTrimestre  = [];
+  let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
 
   // ── Carga de datos ─────────────────────────────────────────────────
   async function loadData(isRefresh = false) {
@@ -391,8 +451,10 @@
       document.getElementById('last-updated').textContent = 'Act.: ' + (json.updated_at || '—');
       allEntries   = json.entries        || [];
       boeTrimestre = json.boe_trimestre  || [];
+      regEspanola  = json.reg_espanola   || { boe: [], cnmc: [], year: '', rango: '' };
       renderTodas();
       renderBoe();
+      renderEsp();
       if (isRefresh) showToast('✓ Datos actualizados');
     } catch (e) {
       document.getElementById('loading').textContent     = 'Error: ' + e.message;
@@ -514,6 +576,92 @@
     `).join('');
   }
 
+  // ── RENDER: pestaña Regulación Española Q1 ───────────────────────
+  function renderEsp() {
+    const query    = document.getElementById('esp-search').value.toLowerCase().trim();
+    const soloImp  = document.getElementById('chk-esp-importante').checked;
+    document.getElementById('esp-loading').style.display = 'none';
+    document.getElementById('esp-range').textContent     = regEspanola.rango || '';
+
+    // ─ BOE Q1 ─
+    const boeFiltered = (regEspanola.boe || []).filter(e => {
+      if (soloImp && e.importante !== 'Sí') return false;
+      if (!query) return true;
+      return ((e.texto||'') + ' ' + (e.organismo||'') + ' ' + (e.seccion||'') +
+              ' ' + (e.tipo||'') + ' ' + (e.palabras_clave||'')).toLowerCase().includes(query);
+    });
+
+    document.getElementById('esp-boe-count').textContent =
+      '(' + boeFiltered.length + ' entrada' + (boeFiltered.length !== 1 ? 's' : '') + ')';
+
+    document.getElementById('esp-boe-entries').innerHTML = boeFiltered.length
+      ? boeFiltered.map(e => `
+        <div class="boe-card">
+          <div class="boe-card-header">
+            <span class="boe-date">📅 ${e.fecha || '—'}</span>
+            ${e.tipo ? `<span class="badge badge-imp" style="font-size:.72rem">${escHtml(e.tipo)}</span>` : ''}
+          </div>
+          <h2>${e.enlace
+            ? `<a href="${e.enlace}" target="_blank" rel="noopener">${escHtml(e.texto)}</a>`
+            : escHtml(e.texto)}</h2>
+          <div class="boe-fields">
+            <div class="boe-field">
+              <span class="boe-field-label">Sección</span>
+              <span class="boe-field-value">${escHtml(e.seccion) || '—'}</span>
+            </div>
+            <div class="boe-field">
+              <span class="boe-field-label">Organismo</span>
+              <span class="boe-field-value">${escHtml(e.organismo) || '—'}</span>
+            </div>
+            <div class="boe-field">
+              <span class="boe-field-label">Subsección</span>
+              <span class="boe-field-value">${escHtml(e.subseccion) || '—'}</span>
+            </div>
+            ${e.palabras_clave ? `
+            <div class="boe-field" style="grid-column:1/-1">
+              <span class="boe-field-label">Palabras clave</span>
+              <span class="boe-field-value">${escHtml(e.palabras_clave)}</span>
+            </div>` : ''}
+          </div>
+          <div class="boe-badges">
+            ${e.importante === 'Sí'      ? '<span class="badge badge-imp">⚖️ Importante</span>' : ''}
+            ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
+          </div>
+        </div>`).join('')
+      : '<p class="state-msg" style="padding:1rem">Sin resultados BOE para este filtro.</p>';
+
+    // ─ CNMC Q1 ─
+    const cnmcFiltered = (regEspanola.cnmc || []).filter(e => {
+      if (soloImp && !e.es_circular) return false;
+      if (!query) return true;
+      return ((e.title||'') + ' ' + (e.department||'') + ' ' + (e.summary||'')).toLowerCase().includes(query);
+    });
+
+    document.getElementById('esp-cnmc-count').textContent =
+      '(' + cnmcFiltered.length + ' entrada' + (cnmcFiltered.length !== 1 ? 's' : '') + ')';
+
+    document.getElementById('esp-cnmc-entries').innerHTML = cnmcFiltered.length
+      ? cnmcFiltered.map(e => `
+        <div class="cnmc-card">
+          <div class="cnmc-meta">
+            ${e.published_date ? `<span class="cnmc-date">📅 ${e.published_date}</span>` : ''}
+            ${e.es_circular ? '<span class="badge badge-acc" style="font-size:.7rem">📋 Circular</span>' : ''}
+          </div>
+          <h2>${e.url
+            ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
+            : escHtml(e.title)}</h2>
+          ${e.summary ? `<p class="cnmc-summary">${escHtml(e.summary)}</p>` : ''}
+        </div>`).join('')
+      : '<p class="state-msg" style="padding:1rem">Sin resultados CNMC para este filtro.</p>';
+
+    // Vacío global
+    const total = boeFiltered.length + cnmcFiltered.length;
+    document.getElementById('esp-count').textContent =
+      total + ' entrada' + (total !== 1 ? 's' : '');
+    document.getElementById('esp-empty').style.display =
+      (total === 0 && query) ? 'block' : 'none';
+  }
+
   // ── Navegación entre pestañas ──────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -539,6 +687,8 @@
 
   document.getElementById('boe-search').addEventListener('input', renderBoe);
   document.getElementById('chk-importante').addEventListener('change', renderBoe);
+  document.getElementById('esp-search').addEventListener('input', renderEsp);
+  document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
 
   document.getElementById('btn-refresh').addEventListener('click', () => loadData(true));
   document.addEventListener('visibilitychange', () => {

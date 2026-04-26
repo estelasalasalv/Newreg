@@ -174,17 +174,67 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
     return [dict(r) for r in rows]
 
 
+def fetch_reg_espanola_q1() -> Dict:
+    """Devuelve BOE y CNMC del primer trimestre del año en curso."""
+    from datetime import date
+    year   = date.today().year
+    q1_ini = date(year, 1, 1).isoformat()
+    q1_fin = date(year, 3, 31).isoformat()
+
+    boe_sql = """
+    SELECT
+        TO_CHAR(fecha, 'DD/MM/YYYY') AS fecha,
+        fuente, seccion, tipo, organismo, subseccion,
+        texto, enlace, palabras_clave, importante, acceso_conexion, publicable
+    FROM   boe_entries
+    WHERE  fecha BETWEEN %(ini)s AND %(fin)s
+    ORDER  BY fecha DESC
+    """
+    cnmc_sql = """
+    SELECT
+        source,
+        title,
+        TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
+        url,
+        section,
+        department,
+        summary,
+        (LOWER(title) LIKE '%%circular%%') AS es_circular
+    FROM   regulatory_entries
+    WHERE  source = 'CNMC'
+      AND  published_date BETWEEN %(ini)s AND %(fin)s
+    ORDER  BY published_date DESC
+    """
+    params = {"ini": q1_ini, "fin": q1_fin}
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(boe_sql, params)
+            boe_rows = [dict(r) for r in cur.fetchall()]
+            cur.execute(cnmc_sql, params)
+            cnmc_rows = [dict(r) for r in cur.fetchall()]
+
+    return {
+        "year":  year,
+        "rango": f"01/01/{year} – 31/03/{year}",
+        "boe":   boe_rows,
+        "cnmc":  cnmc_rows,
+    }
+
+
 def export_to_json(path: str = "web/data.json", limit: int = 300):
     """Exporta datos al JSON que consume la web estática."""
     entries        = fetch_recent(limit)
     boe_trimestre  = fetch_boe_trimestre(92)
+    reg_espanola   = fetch_reg_espanola_q1()
     payload = {
-        "updated_at":     datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),
-        "total":          len(entries),
-        "entries":        entries,        # pestaña Todas
-        "boe_trimestre":  boe_trimestre,  # pestaña BOE Trimestre
+        "updated_at":    datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),
+        "total":         len(entries),
+        "entries":       entries,        # pestaña Todas
+        "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre
+        "reg_espanola":  reg_espanola,   # pestaña Regulación Española (Q1)
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
-    logger.info("Exportadas %d entradas totales / %d BOE trimestre → %s",
-                len(entries), len(boe_trimestre), path)
+    logger.info("Exportadas %d totales / %d BOE trim. / %d+%d Q1 → %s",
+                len(entries), len(boe_trimestre),
+                len(reg_espanola["boe"]), len(reg_espanola["cnmc"]), path)
