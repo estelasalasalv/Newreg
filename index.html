@@ -289,6 +289,40 @@
     .cnmc-date { font-size: 0.75rem; font-weight: 600; color: var(--cnmc); background: var(--tag-bg-cnmc); padding: .12rem .45rem; border-radius: 4px; }
     .cnmc-summary { font-size: 0.8rem; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
+    /* ── Tarjetas Consultas CNMC ── */
+    .con-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--cnmc);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 0.6rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+      transition: box-shadow 0.15s;
+    }
+    @media (min-width: 640px) {
+      .con-card { grid-template-columns: 1fr auto; align-items: start; }
+    }
+    .con-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
+    .con-card h2 { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
+    @media (min-width: 600px) { .con-card h2 { font-size: 1rem; } }
+    .con-card h2 a { color: var(--text); text-decoration: none; }
+    .con-card h2 a:hover { color: var(--cnmc); text-decoration: underline; }
+    .con-plazo {
+      background: var(--tag-bg-cnmc);
+      color: var(--cnmc);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      align-self: start;
+      margin-top: 0.1rem;
+    }
+    .con-plazo-empty { color: var(--muted); font-size: 0.75rem; font-style: italic; }
+
     /* ── Columnas Regulación Española ── */
     #esp-cols {
       display: grid;
@@ -359,6 +393,7 @@
   <button class="tab-btn active" data-tab="todas" role="tab">Todas las fuentes</button>
   <button class="tab-btn"        data-tab="boe"   role="tab">📋 BOE Último Trimestre</button>
   <button class="tab-btn"        data-tab="esp"   role="tab">🇪🇸 Regulación Española</button>
+  <button class="tab-btn"        data-tab="con"   role="tab">📬 Consultas CNMC</button>
 </nav>
 
 <!-- ══════════════════════ PANEL: TODAS ══════════════════════ -->
@@ -433,6 +468,20 @@
   <div id="esp-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
 </div>
 
+<!-- ══════════════════════ PANEL: CONSULTAS CNMC ══════════════════════ -->
+<div id="panel-con" class="tab-panel">
+  <div class="boe-toolbar">
+    <input type="search" id="con-search" placeholder="Buscar consulta CNMC…"
+           autocomplete="off" spellcheck="false" />
+    <span id="con-count" style="font-size:.8rem;color:var(--muted);margin-left:auto;white-space:nowrap"></span>
+  </div>
+  <main>
+    <div id="con-loading" class="state-msg">Cargando…</div>
+    <div id="con-entries"></div>
+    <div id="con-empty" class="state-msg" style="display:none">No se encontraron resultados.</div>
+  </main>
+</div>
+
 <footer>
   Fuentes: <a href="https://www.boe.es/datosabiertos/" target="_blank" rel="noopener">API BOE</a> ·
   <a href="https://www.cnmc.es/consultas-publicas/energia" target="_blank" rel="noopener">CNMC Energía</a>
@@ -475,6 +524,7 @@
 
   let boeTrimestre  = [];
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
+  let cnmcConsultas = [];
 
   // ── Carga de datos ─────────────────────────────────────────────────
   async function loadData() {
@@ -485,10 +535,12 @@
       document.getElementById('last-updated').textContent = 'Act.: ' + (json.updated_at || '—');
       allEntries   = json.entries        || [];
       boeTrimestre = json.boe_trimestre  || [];
-      regEspanola  = json.reg_espanola   || { boe: [], cnmc: [], year: '', rango: '' };
+      regEspanola  = json.reg_espanola    || { boe: [], cnmc: [], year: '', rango: '' };
+      cnmcConsultas = json.cnmc_consultas || [];
       renderTodas();
       renderBoe();
       renderEsp();
+      renderConsultas();
     } catch (e) {
       document.getElementById('loading').textContent     = 'Error: ' + e.message;
       document.getElementById('boe-loading').textContent = 'Error: ' + e.message;
@@ -606,6 +658,33 @@
     `).join('');
   }
 
+  // ── RENDER: pestaña Consultas CNMC ───────────────────────────────
+  function renderConsultas() {
+    const query     = document.getElementById('con-search').value.toLowerCase().trim();
+    const container = document.getElementById('con-entries');
+    document.getElementById('con-loading').style.display = 'none';
+
+    const filtered = cnmcConsultas.filter(e =>
+      !query || (e.title + ' ' + (e.plazo || '')).toLowerCase().includes(query)
+    );
+
+    document.getElementById('con-count').textContent =
+      filtered.length + ' consulta' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('con-empty').style.display =
+      filtered.length ? 'none' : 'block';
+
+    container.innerHTML = filtered.map(e => `
+      <div class="con-card">
+        <h2>${e.url
+          ? `<a href="${e.url}" target="_blank" rel="noopener">${escHtml(e.title)}</a>`
+          : escHtml(e.title)}</h2>
+        ${e.plazo
+          ? `<span class="con-plazo">📅 ${escHtml(e.plazo)}</span>`
+          : `<span class="con-plazo-empty">Plazo no disponible</span>`}
+      </div>
+    `).join('');
+  }
+
   // ── RENDER: pestaña Regulación Española Q1 ───────────────────────
   function renderEsp() {
     const query    = document.getElementById('esp-search').value.toLowerCase().trim();
@@ -717,6 +796,7 @@
 
   document.getElementById('boe-search').addEventListener('input', renderBoe);
   document.getElementById('chk-importante').addEventListener('change', renderBoe);
+  document.getElementById('con-search').addEventListener('input', renderConsultas);
   document.getElementById('esp-search').addEventListener('input', renderEsp);
   document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
 
