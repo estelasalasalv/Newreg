@@ -234,23 +234,22 @@
     }
     .norm-section { font-size: 10.5px; color: var(--gray3); font-style: italic; }
 
-    /* Resumen e impacto */
-    .ai-resumen {
-      font-size: 11.5px; color: var(--gray4); line-height: 1.55;
-      padding: 6px 10px; background: var(--gray1);
-      border-left: 3px solid var(--gray2); border-radius: 0 6px 6px 0;
+    /* Resumen e impacto REE — estilo agente-regulatorio */
+    .norm-card-summary {
+      font-size: 12px;
+      color: var(--gray4);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .norm-card-impact {
+      font-size: 12px;
+      color: var(--text);
+      background: rgba(0,184,176,.07);
+      border-radius: 6px;
+      padding: 7px 10px;
       margin-bottom: 6px;
     }
-    .ai-ree {
-      font-size: 11.5px; color: #78350f; line-height: 1.55;
-      padding: 6px 10px; background: #fff7ed;
-      border-left: 3px solid var(--yellow); border-radius: 0 6px 6px 0;
-      margin-bottom: 6px;
-    }
-    .ai-label {
-      font-size: 9px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .8px; opacity: .6; display: block; margin-bottom: 2px;
-    }
+    .norm-card-impact strong { color: var(--teal2); }
 
     /* Badges de recencia */
     .badge {
@@ -611,8 +610,8 @@
       </div>
       ${sec||sub ? `<div class="norm-section">${esc(sec)}${sub?' › '+esc(sub):''}</div>` : ''}
       ${kw  ? `<div style="font-size:10.5px;color:var(--gray3);margin:4px 0 6px">🔑 ${esc(kw)}</div>` : ''}
-      ${summ? `<div class="ai-resumen"><span class="ai-label">Resumen</span>${esc(summ)}</div>` : ''}
-      ${ree ? `<div class="ai-ree"><span class="ai-label">⚡ Impacto en REE</span>${esc(ree)}</div>` : ''}
+      ${summ? `<div class="norm-card-summary">${esc(summ)}</div>` : ''}
+      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
 
@@ -631,7 +630,7 @@
         ${e.published_date ? `<span>${e.published_date}</span>` : ''}
         ${e.es_circular ? '<span class="badge badge-trimestre">📋 Circular</span>' : ''}
       </div>
-      ${ree ? `<div class="ai-ree"><span class="ai-label">⚡ Impacto en REE</span>${esc(ree)}</div>` : ''}
+      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
 
@@ -645,8 +644,8 @@
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
         ${e.plazo ? `<div class="consulta-plazo">📅 ${esc(e.plazo)}</div>` : ''}
-        ${e.summary ? `<div class="ai-resumen" style="margin-top:6px"><span class="ai-label">Descripción</span>${esc(e.summary.slice(0,200))}</div>` : ''}
-        ${ree ? `<div class="ai-ree"><span class="ai-label">⚡ Impacto en REE</span>${esc(ree)}</div>` : ''}
+        ${e.summary ? `<div class="norm-card-summary" style="margin-top:5px">${esc(e.summary.slice(0,200))}</div>` : ''}
+        ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
       </div>
       ${days !== null ? `
       <div style="text-align:center;min-width:44px">
