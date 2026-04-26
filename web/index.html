@@ -699,7 +699,7 @@
         <div class="entry-meta">
           <span class="tag tag-${e.source}">${e.source}</span>
           ${e.published_date ? `<span class="date">${e.published_date}</span>` : ''}
-          ${e.source === 'CNMC' ? recencyLabel(e.published_date) : ''}
+          ${recencyLabel(e.published_date)}
           ${e.department && e.department !== e.source
             ? `<span class="dept">· ${escHtml(e.department)}</span>` : ''}
         </div>
@@ -744,6 +744,7 @@
       <div class="boe-card">
         <div class="boe-card-header">
           <span class="boe-date">📅 ${e.fecha || '—'}</span>
+            ${recencyLabel(e.fecha)}
           ${e.tipo ? `<span class="badge badge-imp" style="font-size:.72rem">${escHtml(e.tipo)}</span>` : ''}
         </div>
         <h2>${e.enlace
@@ -841,6 +842,7 @@
         <div class="boe-card">
           <div class="boe-card-header">
             <span class="boe-date">📅 ${e.fecha || '—'}</span>
+            ${recencyLabel(e.fecha)}
             ${e.tipo ? `<span class="badge badge-imp" style="font-size:.72rem">${escHtml(e.tipo)}</span>` : ''}
           </div>
           <h2>${e.enlace
