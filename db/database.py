@@ -15,11 +15,9 @@ def get_connection():
 
 
 def init_db():
-    """Recrea las tablas desde cero con el nuevo esquema."""
+    """Crea las tablas si no existen. Nunca borra datos existentes."""
     sql = """
-    -- Tabla BOE con esquema completo de 13 campos
-    DROP TABLE IF EXISTS boe_entries CASCADE;
-    CREATE TABLE boe_entries (
+    CREATE TABLE IF NOT EXISTS boe_entries (
         id               SERIAL PRIMARY KEY,
         external_id      VARCHAR(200) UNIQUE NOT NULL,
         fecha            DATE,
@@ -37,9 +35,9 @@ def init_db():
         publicable       VARCHAR(3)    DEFAULT 'NO',
         scraped_at       TIMESTAMPTZ   DEFAULT NOW()
     );
-    CREATE INDEX idx_boe_fecha      ON boe_entries(fecha DESC);
-    CREATE INDEX idx_boe_importante ON boe_entries(importante);
-    CREATE INDEX idx_boe_acceso     ON boe_entries(acceso_conexion);
+    CREATE INDEX IF NOT EXISTS idx_boe_fecha      ON boe_entries(fecha DESC);
+    CREATE INDEX IF NOT EXISTS idx_boe_importante ON boe_entries(importante);
+    CREATE INDEX IF NOT EXISTS idx_boe_acceso     ON boe_entries(acceso_conexion);
 
     -- Tabla CNMC (sin cambios)
     CREATE TABLE IF NOT EXISTS regulatory_entries (
