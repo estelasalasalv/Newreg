@@ -19,7 +19,11 @@
       --cnmc: #0f7b55;
       --tag-bg-boe: #dbeafe;
       --tag-bg-cnmc: #d1fae5;
-      --refresh-size: 44px; /* mínimo área táctil recomendado */
+      --tag-bg-imp: #fef3c7;
+      --tag-imp: #92400e;
+      --tag-bg-acc: #ede9fe;
+      --tag-acc: #5b21b6;
+      --refresh-size: 44px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -206,6 +210,17 @@
     }
     .section-badge { font-size: 0.73rem; color: var(--muted); font-style: italic; }
 
+    .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-imp { background: var(--tag-bg-imp); color: var(--tag-imp); }
+    .badge-acc { background: var(--tag-bg-acc); color: var(--tag-acc); }
+
     /* ── ESTADOS ────────────────────────────────────────────────────── */
     #empty, #loading {
       text-align: center;
@@ -357,7 +372,11 @@
             : escHtml(e.title)}
         </h2>
         ${e.summary  ? `<p class="summary">${escHtml(e.summary)}</p>` : ''}
-        ${e.section  ? `<p class="section-badge">${escHtml(e.section)}</p>` : ''}
+        ${e.section  ? `<p class="section-badge">${escHtml(e.section)}${e.tipo ? ' › ' + escHtml(e.tipo) : ''}</p>` : ''}
+        <div class="badges">
+          ${e.importante      ? `<span class="badge badge-imp">⚖️ ${escHtml(e.importante)}</span>` : ''}
+          ${e.acceso_conexion ? `<span class="badge badge-acc">🔌 ${escHtml(e.acceso_conexion)}</span>` : ''}
+        </div>
       </div>
     `).join('');
   }
