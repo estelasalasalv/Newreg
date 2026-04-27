@@ -183,6 +183,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
                OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC'
           ELSE 'BOE'
         END                                                     AS filtro,
+        TO_CHAR(fecha, 'YYYY-MM-DD')                            AS fecha_real,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM boe_entries
 
@@ -202,11 +203,12 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         NULL::text                                              AS resumen,
         impacto_ree,
         source                                                  AS filtro,
+        TO_CHAR(published_date, 'YYYY-MM-DD')                   AS fecha_real,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM regulatory_entries
     WHERE (tipo = 'regulacion' OR tipo IS NULL)
 
-    ORDER BY published_date DESC NULLS LAST, scraped_at DESC
+    ORDER BY fecha_real DESC NULLS LAST, scraped_at DESC
     LIMIT %(limit)s
     """
     with get_connection() as conn:
