@@ -1,5 +1,5 @@
 {
-  "updated_at": "27/04/2026 03:08",
+  "updated_at": "27/04/2026 03:27",
   "total": 241,
   "entries": [
     {
@@ -11187,15 +11187,6 @@
   },
   "cnmc_consultas": [
     {
-      "title": "Trámite audiencia de la Circular por la que se establece la tasa de retribución financiera (TRF)",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-circular-por-la-que-se-establece-la-trf-2027-2032",
-      "plazo": "Desde 17 de Abr del 2026 hasta 18 de May del 2026",
-      "summary": null,
-      "impacto_ree": null,
-      "section": "Consultas públicas CNMC",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
       "title": "Consulta pública segundo trámite audiencia - Propuesta P.O 7.6. servicio de arranque autónomo",
       "url": "https://www.cnmc.es/consultas-publicas/energia/segundo-tramite-audiencia-propuesta-po-76-servicio-de-arranque-autonomo",
       "plazo": "Desde 13 de Feb del 2026 hasta 13 de Mar del 2026",
@@ -11250,9 +11241,9 @@
       "scraped_at": "27/04/2026 00:14"
     },
     {
-      "title": "Consulta pública Prop de resolución modificación PO eléctrico 7.5 (DCOOR/DE/003/26)",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/prop-de-resolucion-modificacion-po-electrico-75",
-      "plazo": "Desde 15 de Abr del 2026 hasta 29 de Abr del 2026",
+      "title": "Trámite audiencia de la Circular por la que se establece la tasa de retribución financiera (TRF)",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-circular-por-la-que-se-establece-la-trf-2027-2032",
+      "plazo": "Desde 17 de Abr del 2026 hasta 18 de May del 2026",
       "summary": null,
       "impacto_ree": null,
       "section": "Consultas públicas CNMC",
@@ -11289,6 +11280,15 @@
       "title": "Consulta pública retribución del operador del sistema eléctrico para 2026",
       "url": "https://www.cnmc.es/consultas-publicas/energia/retribucion-del-operador-del-sistema-electrico-para-2026",
       "plazo": "Desde 21 de Nov del 2025 hasta 05 de Dic del 2025",
+      "summary": null,
+      "impacto_ree": null,
+      "section": "Consultas públicas CNMC",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "title": "Consulta pública Prop de resolución modificación PO eléctrico 7.5 (DCOOR/DE/003/26)",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/prop-de-resolucion-modificacion-po-electrico-75",
+      "plazo": "Desde 15 de Abr del 2026 hasta 29 de Abr del 2026",
       "summary": null,
       "impacto_ree": null,
       "section": "Consultas públicas CNMC",
