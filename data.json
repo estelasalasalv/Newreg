@@ -1,5 +1,5 @@
 {
-  "updated_at": "27/04/2026 13:36",
+  "updated_at": "27/04/2026 14:09",
   "total": 400,
   "entries": [
     {
@@ -15262,14 +15262,14 @@
   "cnmc_consultas": [
     {
       "source": "MITERD",
-      "title": "Consulta Pública Previa para la elaboración de la Orden Ministerial por la que se regula el estándar de excelencia social y territorial de los proyectos de generación de energía renovable, almacenamiento e infraestructuras de red, en desarrollo del artículo 20 del Real Decreto-ley 7/2026, de 20 de marzo, por el que se aprueba el Plan Integral de Respuesta a la Crisis en Oriente Medio",
-      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-817.html",
-      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
+      "title": "Consulta pública previa sobre el sello de excelencia en el ámbito del biometano",
+      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-815.html",
+      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta domingo, 10 de mayo de 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": "15/04/2026",
       "estado": "Abierta",
-      "sector": "electricidad",
+      "sector": "gas",
       "scraped_at": "27/04/2026 03:21"
     },
     {
@@ -15346,20 +15346,20 @@
     },
     {
       "source": "MITERD",
-      "title": "Consulta pública previa sobre el sello de excelencia en el ámbito del biometano",
-      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-815.html",
-      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta domingo, 10 de mayo de 2026",
+      "title": "Consulta pública previa para la elaboración de la Orden de la persona titular del Ministerio para la Transición Ecológica y el Reto Demográfico por la que se desarrollan las condiciones y criterios para la valoración del cumplimiento de la obligación de retorno de beneficios a ciudadanos y comunidades locales en las proximidades de instalaciones de producción de energía eléctrica, en desarrollo del artículo 26.3.k) de la Ley 24/2013, de 26 de diciembre, del Sector Eléctrico, en la redacción dada por la disposición final octava, apartado cinco, del Real Decreto-ley 7/2026, de 20 de marzo",
+      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-818.html",
+      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": "15/04/2026",
       "estado": "Abierta",
-      "sector": "gas",
+      "sector": "electricidad",
       "scraped_at": "27/04/2026 03:21"
     },
     {
       "source": "MITERD",
-      "title": "Consulta pública previa para la elaboración de la Orden de la persona titular del Ministerio para la Transición Ecológica y el Reto Demográfico por la que se desarrollan las condiciones y criterios para la valoración del cumplimiento de la obligación de retorno de beneficios a ciudadanos y comunidades locales en las proximidades de instalaciones de producción de energía eléctrica, en desarrollo del artículo 26.3.k) de la Ley 24/2013, de 26 de diciembre, del Sector Eléctrico, en la redacción dada por la disposición final octava, apartado cinco, del Real Decreto-ley 7/2026, de 20 de marzo",
-      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-818.html",
+      "title": "Consulta Pública Previa para la elaboración de la Orden Ministerial por la que se regula el estándar de excelencia social y territorial de los proyectos de generación de energía renovable, almacenamiento e infraestructuras de red, en desarrollo del artículo 20 del Real Decreto-ley 7/2026, de 20 de marzo, por el que se aprueba el Plan Integral de Respuesta a la Crisis en Oriente Medio",
+      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-817.html",
       "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
       "summary": null,
       "impacto_ree": null,
@@ -15466,9 +15466,9 @@
     },
     {
       "source": "CNMC",
-      "title": "Trámite audiencia - Propuesta de resolución criterios de liquidación del OS días 28 y 29 abril 2025",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-resolucion-criterios-liquidacion-operador-sistema-28y29abril2025",
-      "plazo": "Desde 16 de Mar del 2026 hasta 15 de Abr del 2026",
+      "title": "Consulta pública Segunda prórroga proyecto piloto control tensión",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
+      "plazo": "Desde 19 de Dic del 2025 hasta 14 de Ene del 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": null,
@@ -15490,18 +15490,6 @@
     },
     {
       "source": "CNMC",
-      "title": "Trámite de audiencia modificación EEDD demanda transporte",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/modificacion-eedd-demanda-transporte",
-      "plazo": "Desde 30 de Ene del 2026 hasta 06 de Feb del 2026",
-      "summary": null,
-      "impacto_ree": null,
-      "published_date": null,
-      "estado": "Cerrada",
-      "sector": "electricidad",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "source": "CNMC",
       "title": "Consulta Pública Informe evaluación modelo retributivo transporte gas y plantas GNL",
       "url": "https://www.cnmc.es/consultas-publicas/energia/informe-evaluacion-modelo-retributivo-transporte-gas-y-plantas-gnl",
       "plazo": "Desde 01 de Dic del 2025 hasta 31 de Dic del 2025",
@@ -15510,6 +15498,18 @@
       "published_date": null,
       "estado": "Cerrada",
       "sector": "gas",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "source": "CNMC",
+      "title": "Trámite de audiencia modificación EEDD demanda transporte",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/modificacion-eedd-demanda-transporte",
+      "plazo": "Desde 30 de Ene del 2026 hasta 06 de Feb del 2026",
+      "summary": null,
+      "impacto_ree": null,
+      "published_date": null,
+      "estado": "Cerrada",
+      "sector": "electricidad",
       "scraped_at": "27/04/2026 00:14"
     },
     {
@@ -15550,9 +15550,9 @@
     },
     {
       "source": "CNMC",
-      "title": "Consulta pública Segunda prórroga proyecto piloto control tensión",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
-      "plazo": "Desde 19 de Dic del 2025 hasta 14 de Ene del 2026",
+      "title": "Consulta pública Solicitud exención CAM-NC",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/solicitud-exencion-cam-nc",
+      "plazo": "Desde 19 de Dic del 2025 hasta 07 de Ene del 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": null,
@@ -15562,11 +15562,11 @@
     },
     {
       "source": "CNMC",
-      "title": "Consulta pública Solicitud exención CAM-NC",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/solicitud-exencion-cam-nc",
-      "plazo": "Desde 19 de Dic del 2025 hasta 07 de Ene del 2026",
-      "summary": null,
-      "impacto_ree": null,
+      "title": "Consulta pública de modificación de los  P.O. 3.1, 3.2 y 7.2 del sistema eléctrico",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/consulta-publica-de-modificacion-de-los-po-31-32-y-72-del-sistema",
+      "plazo": "Desde 29 de Dic del 2025 hasta 14 de Ene del 2026",
+      "summary": "Consulta publica sobre la modificacion de los procedimientos de operacion 3.1, 3.2 y 7.2, que regulan la energia reactiva, las restricciones tecnicas y la calidad del suministro.",
+      "impacto_ree": "Muy alta - REE como Operador del Sistema debe adaptar los POs 3.1, 3.2 y 7.2 directamente afectados.",
       "published_date": null,
       "estado": "Cerrada",
       "sector": "electricidad",
@@ -15598,11 +15598,11 @@
     },
     {
       "source": "CNMC",
-      "title": "Consulta pública de modificación de los  P.O. 3.1, 3.2 y 7.2 del sistema eléctrico",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/consulta-publica-de-modificacion-de-los-po-31-32-y-72-del-sistema",
-      "plazo": "Desde 29 de Dic del 2025 hasta 14 de Ene del 2026",
-      "summary": "Consulta publica sobre la modificacion de los procedimientos de operacion 3.1, 3.2 y 7.2, que regulan la energia reactiva, las restricciones tecnicas y la calidad del suministro.",
-      "impacto_ree": "Muy alta - REE como Operador del Sistema debe adaptar los POs 3.1, 3.2 y 7.2 directamente afectados.",
+      "title": "Trámite audiencia - Propuesta de resolución criterios de liquidación del OS días 28 y 29 abril 2025",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-resolucion-criterios-liquidacion-operador-sistema-28y29abril2025",
+      "plazo": "Desde 16 de Mar del 2026 hasta 15 de Abr del 2026",
+      "summary": null,
+      "impacto_ree": null,
       "published_date": null,
       "estado": "Cerrada",
       "sector": "electricidad",
