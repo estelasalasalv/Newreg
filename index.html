@@ -878,35 +878,25 @@
     const el   = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    // Usar la fecha más reciente de los datos como referencia "hoy"
-    // (evita problemas cuando la fecha del navegador difiere de la de los datos)
-    const maxISO = allEntries.reduce((max, e) => {
-      const iso = toISO(e.published_date);
-      return iso > max ? iso : max;
-    }, '');
-    const [ry, rm, rd] = (maxISO || '2000-01-01').split('-').map(Number);
+    // fecha_real viene en formato YYYY-MM-DD de la BD → comparación directa
+    // La primera entrada es la más reciente (ORDER BY fecha DESC en SQL)
+    const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
+    const [ry, rm, rd] = refISO.split('-').map(Number);
     const refDate = new Date(ry, rm-1, rd);
     refDate.setDate(refDate.getDate() - dias);
     const cutoffISO = refDate.getFullYear() + '-'
       + String(refDate.getMonth()+1).padStart(2,'0') + '-'
       + String(refDate.getDate()).padStart(2,'0');
 
-    // Convertir DD/MM/YYYY → YYYY-MM-DD para comparar
-    function toISO(s) {
-      if (!s) return '';
-      const p = s.split('/');
-      return p.length === 3 ? p[2]+'-'+p[1]+'-'+p[0] : s;
-    }
-
     const filtered = allEntries.filter(e => {
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
-      const iso = toISO(e.published_date);
+      const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
       if (!q) return true;
       return ((e.title||'')+' '+(e.department||'')+' '+(e.section||'')).toLowerCase().includes(q);
     });
 
-    filtered.sort((a,b) => toISO(b.published_date).localeCompare(toISO(a.published_date)));
+    filtered.sort((a,b) => (b.fecha_real||'').localeCompare(a.fecha_real||''));
 
     const visible = filtered.slice(0, espPage * PAGE);
     document.getElementById('esp-count').textContent = filtered.length + ' entrada' + (filtered.length!==1?'s':'');
