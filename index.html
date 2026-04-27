@@ -380,6 +380,7 @@
     <div class="mobile-tab active"  data-panel="resumen">📊 Resumen</div>
     <div class="mobile-tab"         data-panel="esp"    >📑 Normativa</div>
     <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
+    <div class="mobile-tab"         data-panel="eu"     >🇪🇺 Europea</div>
     <div class="mobile-tab"         data-panel="acceso" >🔌 Acceso/Conexión</div>
     <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
@@ -400,6 +401,9 @@
       </div>
       <div class="sidebar-item" data-panel="con">
         <span class="icon">📬</span> Consultas Públicas
+      </div>
+      <div class="sidebar-item" data-panel="eu">
+        <span class="icon">🇪🇺</span> Normativa Europea
       </div>
       <div class="sidebar-item" data-panel="acceso">
         <span class="icon">🔌</span> Acceso y Conexión
@@ -451,6 +455,28 @@
         </div>
         <div id="resumen-con-entries"></div>
         <div id="resumen-con-empty" class="state-msg" style="display:none;padding:1rem">Sin consultas abiertas.</div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL: NORMATIVA EUROPEA ══ -->
+    <div id="panel-eu" class="panel">
+      <div class="search-bar">
+        <input type="search" id="eu-search" placeholder="Buscar en normativa europea (DOUE)…"
+               autocomplete="off" spellcheck="false"/>
+        <select id="eu-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todos los años</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="chk-eu-importante" style="accent-color:var(--teal);width:14px;height:14px"/>
+          Solo importantes
+        </label>
+        <span class="result-count" id="eu-count"></span>
+      </div>
+      <div id="eu-loading" class="state-msg">Cargando…</div>
+      <div id="eu-entries"></div>
+      <div id="eu-empty" class="state-msg" style="display:none">Sin resultados.</div>
+      <div style="text-align:center;margin-top:12px">
+        <button id="eu-mas" style="display:none;padding:8px 20px;background:var(--teal);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px">Mostrar más</button>
       </div>
     </div>
 
@@ -548,6 +574,7 @@
   let allEntries    = [];
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
   let accesoDatos   = [];
+  let eurlex        = [];
   const PAGE = 50;  // entradas por página
   let todasPage = 1;
   let acPage    = 1;
@@ -657,6 +684,7 @@
       regEspanola   = json.reg_espanola   || { boe:[], cnmc:[], year:'', rango:'' };
       cnmcConsultas = json.cnmc_consultas || [];
       accesoDatos   = json.acceso_conexion  || [];
+      eurlex        = json.eurlex           || [];
       poblarSelectAnios();
       renderAll();
     } catch(e) {
@@ -668,7 +696,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderAcceso(); renderEsp(); renderConsultas();
+    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -827,6 +855,55 @@
   }
 
   // ── RENDER: Acceso y Conexión ─────────────────────────────────
+
+  let euPage = 1;
+  function renderEu() {
+    const q    = document.getElementById('eu-search').value.toLowerCase().trim();
+    const yr   = document.getElementById('eu-year').value;
+    const soloImp = document.getElementById('chk-eu-importante').checked;
+    const el   = document.getElementById('eu-entries');
+    document.getElementById('eu-loading').style.display = 'none';
+
+    const filtered = eurlex.filter(e => {
+      if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
+      if (soloImp && e.importante !== 'Sí') return false;
+      if (yr && String(e.anio) !== yr) return false;
+      if (!q) return true;
+      return ((e.texto||'')+' '+(e.tipo||'')).toLowerCase().includes(q);
+    });
+
+    filtered.sort((a,b) => (b.fecha_real||'').localeCompare(a.fecha_real||''));
+
+    const visible = filtered.slice(0, euPage * PAGE);
+    document.getElementById('eu-count').textContent =
+      filtered.length + ' acto' + (filtered.length!==1?'s':'');
+    document.getElementById('eu-empty').style.display = filtered.length ? 'none' : 'block';
+    const masBtn = document.getElementById('eu-mas');
+    if (masBtn) masBtn.style.display = visible.length < filtered.length ? 'block' : 'none';
+
+    el.innerHTML = visible.map(e => {
+      const imp = e.importante === 'Sí';
+      return '<div class="norm-card" style="border-left-color:#003399">' +
+        '<div class="norm-header">' +
+          '<div class="norm-title">' + (e.enlace ? '<a href="'+esc(e.enlace)+'" target="_blank" rel="noopener">'+esc(e.texto)+'</a>' : esc(e.texto)) + '</div>' +
+          recencyLabel(e.published_date || e.fecha) +
+        '</div>' +
+        '<div class="norm-meta">' +
+          (e.tipo ? '<span class="type-chip'+(imp?' imp':'')+'">'+esc(e.tipo)+'</span>' : '') +
+          (e.fecha ? '<span>'+e.fecha+'</span>' : '') +
+          '<span class="org-chip" style="background:rgba(0,51,153,.1);color:#003399">🇪🇺 DOUE</span>' +
+        '</div>' +
+        (e.resumen ? '<div class="norm-card-summary">'+esc(e.resumen)+'</div>' : '') +
+      '</div>';
+    }).join('');
+
+    // Poblar select de años UE
+    const sel = document.getElementById('eu-year');
+    const existingYears = [...sel.options].map(o=>o.value);
+    const years = [...new Set(eurlex.map(e=>String(e.anio)).filter(Boolean))].sort((a,b)=>b-a);
+    years.forEach(y => { if(!existingYears.includes(y)){const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o);}});
+  }
+
   function renderAcceso() {
     const q    = document.getElementById('ac-search').value.toLowerCase().trim();
     const yr   = document.getElementById('ac-year').value;
@@ -1000,6 +1077,11 @@
   document.getElementById('search').addEventListener('input', () => { todasPage=1; renderTodas(); });
   document.getElementById('todas-year').addEventListener('change', () => { todasPage=1; renderTodas(); });
   document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
+  document.getElementById('eu-search').addEventListener('input', () => { euPage=1; renderEu(); });
+  document.getElementById('eu-year').addEventListener('change', () => { euPage=1; renderEu(); });
+  document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
+  const euMasBtn = document.getElementById('eu-mas');
+  if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
