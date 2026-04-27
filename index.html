@@ -378,7 +378,7 @@
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
     <div class="mobile-tab active"  data-panel="todas">📋 Todas</div>
-    <div class="mobile-tab"         data-panel="esp"  >🇪🇸 Q1</div>
+    <div class="mobile-tab"         data-panel="esp"  >📑 Normativa</div>
     <div class="mobile-tab"         data-panel="con"  >📬 Consultas</div>
   </div>
 </nav>
@@ -394,7 +394,7 @@
         <span class="icon">📋</span> Todas las fuentes
       </div>
       <div class="sidebar-item" data-panel="esp">
-        <span class="icon">🇪🇸</span> Regulación Española Q1
+        <span class="icon">🇪🇸</span> Normativa
       </div>
       <div class="sidebar-item" data-panel="con">
         <span class="icon">📬</span> Consultas Públicas
@@ -423,7 +423,7 @@
         </label>
         <label class="imp-label" style="margin-top:6px">
           <input type="checkbox" id="chk-esp-importante"/>
-          Q1 importantes
+          Solo importantes
         </label>
       </div>
     </div>
@@ -445,12 +445,12 @@
     </div>
 
     <!-- ══ PANEL: BOE TRIMESTRE ══ -->
-    <!-- ══ PANEL: REGULACIÓN ESPAÑOLA Q1 ══ -->
+    <!-- ══ PANEL: NORMATIVA ══ -->
     <div id="panel-esp" class="panel">
       <div class="search-bar">
-        <input type="search" id="esp-search" placeholder="Buscar en Regulación Española Q1…"
+        <input type="search" id="esp-search" placeholder="Buscar en Normativa…"
                autocomplete="off" spellcheck="false"/>
-        <span id="esp-range" style="font-size:11px;color:var(--gray3)"></span>
+        
         <span class="result-count" id="esp-count"></span>
       </div>
       <div id="esp-loading" class="state-msg">Cargando…</div>
@@ -660,15 +660,31 @@
 
   function consultaCard(e) {
     const days    = daysRemaining(e.plazo);
+    const cerrada = (e.estado||'Abierta') === 'Cerrada' || (days !== null && days < 0);
     const ree     = e.impacto_ree || reeImpact('', e.title||'');
-    const abierta = (e.estado||'Abierta') === 'Abierta';
     const org     = e.source || 'CNMC';
     const orgCls  = org === 'CNMC' ? 'badge-cnmc' : 'badge-miterd';
+    const resumen = e.summary || '';
+
+    // Indicador de plazo
+    let plazoHtml = '';
+    if (cerrada) {
+      plazoHtml = `<div style="text-align:center;min-width:56px">
+        <div style="font-size:11px;font-weight:700;color:var(--gray3);text-transform:uppercase;letter-spacing:.5px">Finalizada</div>
+      </div>`;
+    } else if (days !== null) {
+      const col = days <= 7 ? '#e53935' : days <= 30 ? '#f9a825' : 'var(--teal2)';
+      plazoHtml = `<div style="text-align:center;min-width:56px">
+        <div class="days-badge" style="color:${col}">${days}</div>
+        <div class="days-label">días</div>
+      </div>`;
+    }
+
     return `
-    <div class="consulta-card ${abierta ? '' : 'cerrada'}">
+    <div class="consulta-card ${cerrada ? 'cerrada' : ''}">
       <div>
         <div class="consulta-badges">
-          <span class="badge ${abierta ? 'badge-open' : 'badge-closed'}">${abierta ? 'Abierta' : 'Cerrada'}</span>
+          <span class="badge ${cerrada ? 'badge-closed' : 'badge-open'}">${cerrada ? 'Finalizada' : 'Abierta'}</span>
           <span class="badge ${orgCls}">${org}</span>
           ${e.section && e.section !== 'Consultas CNMC' && e.section !== 'Consultas MITERD'
             ? `<span class="badge badge-closed">${esc(e.section)}</span>` : ''}
@@ -677,14 +693,10 @@
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
         ${e.plazo ? `<div class="consulta-fechas">📅 ${esc(e.plazo)}</div>` : ''}
-        ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,220))}</div>` : ''}
+        ${resumen ? `<div class="norm-card-summary">${esc(resumen.slice(0,240))}</div>` : ''}
         ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
       </div>
-      ${days !== null && days >= 0 ? `
-      <div style="text-align:center;min-width:48px">
-        <div class="days-badge" style="color:${days<7?'#e53935':days<30?'#f9a825':'var(--teal2)'}">${days}</div>
-        <div class="days-label">días</div>
-      </div>` : ''}
+      ${plazoHtml}
     </div>`;
   }
 
@@ -712,7 +724,7 @@
     const q       = document.getElementById('esp-search').value.toLowerCase().trim();
     const soloImp = document.getElementById('chk-esp-importante').checked;
     document.getElementById('esp-loading').style.display = 'none';
-    document.getElementById('esp-range').textContent = regEspanola.rango || '';
+    
 
     const boeF = (regEspanola.boe||[]).filter(e => {
       if (soloImp && e.importante !== 'Sí') return false;
@@ -751,6 +763,21 @@
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
       if (!q) return true;
       return ((e.title||'')+' '+(e.plazo||'')+' '+(e.source||'')).toLowerCase().includes(q);
+    });
+
+    // Ordenar: abiertas con menos días primero; sin plazo al final; finalizadas al final
+    filtered.sort((a, b) => {
+      const da = daysRemaining(a.plazo);
+      const db = daysRemaining(b.plazo);
+      const ca = (a.estado||'Abierta') === 'Cerrada' || (da !== null && da < 0);
+      const cb = (b.estado||'Abierta') === 'Cerrada' || (db !== null && db < 0);
+      if (ca && !cb) return 1;
+      if (!ca && cb) return -1;
+      if (ca && cb) return 0;
+      if (da === null && db === null) return 0;
+      if (da === null) return 1;
+      if (db === null) return -1;
+      return da - db;
     });
 
     document.getElementById('con-count').textContent =
