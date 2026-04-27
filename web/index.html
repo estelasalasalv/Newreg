@@ -748,8 +748,8 @@
     }
 
     const normImp = allEntries.filter(e =>
-      e.source === 'BOE' && e.importante === 'Sí' && isThisWeek(e.published_date) &&
-      (activeSource === 'ALL' || activeSource === 'BOE')
+      e.importante === 'Sí' && isThisWeek(e.published_date) &&
+      (activeSource === 'ALL' || (e.filtro||e.source) === activeSource)
     );
     const normEl = document.getElementById('resumen-norm-entries');
     document.getElementById('resumen-norm-empty').style.display = normImp.length ? 'none' : 'block';
@@ -781,7 +781,7 @@
     const el = document.getElementById('entries');
     document.getElementById('loading').style.display = 'none';
     const filtered = allEntries.filter(e => {
-      if (activeSource !== 'ALL' && e.source !== activeSource) return false;
+      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (!q) return true;
       return (e.title+' '+(e.department||'')+' '+(e.section||'')+' '+(e.summary||'')).toLowerCase().includes(q);
     });
@@ -845,7 +845,7 @@
     const filtered = cnmcConsultas.filter(e => {
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;  // no hay consultas BOE
-      if (activeSource !== 'ALL' && e.source !== activeSource) return false;
+      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;

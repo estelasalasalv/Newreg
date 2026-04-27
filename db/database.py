@@ -174,6 +174,13 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         palabras_clave                                          AS summary,
         resumen,
         impacto_ree,
+        CASE
+          WHEN LOWER(organismo) LIKE '%%transici%%ecol%%' OR LOWER(organismo) LIKE '%%miterd%%'
+               OR LOWER(organismo) LIKE '%%miteco%%' THEN 'MITERD'
+          WHEN LOWER(organismo) LIKE '%%mercados%%competencia%%'
+               OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC'
+          ELSE 'BOE'
+        END                                                     AS filtro,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM boe_entries
     WHERE fecha >= CURRENT_DATE - 92
@@ -193,6 +200,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         summary,
         NULL::text                                              AS resumen,
         impacto_ree,
+        source                                                  AS filtro,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM regulatory_entries
     WHERE (published_date IS NULL OR published_date >= CURRENT_DATE - 92)
