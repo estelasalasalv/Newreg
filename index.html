@@ -878,46 +878,41 @@
     const el   = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - dias);
-    cutoff.setHours(0,0,0,0);
+    // Calcular fecha límite como string YYYY-MM-DD (comparación lexicográfica segura)
+    const t = new Date();
+    t.setDate(t.getDate() - dias);
+    const cutoffISO = t.getFullYear() + '-'
+      + String(t.getMonth()+1).padStart(2,'0') + '-'
+      + String(t.getDate()).padStart(2,'0');
 
-    function parseDate(s) {
-      if (!s) return null;
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
-        const [d,m,y] = s.split('/');
-        return new Date(+y, +m-1, +d);
-      }
-      return new Date(s);
+    // Convertir DD/MM/YYYY → YYYY-MM-DD para comparar
+    function toISO(s) {
+      if (!s) return '';
+      const p = s.split('/');
+      return p.length === 3 ? p[2]+'-'+p[1]+'-'+p[0] : s;
     }
 
     const filtered = allEntries.filter(e => {
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
-      const d = parseDate(e.published_date);
-      if (!d || isNaN(d)) return false;
-      if (d < cutoff) return false;
+      const iso = toISO(e.published_date);
+      if (!iso || iso < cutoffISO) return false;
       if (!q) return true;
       return ((e.title||'')+' '+(e.department||'')+' '+(e.section||'')).toLowerCase().includes(q);
     });
 
-    // Ordenar por fecha descendente
-    filtered.sort((a,b) => {
-      const da = parseDate(a.published_date), db = parseDate(b.published_date);
-      if (!da && !db) return 0;
-      if (!da) return 1; if (!db) return -1;
-      return db - da;
-    });
+    filtered.sort((a,b) => toISO(b.published_date).localeCompare(toISO(a.published_date)));
 
-    const visible  = filtered.slice(0, espPage * PAGE);
+    const visible = filtered.slice(0, espPage * PAGE);
     document.getElementById('esp-count').textContent = filtered.length + ' entrada' + (filtered.length!==1?'s':'');
     document.getElementById('esp-empty').style.display = filtered.length ? 'none' : 'block';
     const masBtn = document.getElementById('esp-mas');
     if (masBtn) masBtn.style.display = visible.length < filtered.length ? 'block' : 'none';
 
-    el.innerHTML = visible.map(e => {
-      if (e.source === 'BOE') return normCardBOE(e,'title','published_date','summary','section','department','tipo','url');
-      return cnmcRegCard(e);
-    }).join('');
+    el.innerHTML = visible.map(e =>
+      e.source === 'BOE'
+        ? normCardBOE(e,'title','published_date','summary','section','department','tipo','url')
+        : cnmcRegCard(e)
+    ).join('');
   }
 
   let activeOrg = 'ALL';
