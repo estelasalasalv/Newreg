@@ -686,7 +686,7 @@
         <div style="font-size:11px;font-weight:700;color:var(--gray3);text-transform:uppercase;letter-spacing:.5px">Finalizada</div>
       </div>`;
     } else if (days !== null) {
-      const col = days <= 7 ? '#e53935' : days <= 30 ? '#f9a825' : 'var(--teal2)';
+      const col = days <= 7 ? '#e53935' : days <= 20 ? '#f9a825' : '#2e7d32';
       plazoHtml = `<div style="text-align:center;min-width:56px">
         <div class="days-badge" style="color:${col}">${days}</div>
         <div class="days-label">días</div>
