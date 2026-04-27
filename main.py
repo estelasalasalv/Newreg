@@ -59,7 +59,7 @@ def main():
 
     # ── Exportar JSON para la web ───────────────────────────────────────
     logger.info("=== Exportando web/data.json ===")
-    export_to_json("web/data.json", limit=400)
+    export_to_json("web/data.json", limit=3000)
 
     logger.info("=== Listo. BOE=%d  CNMC=%d ===", boe_new, cnmc_new)
 
