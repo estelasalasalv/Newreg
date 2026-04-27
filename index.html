@@ -850,14 +850,7 @@
     document.getElementById('ac-empty').style.display = filtered.length ? 'none' : 'block';
     document.getElementById('ac-mas').style.display = visible.length < filtered.length ? 'block' : 'none';
 
-    el.innerHTML = visible.map(e => {
-      const acBadge = e.acceso_conexion && e.acceso_conexion !== 'No'
-        ? '<span class="badge badge-acc" style="font-size:.7rem">' + esc(e.acceso_conexion) + '</span>' : '';
-      return normCardBOE(e,'title','published_date','summary','section','department','tipo','url').replace('</div>
-    </div>',
-        acBadge + '</div>
-    </div>');
-    }).join('');
+    el.innerHTML = visible.map(e => normCardBOE(e,'title','published_date','summary','section','department','tipo','url')).join('');
   }
 
     /* ── Renders ─────────────────────────────────────────────────── */
