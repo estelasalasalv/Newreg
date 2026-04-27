@@ -310,7 +310,7 @@ def scrape(days_back: int = 1) -> List[Dict]:
 
     for offset in range(days_back):
         date = datetime.now() - timedelta(days=offset)
-        if date.weekday() >= 5:   # sin sábado ni domingo
+        if date.weekday() == 6:   # el BOE no publica los domingos
             continue
         fecha = date.strftime("%Y%m%d")
         url   = BOE_API.format(fecha=fecha)
