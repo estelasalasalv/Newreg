@@ -22,6 +22,15 @@ ENERGY_TERMS = [
     "circular","cir/de","rap/de","cnmc/de",
 ]
 
+
+_GAS_RE = re.compile(r'gas natural|regasificaci|distribuc.*gas|transporte.*gas|biometano|gnl|gasif|peajes.*gas|pr.rroga.*gas', re.IGNORECASE)
+_TELCO_RE = re.compile(r'telecomunicaci|audiovisual|postal|ferroviario', re.IGNORECASE)
+
+def _detect_sector(title: str) -> str:
+    if _GAS_RE.search(title): return 'gas'
+    if _TELCO_RE.search(title): return 'otros'
+    return 'electricidad'
+
 _HEADERS = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 
 _MONTHS = {
@@ -118,6 +127,7 @@ def _extract(soup: BeautifulSoup) -> List[Dict]:
             "summary":        None,
             "plazo":          None,
             "estado":         estado,
+            "sector":         _detect_sector(title),
         })
     return entries
 

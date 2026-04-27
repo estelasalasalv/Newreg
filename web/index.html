@@ -500,6 +500,12 @@
           <button class="org-filter" data-org="MITERD">MITERD</button>
           <button class="org-filter" data-org="Abierta">Solo abiertas</button>
         </div>
+        <button id="btn-otros-sectores" style="
+          padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
+          border:1px solid var(--gray2); background:var(--white); cursor:pointer;
+          color:var(--gray4); transition:all .15s; margin-left:auto;">
+          + Ver otros sectores
+        </button>
         <span class="result-count" id="con-count"></span>
       </div>
       <div id="con-loading" class="state-msg">Cargando…</div>
@@ -836,15 +842,28 @@
   }
 
   let activeOrg = 'ALL';
+  let mostrarOtrosSectores = false;
 
   function renderConsultas() {
     const q  = document.getElementById('con-search').value.toLowerCase().trim();
     const el = document.getElementById('con-entries');
     document.getElementById('con-loading').style.display = 'none';
 
+    const otrosCount = cnmcConsultas.filter(e => e.sector && e.sector !== 'electricidad').length;
+    const btn = document.getElementById('btn-otros-sectores');
+    if (btn) {
+      btn.textContent = mostrarOtrosSectores
+        ? '− Ocultar otros sectores'
+        : `+ Ver otros sectores (${otrosCount})`;
+      btn.style.background = mostrarOtrosSectores ? 'var(--teal)' : '';
+      btn.style.color      = mostrarOtrosSectores ? 'var(--navy)' : '';
+    }
+
     const filtered = cnmcConsultas.filter(e => {
+      // Ocultar otros sectores salvo que el botón esté activo
+      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad') return false;
       // Filtro de fuente global (sidebar)
-      if (activeSource === 'BOE') return false;  // no hay consultas BOE
+      if (activeSource === 'BOE') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
@@ -909,6 +928,10 @@
   document.getElementById('search').addEventListener('input', renderTodas);
   document.getElementById('esp-search').addEventListener('input', renderEsp);
   document.getElementById('con-search').addEventListener('input', renderConsultas);
+  document.getElementById('btn-otros-sectores').addEventListener('click', () => {
+    mostrarOtrosSectores = !mostrarOtrosSectores;
+    renderConsultas();
+  });
   document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
 
   document.querySelectorAll('.org-filter').forEach(btn => {

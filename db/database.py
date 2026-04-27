@@ -99,18 +99,19 @@ def upsert_entries(entries: List[Dict]) -> int:
         return 0
     sql = """
     INSERT INTO regulatory_entries
-        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo, estado)
+        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo, estado, sector)
     VALUES
         (%(source)s, %(external_id)s, %(title)s, %(published_date)s,
          %(url)s, %(section)s, %(department)s, %(summary)s,
-         %(tipo)s, %(plazo)s, %(estado)s)
+         %(tipo)s, %(plazo)s, %(estado)s, %(sector)s)
     ON CONFLICT (external_id) DO UPDATE SET plazo = EXCLUDED.plazo, estado = EXCLUDED.estado
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"), "estado": e.get("estado", "Abierta")}
+                row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
+                       "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad")}
                 cur.execute(sql, row)
                 inserted += cur.rowcount
         conn.commit()
@@ -123,6 +124,7 @@ def fetch_cnmc_consultas() -> List[Dict]:
     SELECT source, title, url, plazo, summary, impacto_ree,
            TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
            COALESCE(estado, 'Abierta') AS estado,
+           COALESCE(sector, 'electricidad') AS sector,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
     FROM   regulatory_entries
     WHERE  source IN ('CNMC', 'MITERD')
