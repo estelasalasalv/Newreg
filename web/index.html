@@ -682,7 +682,7 @@
     const enlace = e[enlaceField] || '';
     const tipo   = e.tipo || '';
     const imp    = e.importante === 'Sí';
-    const summ   = e.resumen     || autoSummary(title);
+    const summ   = e.resumen     || '';
     const ree    = e.impacto_ree || reeImpact(kw, title);
     return `
     <div class="norm-card">
