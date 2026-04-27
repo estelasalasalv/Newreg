@@ -185,7 +185,6 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         END                                                     AS filtro,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM boe_entries
-    WHERE fecha >= CURRENT_DATE - 92
 
     UNION ALL
 
@@ -205,8 +204,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         source                                                  AS filtro,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM regulatory_entries
-    WHERE (published_date IS NULL OR published_date >= CURRENT_DATE - 92)
-      AND (tipo = 'regulacion' OR tipo IS NULL)
+    WHERE (tipo = 'regulacion' OR tipo IS NULL)
 
     ORDER BY published_date DESC NULLS LAST, scraped_at DESC
     LIMIT %(limit)s
@@ -214,6 +212,47 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, {"limit": limit})
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
+def fetch_acceso_conexion() -> List[Dict]:
+    """Devuelve todas las entradas BOE+consultas relacionadas con acceso y conexión."""
+    sql = """
+    SELECT
+        'BOE'                                                   AS source,
+        texto                                                   AS title,
+        TO_CHAR(fecha, 'DD/MM/YYYY')                           AS published_date,
+        EXTRACT(YEAR FROM fecha)::int                          AS anio,
+        enlace                                                  AS url,
+        seccion                                                 AS section,
+        organismo                                               AS department,
+        tipo, importante, acceso_conexion, palabras_clave AS summary,
+        resumen, impacto_ree,
+        CASE
+          WHEN LOWER(organismo) LIKE '%%transici%%ecol%%' OR LOWER(organismo) LIKE '%%miterd%%' THEN 'MITERD'
+          WHEN LOWER(organismo) LIKE '%%mercados%%competencia%%' OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC'
+          ELSE 'BOE'
+        END AS filtro
+    FROM boe_entries
+    WHERE acceso_conexion != 'No'
+    UNION ALL
+    SELECT
+        source, title,
+        TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
+        EXTRACT(YEAR FROM COALESCE(published_date, scraped_at::date))::int AS anio,
+        url, section, department,
+        NULL::text AS tipo, NULL::text AS importante, 'Acceso/Conexion' AS acceso_conexion,
+        summary, NULL::text AS resumen, impacto_ree, source AS filtro
+    FROM regulatory_entries
+    WHERE tipo = 'consulta'
+      AND (LOWER(title) LIKE '%%acceso%%' OR LOWER(title) LIKE '%%conexi%%'
+           OR LOWER(title) LIKE '%%peaje%%' OR LOWER(summary) LIKE '%%acceso%%')
+    ORDER BY published_date DESC NULLS LAST, anio DESC
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
             rows = cur.fetchall()
     return [dict(r) for r in rows]
 
@@ -273,6 +312,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     boe_trimestre  = fetch_boe_trimestre(92)
     reg_espanola   = fetch_reg_espanola_q1()
     consultas      = fetch_cnmc_consultas()
+    acceso_con     = fetch_acceso_conexion()
     payload = {
         "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
         "total":         len(entries),
@@ -280,6 +320,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre
         "reg_espanola":  reg_espanola,   # pestaña Regulación Española (Q1)
         "cnmc_consultas": consultas,     # pestaña Consultas CNMC
+        "acceso_conexion": acceso_con,  # pestaña Acceso y Conexión
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)

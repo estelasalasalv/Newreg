@@ -380,6 +380,7 @@
     <div class="mobile-tab active"  data-panel="resumen">📊 Resumen</div>
     <div class="mobile-tab"         data-panel="esp"    >📑 Normativa</div>
     <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
+    <div class="mobile-tab"         data-panel="acceso" >🔌 Acceso/Conexión</div>
     <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
 </nav>
@@ -399,6 +400,9 @@
       </div>
       <div class="sidebar-item" data-panel="con">
         <span class="icon">📬</span> Consultas Públicas
+      </div>
+      <div class="sidebar-item" data-panel="acceso">
+        <span class="icon">🔌</span> Acceso y Conexión
       </div>
       <div class="sidebar-item" data-panel="todas">
         <span class="icon">📋</span> Todas las fuentes
@@ -450,16 +454,40 @@
       </div>
     </div>
 
+    <!-- ══ PANEL: ACCESO Y CONEXIÓN ══ -->
+    <div id="panel-acceso" class="panel">
+      <div class="search-bar">
+        <input type="search" id="ac-search" placeholder="Buscar en normativa de acceso y conexión…"
+               autocomplete="off" spellcheck="false"/>
+        <select id="ac-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todos los años</option>
+        </select>
+        <span class="result-count" id="ac-count"></span>
+      </div>
+      <div id="ac-loading" class="state-msg">Cargando…</div>
+      <div id="ac-entries"></div>
+      <div id="ac-empty" class="state-msg" style="display:none">Sin resultados.</div>
+      <div style="text-align:center;margin-top:12px">
+        <button id="ac-mas" style="display:none;padding:8px 20px;background:var(--teal);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px">
+          Mostrar más
+        </button>
+      </div>
+    </div>
+
     <!-- ══ PANEL: TODAS ══ -->
     <div id="panel-todas" class="panel">
       <div class="search-bar">
         <input type="search" id="search" placeholder="Buscar por título, organismo, palabras clave…"
                autocomplete="off" spellcheck="false"/>
+        <select id="todas-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"><option value="">Todos los años</option></select>
         <span class="result-count" id="count"></span>
       </div>
       <div id="loading" class="state-msg">Cargando datos…</div>
       <div id="entries"></div>
       <div id="empty" class="state-msg" style="display:none">Sin resultados.</div>
+      <div style="text-align:center;margin-top:12px">
+        <button id="todas-mas" style="display:none;padding:8px 20px;background:var(--teal);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px">Mostrar más</button>
+      </div>
     </div>
 
     <!-- ══ PANEL: BOE TRIMESTRE ══ -->
@@ -525,6 +553,10 @@
   /* ── Estado ────────────────────────────────────────────────── */
   let allEntries    = [];
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
+  let accesoDatos   = [];
+  const PAGE = 50;  // entradas por página
+  let todasPage = 1;
+  let acPage    = 1;
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
   let activePanel   = 'resumen';
@@ -629,6 +661,8 @@
       allEntries    = json.entries        || [];
       regEspanola   = json.reg_espanola   || { boe:[], cnmc:[], year:'', rango:'' };
       cnmcConsultas = json.cnmc_consultas || [];
+      accesoDatos   = json.acceso_conexion  || [];
+      poblarSelectAnios();
       renderAll();
     } catch(e) {
       ['loading','boe-loading','esp-loading','con-loading'].forEach(id => {
@@ -639,7 +673,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderEsp(); renderConsultas();
+    renderResumen(); renderTodas(); renderAcceso(); renderEsp(); renderConsultas();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -781,19 +815,68 @@
     conEl.innerHTML = conAbiertas.map(consultaCard).join('');
   }
 
+
+  // ── Poblar selects de año ────────────────────────────────────────
+  function poblarSelectAnios() {
+    const anios = [...new Set([
+      ...allEntries.map(e => e.published_date ? e.published_date.slice(-4) : null),
+      ...accesoDatos.map(e => e.anio ? String(e.anio) : null)
+    ].filter(Boolean))].sort((a,b)=>b-a);
+
+    ['todas-year','ac-year'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const existing = [...sel.options].map(o=>o.value);
+      anios.forEach(a => { if (!existing.includes(a)) { const o=document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o); }});
+    });
+  }
+
+  // ── RENDER: Acceso y Conexión ─────────────────────────────────
+  function renderAcceso() {
+    const q    = document.getElementById('ac-search').value.toLowerCase().trim();
+    const yr   = document.getElementById('ac-year').value;
+    const el   = document.getElementById('ac-entries');
+    document.getElementById('ac-loading').style.display = 'none';
+
+    const filtered = accesoDatos.filter(e => {
+      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      if (yr && String(e.anio) !== yr) return false;
+      if (!q) return true;
+      return ((e.title||'')+' '+(e.department||'')+' '+(e.acceso_conexion||'')).toLowerCase().includes(q);
+    });
+
+    const visible = filtered.slice(0, acPage * PAGE);
+    document.getElementById('ac-count').textContent = filtered.length + ' resultado' + (filtered.length!==1?'s':'');
+    document.getElementById('ac-empty').style.display = filtered.length ? 'none' : 'block';
+    document.getElementById('ac-mas').style.display = visible.length < filtered.length ? 'block' : 'none';
+
+    el.innerHTML = visible.map(e => {
+      const acBadge = e.acceso_conexion && e.acceso_conexion !== 'No'
+        ? '<span class="badge badge-acc" style="font-size:.7rem">' + esc(e.acceso_conexion) + '</span>' : '';
+      return normCardBOE(e,'title','published_date','summary','section','department','tipo','url').replace('</div>
+    </div>',
+        acBadge + '</div>
+    </div>');
+    }).join('');
+  }
+
     /* ── Renders ─────────────────────────────────────────────────── */
   function renderTodas() {
     const q  = document.getElementById('search').value.toLowerCase().trim();
     const el = document.getElementById('entries');
     document.getElementById('loading').style.display = 'none';
+    const todasYr = document.getElementById('todas-year').value;
     const filtered = allEntries.filter(e => {
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      if (todasYr && e.published_date && !e.published_date.endsWith(todasYr)) return false;
       if (!q) return true;
       return (e.title+' '+(e.department||'')+' '+(e.section||'')+' '+(e.summary||'')).toLowerCase().includes(q);
     });
+    const todasVisible = filtered.slice(0, todasPage * PAGE);
     document.getElementById('count').textContent = filtered.length + ' resultado' + (filtered.length!==1?'s':'');
+    document.getElementById('todas-mas').style.display = todasVisible.length < filtered.length ? 'block' : 'none';
     document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
-    el.innerHTML = filtered.map(e => {
+    el.innerHTML = todasVisible.map(e => {
       if (e.source === 'BOE') {
         return normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url');
       }
@@ -925,7 +1008,12 @@
   });
 
   /* ── Búsquedas ──────────────────────────────────────────────── */
-  document.getElementById('search').addEventListener('input', renderTodas);
+  document.getElementById('search').addEventListener('input', () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-year').addEventListener('change', () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
+  document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
+  document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
+  document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
   document.getElementById('esp-search').addEventListener('input', renderEsp);
   document.getElementById('con-search').addEventListener('input', renderConsultas);
   document.getElementById('btn-otros-sectores').addEventListener('click', () => {
