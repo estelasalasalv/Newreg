@@ -377,9 +377,10 @@
 <!-- MOBILE NAV -->
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
-    <div class="mobile-tab active"  data-panel="todas">📋 Todas</div>
-    <div class="mobile-tab"         data-panel="esp"  >📑 Normativa</div>
-    <div class="mobile-tab"         data-panel="con"  >📬 Consultas</div>
+    <div class="mobile-tab active"  data-panel="resumen">📊 Resumen</div>
+    <div class="mobile-tab"         data-panel="esp"    >📑 Normativa</div>
+    <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
+    <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
 </nav>
 
@@ -389,15 +390,18 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-section">
-      <div class="sidebar-label">Normativa</div>
-      <div class="sidebar-item active" data-panel="todas">
-        <span class="icon">📋</span> Todas las fuentes
+      <div class="sidebar-label">Navegación</div>
+      <div class="sidebar-item active" data-panel="resumen">
+        <span class="icon">📊</span> Resumen semanal
       </div>
       <div class="sidebar-item" data-panel="esp">
         <span class="icon">🇪🇸</span> Normativa
       </div>
       <div class="sidebar-item" data-panel="con">
         <span class="icon">📬</span> Consultas Públicas
+      </div>
+      <div class="sidebar-item" data-panel="todas">
+        <span class="icon">📋</span> Todas las fuentes
       </div>
     </div>
 
@@ -427,8 +431,26 @@
   <!-- MAIN -->
   <div class="main">
 
+    <!-- ══ PANEL: RESUMEN SEMANAL ══ -->
+    <div id="panel-resumen" class="panel active">
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray4);margin-bottom:10px">
+          📌 Normativa importante de la semana
+        </div>
+        <div id="resumen-norm-entries"></div>
+        <div id="resumen-norm-empty" class="state-msg" style="display:none;padding:1rem">Sin normativa importante esta semana.</div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray4);margin-bottom:10px">
+          📬 Consultas públicas abiertas
+        </div>
+        <div id="resumen-con-entries"></div>
+        <div id="resumen-con-empty" class="state-msg" style="display:none;padding:1rem">Sin consultas abiertas.</div>
+      </div>
+    </div>
+
     <!-- ══ PANEL: TODAS ══ -->
-    <div id="panel-todas" class="panel active">
+    <div id="panel-todas" class="panel">
       <div class="search-bar">
         <input type="search" id="search" placeholder="Buscar por título, organismo, palabras clave…"
                autocomplete="off" spellcheck="false"/>
@@ -498,7 +520,7 @@
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
-  let activePanel   = 'todas';
+  let activePanel   = 'resumen';
 
   /* ── Utilidades ─────────────────────────────────────────────── */
   function esc(s) {
@@ -610,7 +632,7 @@
   }
 
   function renderAll() {
-    renderTodas(); renderEsp(); renderConsultas();
+    renderResumen(); renderTodas(); renderEsp(); renderConsultas();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -708,7 +730,48 @@
     </div>`;
   }
 
-  /* ── Renders ─────────────────────────────────────────────────── */
+  function renderResumen() {
+    // Normativa importante de esta semana (badge-hoy o badge-semana)
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - (weekStart.getDay()+6)%7);
+    weekStart.setHours(0,0,0,0);
+
+    function isThisWeek(dateStr) {
+      if (!dateStr) return false;
+      let d;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        const [day,mon,yr] = dateStr.split('/');
+        d = new Date(+yr, +mon-1, +day);
+      } else { d = new Date(dateStr); }
+      return !isNaN(d) && d >= weekStart;
+    }
+
+    const normImp = allEntries.filter(e =>
+      e.source === 'BOE' && e.importante === 'Sí' && isThisWeek(e.published_date)
+    );
+    const normEl = document.getElementById('resumen-norm-entries');
+    document.getElementById('resumen-norm-empty').style.display = normImp.length ? 'none' : 'block';
+    normEl.innerHTML = normImp.map(e =>
+      normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
+    ).join('');
+
+    // Consultas abiertas (todas, sin filtro de fuente)
+    const conAbiertas = cnmcConsultas.filter(e => {
+      const d = daysRemaining(e.plazo);
+      return (e.estado||'Abierta') === 'Abierta' && (d === null || d >= 0);
+    });
+    conAbiertas.sort((a,b) => {
+      const da = daysRemaining(a.plazo), db = daysRemaining(b.plazo);
+      if (da===null && db===null) return 0;
+      if (da===null) return 1; if (db===null) return -1;
+      return da - db;
+    });
+    const conEl = document.getElementById('resumen-con-entries');
+    document.getElementById('resumen-con-empty').style.display = conAbiertas.length ? 'none' : 'block';
+    conEl.innerHTML = conAbiertas.map(consultaCard).join('');
+  }
+
+    /* ── Renders ─────────────────────────────────────────────────── */
   function renderTodas() {
     const q  = document.getElementById('search').value.toLowerCase().trim();
     const el = document.getElementById('entries');
