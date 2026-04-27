@@ -248,8 +248,14 @@ def fetch_acceso_conexion() -> List[Dict]:
         summary, NULL::text AS resumen, impacto_ree, source AS filtro
     FROM regulatory_entries
     WHERE tipo = 'consulta'
-      AND (LOWER(title) LIKE '%%acceso%%' OR LOWER(title) LIKE '%%conexi%%'
-           OR LOWER(title) LIKE '%%peaje%%' OR LOWER(summary) LIKE '%%acceso%%')
+      AND (
+        LOWER(title) LIKE '%%acceso%%' OR LOWER(title) LIKE '%%conexi%%'
+        OR LOWER(title) LIKE '%%peaje%%' OR LOWER(summary) LIKE '%%acceso%%'
+        OR LOWER(title) LIKE '%%nudo%%transici%%' OR LOWER(title) LIKE '%%manifestaci%%inter%%nudo%%'
+        OR LOWER(title) LIKE '%%precios el%%ctric%%' OR LOWER(title) LIKE '%%trf%%'
+        OR LOWER(title) LIKE '%%retribuci%%transporte%%' OR LOWER(title) LIKE '%%circular%%precio%%'
+        OR LOWER(summary) LIKE '%%acceso a la red%%' OR LOWER(summary) LIKE '%%conexi%%red%%'
+      )
     ORDER BY published_date DESC NULLS LAST, anio DESC
     """
     with get_connection() as conn:
