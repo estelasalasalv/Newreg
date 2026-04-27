@@ -231,6 +231,15 @@ _EXCLUDED_TITLES = [
     re.compile(r"certificado profesional.*intercambio geoterm", re.IGNORECASE),
     re.compile(r"instituto geogr[aá]fico nacional", re.IGNORECASE),
     re.compile(r"fiscal con destino", re.IGNORECASE),
+    re.compile(r"seguridad jur[ií]dica y fe p[uú]blica", re.IGNORECASE),
+]
+
+# Organismos aprobados para libre designación
+_LIBRE_DESIG_RE  = re.compile(r"libre designaci[oó]n", re.IGNORECASE)
+_LIBRE_DESIG_OK  = [
+    "transicion ecologica", "miterd", "miteco",
+    "mercados y la competencia", "cnmc",
+    "presidencia del gobierno", "jefatura del estado",
 ]
 
 
@@ -243,7 +252,15 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
         return False
     if any(p.search(titulo) for p in _EXCLUDED_TITLES):
         return False
+    # Libre designación solo de organismos energéticos aprobados
+    if _LIBRE_DESIG_RE.search(titulo):
+        dept_n = _norm(dept)
+        if not any(ok in dept_n for ok in _LIBRE_DESIG_OK):
+            return False
 
+    # Keywords solo en título (no en epígrafe) para evitar falsos positivos
+    # como "Impacto ambiental" que coincide con el nombre del epígrafe
+    norm_titulo = _norm(titulo)
     norm_titulo_ep = _norm(titulo + " " + epigrafe)
     dept_norm = _norm(dept)
 
@@ -254,9 +271,10 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
         # Si solo coincide por nombramiento/cese y dept no aprobado → saltar
         # (pero puede pasar igualmente la Regla 2)
 
-    # Regla 2: cualquier keyword energética en título o epígrafe
+    # Regla 2: keywords energéticas solo en el título
+    # (no en epígrafe para evitar que "Impacto ambiental" incluya todo lo de esa subsección)
     for _, pat in _KW_PATTERNS:
-        if pat.search(norm_titulo_ep):
+        if pat.search(norm_titulo):
             return True
 
     return False

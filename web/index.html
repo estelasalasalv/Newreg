@@ -879,11 +879,13 @@
     document.getElementById('esp-loading').style.display = 'none';
 
     // fecha_real viene en formato YYYY-MM-DD de la BD → comparación directa
-    // La primera entrada es la más reciente (ORDER BY fecha DESC en SQL)
     const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
     const [ry, rm, rd] = refISO.split('-').map(Number);
     const refDate = new Date(ry, rm-1, rd);
-    refDate.setDate(refDate.getDate() - dias);
+    // Si la fecha de referencia es lunes (día 1) y el selector es 7 días,
+    // ampliar automáticamente a 14 para incluir también la semana anterior
+    const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
+    refDate.setDate(refDate.getDate() - diasEfectivos);
     const cutoffISO = refDate.getFullYear() + '-'
       + String(refDate.getMonth()+1).padStart(2,'0') + '-'
       + String(refDate.getDate()).padStart(2,'0');
