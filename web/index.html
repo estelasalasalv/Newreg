@@ -734,21 +734,30 @@
     document.getElementById('esp-loading').style.display = 'none';
     
 
-    const boeF = (regEspanola.boe||[]).filter(e => {
+    const showBOE  = activeSource === 'ALL' || activeSource === 'BOE';
+    const showCNMC = activeSource === 'ALL' || activeSource === 'CNMC';
+
+    // Mostrar/ocultar columnas según fuente activa
+    const boeCol  = document.getElementById('esp-boe-entries')?.closest('.col-panel');
+    const cnmcCol = document.getElementById('esp-cnmc-entries')?.closest('.col-panel');
+    if (boeCol)  boeCol.style.display  = showBOE  ? '' : 'none';
+    if (cnmcCol) cnmcCol.style.display = showCNMC ? '' : 'none';
+
+    const boeF = showBOE ? (regEspanola.boe||[]).filter(e => {
       if (soloImp && e.importante !== 'Sí') return false;
       if (!q) return true;
       return (e.texto+' '+(e.organismo||'')+' '+(e.palabras_clave||'')).toLowerCase().includes(q);
-    });
+    }) : [];
     document.getElementById('esp-boe-count').textContent = '('+boeF.length+')';
     document.getElementById('esp-boe-entries').innerHTML = boeF.length
       ? boeF.map(e => normCardBOE(e,'texto','fecha','palabras_clave','seccion','organismo','subseccion','enlace')).join('')
       : '<p class="state-msg">Sin resultados BOE.</p>';
 
-    const cnmcF = (regEspanola.cnmc||[]).filter(e => {
+    const cnmcF = showCNMC ? (regEspanola.cnmc||[]).filter(e => {
       if (soloImp && !e.es_circular) return false;
       if (!q) return true;
       return ((e.title||'')+' '+(e.department||'')).toLowerCase().includes(q);
-    });
+    }) : [];
     document.getElementById('esp-cnmc-count').textContent = '('+cnmcF.length+')';
     document.getElementById('esp-cnmc-entries').innerHTML = cnmcF.length
       ? cnmcF.map(cnmcRegCard).join('')
@@ -767,6 +776,10 @@
     document.getElementById('con-loading').style.display = 'none';
 
     const filtered = cnmcConsultas.filter(e => {
+      // Filtro de fuente global (sidebar)
+      if (activeSource === 'BOE') return false;  // no hay consultas BOE
+      if (activeSource === 'CNMC' && e.source !== 'CNMC') return false;
+      // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
       if (!q) return true;
@@ -821,7 +834,7 @@
       document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeSource = btn.dataset.source;
-      renderTodas();
+      renderAll();
     });
   });
 
