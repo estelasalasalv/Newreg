@@ -25,6 +25,13 @@ def main():
     logger.info("=== Iniciando base de datos ===")
     init_db()
 
+    # ── BOE Sección V Anuncios (HTML) ──────────────────────────────────
+    logger.info("=== Scraping BOE Anuncios Sección V ===")
+    from scraper.boe_anuncios import scrape as scrape_anuncios
+    anuncios = scrape_anuncios(days_back=1)
+    anuncios_new = upsert_boe(anuncios)
+    logger.info("BOE Anuncios: %d encontrados, %d nuevos", len(anuncios), anuncios_new)
+
     # ── BOE: solo el día actual ─────────────────────────────────────────
     logger.info("=== Scraping BOE (hoy) ===")
     boe_entries = boe.scrape(days_back=1)
