@@ -878,12 +878,18 @@
     const el   = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    // Calcular fecha límite como string YYYY-MM-DD (comparación lexicográfica segura)
-    const t = new Date();
-    t.setDate(t.getDate() - dias);
-    const cutoffISO = t.getFullYear() + '-'
-      + String(t.getMonth()+1).padStart(2,'0') + '-'
-      + String(t.getDate()).padStart(2,'0');
+    // Usar la fecha más reciente de los datos como referencia "hoy"
+    // (evita problemas cuando la fecha del navegador difiere de la de los datos)
+    const maxISO = allEntries.reduce((max, e) => {
+      const iso = toISO(e.published_date);
+      return iso > max ? iso : max;
+    }, '');
+    const [ry, rm, rd] = (maxISO || '2000-01-01').split('-').map(Number);
+    const refDate = new Date(ry, rm-1, rd);
+    refDate.setDate(refDate.getDate() - dias);
+    const cutoffISO = refDate.getFullYear() + '-'
+      + String(refDate.getMonth()+1).padStart(2,'0') + '-'
+      + String(refDate.getDate()).padStart(2,'0');
 
     // Convertir DD/MM/YYYY → YYYY-MM-DD para comparar
     function toISO(s) {
