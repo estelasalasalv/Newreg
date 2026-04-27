@@ -719,6 +719,7 @@
           ${enlace ? `<a href="${esc(enlace)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title)}
         </div>
         ${recencyLabel(fecha)}
+        ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
       </div>
       <div class="norm-meta">
         ${tipo ? `<span class="type-chip ${imp?'imp':''}">${esc(tipo)}</span>` : ''}
