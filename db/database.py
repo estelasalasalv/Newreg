@@ -167,6 +167,8 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         importante,
         acceso_conexion,
         palabras_clave                                          AS summary,
+        resumen,
+        impacto_ree,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM boe_entries
     WHERE fecha >= CURRENT_DATE - 92
@@ -184,6 +186,8 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         NULL::text                                              AS importante,
         NULL::text                                              AS acceso_conexion,
         summary,
+        NULL::text                                              AS resumen,
+        impacto_ree,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at
     FROM regulatory_entries
     WHERE (published_date IS NULL OR published_date >= CURRENT_DATE - 92)

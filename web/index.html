@@ -592,8 +592,8 @@
     const enlace = e[enlaceField] || '';
     const tipo   = e.tipo || '';
     const imp    = e.importante === 'Sí';
-    const summ   = autoSummary(title);
-    const ree    = reeImpact(kw, title);
+    const summ   = e.resumen     || autoSummary(title);
+    const ree    = e.impacto_ree || reeImpact(kw, title);
     return `
     <div class="norm-card">
       <div class="norm-header">
