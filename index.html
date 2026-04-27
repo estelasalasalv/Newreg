@@ -377,9 +377,10 @@
 <!-- MOBILE NAV -->
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
-    <div class="mobile-tab active"  data-panel="todas">📋 Todas</div>
-    <div class="mobile-tab"         data-panel="esp"  >📑 Normativa</div>
-    <div class="mobile-tab"         data-panel="con"  >📬 Consultas</div>
+    <div class="mobile-tab active"  data-panel="resumen">📊 Resumen</div>
+    <div class="mobile-tab"         data-panel="esp"    >📑 Normativa</div>
+    <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
+    <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
 </nav>
 
@@ -389,15 +390,18 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-section">
-      <div class="sidebar-label">Normativa</div>
-      <div class="sidebar-item active" data-panel="todas">
-        <span class="icon">📋</span> Todas las fuentes
+      <div class="sidebar-label">Navegación</div>
+      <div class="sidebar-item active" data-panel="resumen">
+        <span class="icon">📊</span> Resumen semanal
       </div>
       <div class="sidebar-item" data-panel="esp">
         <span class="icon">🇪🇸</span> Normativa
       </div>
       <div class="sidebar-item" data-panel="con">
         <span class="icon">📬</span> Consultas Públicas
+      </div>
+      <div class="sidebar-item" data-panel="todas">
+        <span class="icon">📋</span> Todas las fuentes
       </div>
     </div>
 
@@ -415,13 +419,8 @@
     <div class="sidebar-divider"></div>
 
     <div class="sidebar-section">
-      <div class="sidebar-label">Solo importantes</div>
       <div style="padding:4px 16px">
         <label class="imp-label">
-          <input type="checkbox" id="chk-importante"/>
-          BOE (Ley / RD / Circular)
-        </label>
-        <label class="imp-label" style="margin-top:6px">
           <input type="checkbox" id="chk-esp-importante"/>
           Solo importantes
         </label>
@@ -432,8 +431,26 @@
   <!-- MAIN -->
   <div class="main">
 
+    <!-- ══ PANEL: RESUMEN SEMANAL ══ -->
+    <div id="panel-resumen" class="panel active">
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray4);margin-bottom:10px">
+          📌 Normativa importante de la semana
+        </div>
+        <div id="resumen-norm-entries"></div>
+        <div id="resumen-norm-empty" class="state-msg" style="display:none;padding:1rem">Sin normativa importante esta semana.</div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray4);margin-bottom:10px">
+          📬 Consultas públicas abiertas
+        </div>
+        <div id="resumen-con-entries"></div>
+        <div id="resumen-con-empty" class="state-msg" style="display:none;padding:1rem">Sin consultas abiertas.</div>
+      </div>
+    </div>
+
     <!-- ══ PANEL: TODAS ══ -->
-    <div id="panel-todas" class="panel active">
+    <div id="panel-todas" class="panel">
       <div class="search-bar">
         <input type="search" id="search" placeholder="Buscar por título, organismo, palabras clave…"
                autocomplete="off" spellcheck="false"/>
@@ -503,7 +520,7 @@
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
-  let activePanel   = 'todas';
+  let activePanel   = 'resumen';
 
   /* ── Utilidades ─────────────────────────────────────────────── */
   function esc(s) {
@@ -615,7 +632,7 @@
   }
 
   function renderAll() {
-    renderTodas(); renderEsp(); renderConsultas();
+    renderResumen(); renderTodas(); renderEsp(); renderConsultas();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -686,7 +703,7 @@
         <div style="font-size:11px;font-weight:700;color:var(--gray3);text-transform:uppercase;letter-spacing:.5px">Finalizada</div>
       </div>`;
     } else if (days !== null) {
-      const col = days <= 7 ? '#e53935' : days <= 30 ? '#f9a825' : 'var(--teal2)';
+      const col = days <= 7 ? '#e53935' : days <= 20 ? '#f9a825' : '#2e7d32';
       plazoHtml = `<div style="text-align:center;min-width:56px">
         <div class="days-badge" style="color:${col}">${days}</div>
         <div class="days-label">días</div>
@@ -713,7 +730,48 @@
     </div>`;
   }
 
-  /* ── Renders ─────────────────────────────────────────────────── */
+  function renderResumen() {
+    // Normativa importante de esta semana (badge-hoy o badge-semana)
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - (weekStart.getDay()+6)%7);
+    weekStart.setHours(0,0,0,0);
+
+    function isThisWeek(dateStr) {
+      if (!dateStr) return false;
+      let d;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        const [day,mon,yr] = dateStr.split('/');
+        d = new Date(+yr, +mon-1, +day);
+      } else { d = new Date(dateStr); }
+      return !isNaN(d) && d >= weekStart;
+    }
+
+    const normImp = allEntries.filter(e =>
+      e.source === 'BOE' && e.importante === 'Sí' && isThisWeek(e.published_date)
+    );
+    const normEl = document.getElementById('resumen-norm-entries');
+    document.getElementById('resumen-norm-empty').style.display = normImp.length ? 'none' : 'block';
+    normEl.innerHTML = normImp.map(e =>
+      normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
+    ).join('');
+
+    // Consultas abiertas (todas, sin filtro de fuente)
+    const conAbiertas = cnmcConsultas.filter(e => {
+      const d = daysRemaining(e.plazo);
+      return (e.estado||'Abierta') === 'Abierta' && (d === null || d >= 0);
+    });
+    conAbiertas.sort((a,b) => {
+      const da = daysRemaining(a.plazo), db = daysRemaining(b.plazo);
+      if (da===null && db===null) return 0;
+      if (da===null) return 1; if (db===null) return -1;
+      return da - db;
+    });
+    const conEl = document.getElementById('resumen-con-entries');
+    document.getElementById('resumen-con-empty').style.display = conAbiertas.length ? 'none' : 'block';
+    conEl.innerHTML = conAbiertas.map(consultaCard).join('');
+  }
+
+    /* ── Renders ─────────────────────────────────────────────────── */
   function renderTodas() {
     const q  = document.getElementById('search').value.toLowerCase().trim();
     const el = document.getElementById('entries');
@@ -739,21 +797,30 @@
     document.getElementById('esp-loading').style.display = 'none';
     
 
-    const boeF = (regEspanola.boe||[]).filter(e => {
+    const showBOE  = activeSource === 'ALL' || activeSource === 'BOE';
+    const showCNMC = activeSource === 'ALL' || activeSource === 'CNMC';
+
+    // Mostrar/ocultar columnas según fuente activa
+    const boeCol  = document.getElementById('esp-boe-entries')?.closest('.col-panel');
+    const cnmcCol = document.getElementById('esp-cnmc-entries')?.closest('.col-panel');
+    if (boeCol)  boeCol.style.display  = showBOE  ? '' : 'none';
+    if (cnmcCol) cnmcCol.style.display = showCNMC ? '' : 'none';
+
+    const boeF = showBOE ? (regEspanola.boe||[]).filter(e => {
       if (soloImp && e.importante !== 'Sí') return false;
       if (!q) return true;
       return (e.texto+' '+(e.organismo||'')+' '+(e.palabras_clave||'')).toLowerCase().includes(q);
-    });
+    }) : [];
     document.getElementById('esp-boe-count').textContent = '('+boeF.length+')';
     document.getElementById('esp-boe-entries').innerHTML = boeF.length
       ? boeF.map(e => normCardBOE(e,'texto','fecha','palabras_clave','seccion','organismo','subseccion','enlace')).join('')
       : '<p class="state-msg">Sin resultados BOE.</p>';
 
-    const cnmcF = (regEspanola.cnmc||[]).filter(e => {
+    const cnmcF = showCNMC ? (regEspanola.cnmc||[]).filter(e => {
       if (soloImp && !e.es_circular) return false;
       if (!q) return true;
       return ((e.title||'')+' '+(e.department||'')).toLowerCase().includes(q);
-    });
+    }) : [];
     document.getElementById('esp-cnmc-count').textContent = '('+cnmcF.length+')';
     document.getElementById('esp-cnmc-entries').innerHTML = cnmcF.length
       ? cnmcF.map(cnmcRegCard).join('')
@@ -772,6 +839,10 @@
     document.getElementById('con-loading').style.display = 'none';
 
     const filtered = cnmcConsultas.filter(e => {
+      // Filtro de fuente global (sidebar)
+      if (activeSource === 'BOE') return false;  // no hay consultas BOE
+      if (activeSource === 'CNMC' && e.source !== 'CNMC') return false;
+      // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
       if (!q) return true;
@@ -826,7 +897,7 @@
       document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeSource = btn.dataset.source;
-      renderTodas();
+      renderAll();
     });
   });
 
