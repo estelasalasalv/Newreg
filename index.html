@@ -490,31 +490,25 @@
       </div>
     </div>
 
-    <!-- ══ PANEL: BOE TRIMESTRE ══ -->
-    <!-- ══ PANEL: NORMATIVA ══ -->
+    <!-- ══ PANEL: NORMATIVA RECIENTE ══ -->
     <div id="panel-esp" class="panel">
       <div class="search-bar">
-        <input type="search" id="esp-search" placeholder="Buscar en Normativa…"
+        <input type="search" id="esp-search" placeholder="Buscar en normativa reciente…"
                autocomplete="off" spellcheck="false"/>
-        
+        <select id="esp-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="7">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
+          <option value="30">Último mes</option>
+          <option value="90">Últimos 3 meses</option>
+        </select>
         <span class="result-count" id="esp-count"></span>
       </div>
       <div id="esp-loading" class="state-msg">Cargando…</div>
-      <div class="col-grid">
-        <div class="col-panel">
-          <div class="col-header col-header-boe">
-            📄 BOE <span class="col-count" id="esp-boe-count"></span>
-          </div>
-          <div class="col-body" id="esp-boe-entries"></div>
-        </div>
-        <div class="col-panel">
-          <div class="col-header col-header-cnmc">
-            🏛️ CNMC <span class="col-count" id="esp-cnmc-count"></span>
-          </div>
-          <div class="col-body" id="esp-cnmc-entries"></div>
-        </div>
-      </div>
+      <div id="esp-entries"></div>
       <div id="esp-empty" class="state-msg" style="display:none">Sin resultados.</div>
+      <div style="text-align:center;margin-top:12px">
+        <button id="esp-mas" style="display:none;padding:8px 20px;background:var(--teal);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px">Mostrar más</button>
+      </div>
     </div>
 
     <!-- ══ PANEL: CONSULTAS PÚBLICAS (CNMC + MITERD) ══ -->
@@ -557,6 +551,7 @@
   const PAGE = 50;  // entradas por página
   let todasPage = 1;
   let acPage    = 1;
+  let espPage   = 1;
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
   let activePanel   = 'resumen';
@@ -878,43 +873,51 @@
   }
 
   function renderEsp() {
-    const q       = document.getElementById('esp-search').value.toLowerCase().trim();
-    const soloImp = document.getElementById('chk-esp-importante').checked;
+    const q    = document.getElementById('esp-search').value.toLowerCase().trim();
+    const dias = parseInt(document.getElementById('esp-dias').value || '14');
+    const el   = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
-    
 
-    const showBOE  = activeSource === 'ALL' || activeSource === 'BOE';
-    const showCNMC = activeSource === 'ALL' || activeSource === 'CNMC';
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - dias);
+    cutoff.setHours(0,0,0,0);
 
-    // Mostrar/ocultar columnas según fuente activa
-    const boeCol  = document.getElementById('esp-boe-entries')?.closest('.col-panel');
-    const cnmcCol = document.getElementById('esp-cnmc-entries')?.closest('.col-panel');
-    if (boeCol)  boeCol.style.display  = showBOE  ? '' : 'none';
-    if (cnmcCol) cnmcCol.style.display = showCNMC ? '' : 'none';
+    function parseDate(s) {
+      if (!s) return null;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+        const [d,m,y] = s.split('/');
+        return new Date(+y, +m-1, +d);
+      }
+      return new Date(s);
+    }
 
-    const boeF = showBOE ? (regEspanola.boe||[]).filter(e => {
-      if (soloImp && e.importante !== 'Sí') return false;
+    const filtered = allEntries.filter(e => {
+      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      const d = parseDate(e.published_date);
+      if (!d || isNaN(d)) return false;
+      if (d < cutoff) return false;
       if (!q) return true;
-      return (e.texto+' '+(e.organismo||'')+' '+(e.palabras_clave||'')).toLowerCase().includes(q);
-    }) : [];
-    document.getElementById('esp-boe-count').textContent = '('+boeF.length+')';
-    document.getElementById('esp-boe-entries').innerHTML = boeF.length
-      ? boeF.map(e => normCardBOE(e,'texto','fecha','palabras_clave','seccion','organismo','subseccion','enlace')).join('')
-      : '<p class="state-msg">Sin resultados BOE.</p>';
+      return ((e.title||'')+' '+(e.department||'')+' '+(e.section||'')).toLowerCase().includes(q);
+    });
 
-    const cnmcF = showCNMC ? (regEspanola.cnmc||[]).filter(e => {
-      if (soloImp && !e.es_circular) return false;
-      if (!q) return true;
-      return ((e.title||'')+' '+(e.department||'')).toLowerCase().includes(q);
-    }) : [];
-    document.getElementById('esp-cnmc-count').textContent = '('+cnmcF.length+')';
-    document.getElementById('esp-cnmc-entries').innerHTML = cnmcF.length
-      ? cnmcF.map(cnmcRegCard).join('')
-      : '<p class="state-msg">Sin resultados CNMC.</p>';
+    // Ordenar por fecha descendente
+    filtered.sort((a,b) => {
+      const da = parseDate(a.published_date), db = parseDate(b.published_date);
+      if (!da && !db) return 0;
+      if (!da) return 1; if (!db) return -1;
+      return db - da;
+    });
 
-    const total = boeF.length + cnmcF.length;
-    document.getElementById('esp-count').textContent = total + ' entrada' + (total!==1?'s':'');
-    document.getElementById('esp-empty').style.display = (total===0&&q) ? 'block' : 'none';
+    const visible  = filtered.slice(0, espPage * PAGE);
+    document.getElementById('esp-count').textContent = filtered.length + ' entrada' + (filtered.length!==1?'s':'');
+    document.getElementById('esp-empty').style.display = filtered.length ? 'none' : 'block';
+    const masBtn = document.getElementById('esp-mas');
+    if (masBtn) masBtn.style.display = visible.length < filtered.length ? 'block' : 'none';
+
+    el.innerHTML = visible.map(e => {
+      if (e.source === 'BOE') return normCardBOE(e,'title','published_date','summary','section','department','tipo','url');
+      return cnmcRegCard(e);
+    }).join('');
   }
 
   let activeOrg = 'ALL';
@@ -1007,13 +1010,16 @@
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
-  document.getElementById('esp-search').addEventListener('input', renderEsp);
+  document.getElementById('esp-search').addEventListener('input', () => { espPage=1; renderEsp(); });
+  document.getElementById('esp-dias').addEventListener('change', () => { espPage=1; renderEsp(); });
+  const espMasBtn = document.getElementById('esp-mas');
+  if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
   document.getElementById('btn-otros-sectores').addEventListener('click', () => {
     mostrarOtrosSectores = !mostrarOtrosSectores;
     renderConsultas();
   });
-  document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
+
 
   document.querySelectorAll('.org-filter').forEach(btn => {
     btn.addEventListener('click', () => {
