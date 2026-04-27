@@ -265,6 +265,48 @@ def fetch_acceso_conexion() -> List[Dict]:
     return [dict(r) for r in rows]
 
 
+def fetch_eurlex(limit: int = 500) -> List[Dict]:
+    """Devuelve normativa europea energética del DOUE."""
+    sql = """
+    SELECT
+        external_id, TO_CHAR(fecha,'DD/MM/YYYY') AS fecha,
+        EXTRACT(YEAR FROM fecha)::int             AS anio,
+        fuente, seccion, tipo, organismo, texto, enlace,
+        palabras_clave, resumen, importante, acceso_conexion,
+        TO_CHAR(fecha,'YYYY-MM-DD')               AS fecha_real
+    FROM   eurlex_entries
+    ORDER  BY fecha DESC NULLS LAST
+    LIMIT  %(limit)s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, {"limit": limit})
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
+def upsert_eurlex(entries: List[Dict]) -> int:
+    if not entries:
+        return 0
+    sql = """
+    INSERT INTO eurlex_entries
+        (external_id,fecha,fuente,seccion,tipo,organismo,subseccion,
+         texto,enlace,palabras_clave,resumen,importante,acceso_conexion,publicable)
+    VALUES
+        (%(external_id)s,%(fecha)s,%(fuente)s,%(seccion)s,%(tipo)s,%(organismo)s,%(subseccion)s,
+         %(texto)s,%(enlace)s,%(palabras_clave)s,%(resumen)s,%(importante)s,%(acceso_conexion)s,%(publicable)s)
+    ON CONFLICT (external_id) DO NOTHING
+    """
+    inserted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for e in entries:
+                cur.execute(sql, e)
+                inserted += cur.rowcount
+        conn.commit()
+    return inserted
+
+
 def fetch_reg_espanola_q1() -> Dict:
     """Devuelve BOE y CNMC del primer trimestre del año en curso."""
     from datetime import date
@@ -321,6 +363,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     reg_espanola   = fetch_reg_espanola_q1()
     consultas      = fetch_cnmc_consultas()
     acceso_con     = fetch_acceso_conexion()
+    eurlex         = fetch_eurlex(500)
     payload = {
         "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
         "total":         len(entries),
@@ -329,6 +372,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "reg_espanola":  reg_espanola,   # pestaña Regulación Española (Q1)
         "cnmc_consultas": consultas,     # pestaña Consultas CNMC
         "acceso_conexion": acceso_con,  # pestaña Acceso y Conexión
+        "eurlex":          eurlex,      # pestaña Normativa Europea
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)

@@ -25,6 +25,14 @@ def main():
     logger.info("=== Iniciando base de datos ===")
     init_db()
 
+    # ── EUR-Lex (DOUE) ──────────────────────────────────────────────────
+    logger.info("=== Scraping EUR-Lex (DOUE) ===")
+    from scraper.eurlex import scrape as scrape_eurlex
+    from db.database import upsert_eurlex
+    eu_entries = scrape_eurlex(days_back=2)
+    eu_new     = upsert_eurlex(eu_entries)
+    logger.info("EUR-Lex: %d actos, %d nuevos", len(eu_entries), eu_new)
+
     # ── BOE Sección V Anuncios (HTML) ──────────────────────────────────
     logger.info("=== Scraping BOE Anuncios Sección V ===")
     from scraper.boe_anuncios import scrape as scrape_anuncios
