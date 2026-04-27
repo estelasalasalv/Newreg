@@ -148,8 +148,11 @@ _ACCESS_RE = re.compile(r"\b(acceso|conexion|interconexion|peaje de acceso|red d
 # ── Detección de tipo de documento ───────────────────────────────────────────
 _TIPO_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r"^ley organica"),       "Ley Orgánica"),
-    (re.compile(r"^real decreto.?ley"),  "Real Decreto-ley"),
-    (re.compile(r"^real decreto"),       "Real Decreto"),
+    (re.compile(r"^real decreto.?ley"),            "Real Decreto-ley"),
+    (re.compile(r"^real decreto"),                 "Real Decreto"),
+    (re.compile(r"^decreto foral legislativo"),    "Decreto Foral Legislativo"),
+    (re.compile(r"^decreto foral"),                "Decreto Foral"),
+    (re.compile(r"^decreto legislativo"),          "Decreto Legislativo"),
     (re.compile(r"^ley\b"),              "Ley"),
     (re.compile(r"^orden\b"),            "Orden"),
     (re.compile(r"^circular\b"),         "Circular"),

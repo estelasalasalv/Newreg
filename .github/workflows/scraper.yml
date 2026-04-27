@@ -6,7 +6,7 @@ on:
     # Verano CEST (UTC+2): 06:00 y 10:00 UTC
     # Invierno CET  (UTC+1): 07:00 y 11:00 UTC
     # Usamos horario verano como referencia (abril–octubre)
-    - cron: '0 6 * * 1-5'   # Lunes–Viernes 08:00 CEST
+    - cron: '0 6 * * 1-6'   # Lunes–Sábado 08:00 CEST
     - cron: '0 10 * * 1-5'  # Lunes–Viernes 12:00 CEST
   workflow_dispatch:          # Permite ejecución manual desde GitHub
 
