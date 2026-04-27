@@ -226,6 +226,7 @@ def _dept_is_approved(dept_norm: str) -> bool:
 
 # Subsecciones/títulos excluidos explícitamente
 _EXCLUDED_SUBSECTIONS = re.compile(r"\brtve\b|convenio", re.IGNORECASE)
+_EXCLUDED_ORGANISMS   = re.compile(r"\buniversidad", re.IGNORECASE)
 _EXCLUDED_TITLES = [
     re.compile(r"certificado profesional.*intercambio geoterm", re.IGNORECASE),
     re.compile(r"instituto geogr[aá]fico nacional", re.IGNORECASE),
@@ -235,8 +236,10 @@ _EXCLUDED_TITLES = [
 
 def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
     """True si el documento debe incluirse según las reglas."""
-    # Excluir subsecciones y títulos no deseados
+    # Excluir subsecciones, organismos y títulos no deseados
     if _EXCLUDED_SUBSECTIONS.search(epigrafe) or _EXCLUDED_SUBSECTIONS.search(dept):
+        return False
+    if _EXCLUDED_ORGANISMS.search(dept):
         return False
     if any(p.search(titulo) for p in _EXCLUDED_TITLES):
         return False
