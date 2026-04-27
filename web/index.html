@@ -571,10 +571,23 @@
 
   function daysRemaining(plazoStr) {
     if (!plazoStr) return null;
-    const m = plazoStr.match(/hasta\s+(\d{1,2})\s+de\s+(\w+)\s+del?\s+(\d{4})/i);
+    // Formatos: "hasta 27 de Abr del 2026" / "Hasta martes, 19 de mayo de 2026"
+    const m = plazoStr.match(/hasta\s+(?:\w+,\s*)?(\d{1,2})\s+de\s+(\w+)\s+(?:de[l]?\s+)(\d{4})/i);
     if (!m) return null;
-    const months = {enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,
-                    julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11};
+    const months = {
+      enero:0,  ene:0,
+      febrero:1, feb:1,
+      marzo:2,   mar:2,
+      abril:3,   abr:3,
+      mayo:4,    may:4,
+      junio:5,   jun:5,
+      julio:6,   jul:6,
+      agosto:7,  ago:7,
+      septiembre:8, sep:8,
+      octubre:9,    oct:9,
+      noviembre:10, nov:10,
+      diciembre:11, dic:11,
+    };
     const mon = months[m[2].toLowerCase()];
     if (mon === undefined) return null;
     const end  = new Date(+m[3], mon, +m[1]);
