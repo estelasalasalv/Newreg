@@ -378,7 +378,7 @@
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
     <div class="mobile-tab active"  data-panel="todas">📋 Todas</div>
-    <div class="mobile-tab"         data-panel="esp"  >🇪🇸 Q1</div>
+    <div class="mobile-tab"         data-panel="esp"  >📑 Normativa T1</div>
     <div class="mobile-tab"         data-panel="con"  >📬 Consultas</div>
   </div>
 </nav>
@@ -394,7 +394,7 @@
         <span class="icon">📋</span> Todas las fuentes
       </div>
       <div class="sidebar-item" data-panel="esp">
-        <span class="icon">🇪🇸</span> Regulación Española Q1
+        <span class="icon">🇪🇸</span> Normativa T1
       </div>
       <div class="sidebar-item" data-panel="con">
         <span class="icon">📬</span> Consultas Públicas
@@ -445,10 +445,10 @@
     </div>
 
     <!-- ══ PANEL: BOE TRIMESTRE ══ -->
-    <!-- ══ PANEL: REGULACIÓN ESPAÑOLA Q1 ══ -->
+    <!-- ══ PANEL: NORMATIVA T1 ══ -->
     <div id="panel-esp" class="panel">
       <div class="search-bar">
-        <input type="search" id="esp-search" placeholder="Buscar en Regulación Española Q1…"
+        <input type="search" id="esp-search" placeholder="Buscar en Normativa T1…"
                autocomplete="off" spellcheck="false"/>
         <span id="esp-range" style="font-size:11px;color:var(--gray3)"></span>
         <span class="result-count" id="esp-count"></span>
@@ -664,7 +664,7 @@
     const ree     = e.impacto_ree || reeImpact('', e.title||'');
     const org     = e.source || 'CNMC';
     const orgCls  = org === 'CNMC' ? 'badge-cnmc' : 'badge-miterd';
-    const resumen = e.summary || autoSummary(e.title||'');
+    const resumen = e.summary || '';
 
     // Indicador de plazo
     let plazoHtml = '';
