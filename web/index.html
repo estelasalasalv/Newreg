@@ -413,6 +413,7 @@
         <button class="src-btn active" data-source="ALL">Todos</button>
         <button class="src-btn" data-source="BOE">BOE</button>
         <button class="src-btn" data-source="CNMC">CNMC</button>
+        <button class="src-btn" data-source="MITERD">MITERD</button>
       </div>
     </div>
 
@@ -747,7 +748,8 @@
     }
 
     const normImp = allEntries.filter(e =>
-      e.source === 'BOE' && e.importante === 'Sí' && isThisWeek(e.published_date)
+      e.source === 'BOE' && e.importante === 'Sí' && isThisWeek(e.published_date) &&
+      (activeSource === 'ALL' || activeSource === 'BOE')
     );
     const normEl = document.getElementById('resumen-norm-entries');
     document.getElementById('resumen-norm-empty').style.display = normImp.length ? 'none' : 'block';
@@ -755,9 +757,11 @@
       normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
     ).join('');
 
-    // Consultas abiertas (todas, sin filtro de fuente)
+    // Consultas abiertas con filtro de fuente
     const conAbiertas = cnmcConsultas.filter(e => {
       const d = daysRemaining(e.plazo);
+      if (activeSource !== 'ALL' && activeSource !== 'BOE' && e.source !== activeSource) return false;
+      if (activeSource === 'BOE') return false;
       return (e.estado||'Abierta') === 'Abierta' && (d === null || d >= 0);
     });
     conAbiertas.sort((a,b) => {
@@ -841,7 +845,7 @@
     const filtered = cnmcConsultas.filter(e => {
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;  // no hay consultas BOE
-      if (activeSource === 'CNMC' && e.source !== 'CNMC') return false;
+      if (activeSource !== 'ALL' && e.source !== activeSource) return false;
       // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
