@@ -1,5 +1,5 @@
 {
-  "updated_at": "27/04/2026 04:12",
+  "updated_at": "27/04/2026 04:19",
   "total": 241,
   "entries": [
     {
@@ -11188,12 +11188,34 @@
   "cnmc_consultas": [
     {
       "source": "MITERD",
+      "title": "Consulta pública previa para la elaboración de la Orden de la persona titular del Ministerio para la Transición Ecológica y el Reto Demográfico por la que se desarrollan las condiciones y criterios para la valoración del cumplimiento de la obligación de retorno de beneficios a ciudadanos y comunidades locales en las proximidades de instalaciones de producción de energía eléctrica, en desarrollo del artículo 26.3.k) de la Ley 24/2013, de 26 de diciembre, del Sector Eléctrico, en la redacción dada por la disposición final octava, apartado cinco, del Real Decreto-ley 7/2026, de 20 de marzo",
+      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-818.html",
+      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
+      "summary": null,
+      "impacto_ree": null,
+      "published_date": "15/04/2026",
+      "estado": "Abierta",
+      "scraped_at": "27/04/2026 03:21"
+    },
+    {
+      "source": "MITERD",
       "title": "Audiencia e información pública sobre el proyecto de Real Decreto por el que se modifica el Real Decreto 36/2023, de 24 de enero, por el que se establece un sistema de Certificados de Ahorro Energético",
       "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-821.html",
       "plazo": "Plazo de remisión: Desde lunes, 27 de abril de 2026 Hasta martes, 19 de mayo de 2026",
       "summary": "Audiencia sobre el proyecto de Real Decreto que modifica el sistema de Certificados de Ahorro Energetico (CAE), actualizando requisitos de eficiencia energetica para instalaciones.",
       "impacto_ree": "Media - el ahorro energetico puede reducir la demanda total gestionada por REE en la red de transporte.",
       "published_date": "27/04/2026",
+      "estado": "Abierta",
+      "scraped_at": "27/04/2026 03:21"
+    },
+    {
+      "source": "MITERD",
+      "title": "Consulta pública previa a la elaboración de la Orden de bases del concurso de acceso para instalaciones renovables en el nudo de transición justa Maciñeira 400 kV",
+      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-820.html",
+      "plazo": "Plazo de remisión: Desde viernes, 24 de abril de 2026 Hasta martes, 19 de mayo de 2026",
+      "summary": "Consulta previa para elaborar la Orden de bases del concurso de acceso para instalaciones renovables en el nudo de transicion justa Macineira 400 kV.",
+      "impacto_ree": "Alta - afecta al acceso de instalaciones renovables a un nudo de 400 kV de la red de transporte gestionada por REE.",
+      "published_date": "24/04/2026",
       "estado": "Abierta",
       "scraped_at": "27/04/2026 03:21"
     },
@@ -11232,6 +11254,17 @@
     },
     {
       "source": "MITERD",
+      "title": "Consulta pública previa para la elaboración del Real Decreto por el que se regulan el procedimiento de designación, los criterios mínimos y el catálogo de medidas de mitigación de las Zonas de Aceleración Renovable, en desarrollo de los artículos 14 a 18 del Real Decreto-ley 7/2026, de 20 de marzo, por el que se aprueba el Plan Integral de Respuesta a la Crisis en Oriente Medio",
+      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-819.html",
+      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
+      "summary": null,
+      "impacto_ree": null,
+      "published_date": "15/04/2026",
+      "estado": "Abierta",
+      "scraped_at": "27/04/2026 03:21"
+    },
+    {
+      "source": "MITERD",
       "title": "Consulta pública previa sobre el sello de excelencia en el ámbito del biometano",
       "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-815.html",
       "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta domingo, 10 de mayo de 2026",
@@ -11253,37 +11286,15 @@
       "scraped_at": "27/04/2026 03:21"
     },
     {
-      "source": "MITERD",
-      "title": "Consulta pública previa para la elaboración del Real Decreto por el que se regulan el procedimiento de designación, los criterios mínimos y el catálogo de medidas de mitigación de las Zonas de Aceleración Renovable, en desarrollo de los artículos 14 a 18 del Real Decreto-ley 7/2026, de 20 de marzo, por el que se aprueba el Plan Integral de Respuesta a la Crisis en Oriente Medio",
-      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-819.html",
-      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
+      "source": "CNMC",
+      "title": "Consulta pública Prop resolución prórroga peajes de acceso gas para el año de gas 2027",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-de-resolucion-prorroga-para-el-gas-2027",
+      "plazo": "Desde 13 de Abr del 2026 hasta 27 de Abr del 2026",
       "summary": null,
       "impacto_ree": null,
-      "published_date": "15/04/2026",
+      "published_date": null,
       "estado": "Abierta",
-      "scraped_at": "27/04/2026 03:21"
-    },
-    {
-      "source": "MITERD",
-      "title": "Consulta pública previa para la elaboración de la Orden de la persona titular del Ministerio para la Transición Ecológica y el Reto Demográfico por la que se desarrollan las condiciones y criterios para la valoración del cumplimiento de la obligación de retorno de beneficios a ciudadanos y comunidades locales en las proximidades de instalaciones de producción de energía eléctrica, en desarrollo del artículo 26.3.k) de la Ley 24/2013, de 26 de diciembre, del Sector Eléctrico, en la redacción dada por la disposición final octava, apartado cinco, del Real Decreto-ley 7/2026, de 20 de marzo",
-      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-818.html",
-      "plazo": "Plazo de remisión: Desde miércoles, 15 de abril de 2026 Hasta viernes, 15 de mayo de 2026",
-      "summary": null,
-      "impacto_ree": null,
-      "published_date": "15/04/2026",
-      "estado": "Abierta",
-      "scraped_at": "27/04/2026 03:21"
-    },
-    {
-      "source": "MITERD",
-      "title": "Consulta pública previa a la elaboración de la Orden de bases del concurso de acceso para instalaciones renovables en el nudo de transición justa Maciñeira 400 kV",
-      "url": "https://www.miteco.gob.es/es/energia/participacion/2026/detalle-participacion-publica-k-820.html",
-      "plazo": "Plazo de remisión: Desde viernes, 24 de abril de 2026 Hasta martes, 19 de mayo de 2026",
-      "summary": "Consulta previa para elaborar la Orden de bases del concurso de acceso para instalaciones renovables en el nudo de transicion justa Macineira 400 kV.",
-      "impacto_ree": "Alta - afecta al acceso de instalaciones renovables a un nudo de 400 kV de la red de transporte gestionada por REE.",
-      "published_date": "24/04/2026",
-      "estado": "Abierta",
-      "scraped_at": "27/04/2026 03:21"
+      "scraped_at": "27/04/2026 00:14"
     },
     {
       "source": "CNMC",
@@ -11298,11 +11309,11 @@
     },
     {
       "source": "CNMC",
-      "title": "Trámite audiencia de la Circular por la que se establece la tasa de retribución financiera (TRF) de gas",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-circular-por-la-que-se-establece-la-trf-2027-2032",
-      "plazo": "Desde 17 de Abr del 2026 hasta 18 de May del 2026",
-      "summary": null,
-      "impacto_ree": null,
+      "title": "Consulta Pública específica Circular precios eléctricos",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/especifica-circular-precios-electricos",
+      "plazo": "Desde 09 de Abr del 2026 hasta 22 de May del 2026",
+      "summary": "Metodologia de calculo de derechos economicos para conexiones del sector electrico y alquiler de equipos, adaptandose a los objetivos de descarbonizacion y asegurando retornos razonables para las distribuidoras.",
+      "impacto_ree": "Media - afecta a distribuidoras; metodologia de referencia para retribucion de instalaciones.",
       "published_date": null,
       "estado": "Abierta",
       "scraped_at": "27/04/2026 00:14"
@@ -11331,22 +11342,11 @@
     },
     {
       "source": "CNMC",
-      "title": "Consulta pública Prop resolución prórroga peajes de acceso gas para el año de gas 2027",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-de-resolucion-prorroga-para-el-gas-2027",
-      "plazo": "Desde 13 de Abr del 2026 hasta 27 de Abr del 2026",
+      "title": "Trámite audiencia de la Circular por la que se establece la tasa de retribución financiera (TRF) de gas",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-circular-por-la-que-se-establece-la-trf-2027-2032",
+      "plazo": "Desde 17 de Abr del 2026 hasta 18 de May del 2026",
       "summary": null,
       "impacto_ree": null,
-      "published_date": null,
-      "estado": "Abierta",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "source": "CNMC",
-      "title": "Consulta Pública específica Circular precios eléctricos",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/especifica-circular-precios-electricos",
-      "plazo": "Desde 09 de Abr del 2026 hasta 22 de May del 2026",
-      "summary": "Metodologia de calculo de derechos economicos para conexiones del sector electrico y alquiler de equipos, adaptandose a los objetivos de descarbonizacion y asegurando retornos razonables para las distribuidoras.",
-      "impacto_ree": "Media - afecta a distribuidoras; metodologia de referencia para retribucion de instalaciones.",
       "published_date": null,
       "estado": "Abierta",
       "scraped_at": "27/04/2026 00:14"
@@ -11375,20 +11375,9 @@
     },
     {
       "source": "CNMC",
-      "title": "Trámite audiencia - Propuesta de resolución criterios de liquidación del OS días 28 y 29 abril 2025",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-resolucion-criterios-liquidacion-operador-sistema-28y29abril2025",
-      "plazo": "Desde 16 de Mar del 2026 hasta 15 de Abr del 2026",
-      "summary": null,
-      "impacto_ree": null,
-      "published_date": null,
-      "estado": "Cerrada",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "source": "CNMC",
-      "title": "Consulta pública Segunda prórroga proyecto piloto control tensión",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
-      "plazo": "Desde 19 de Dic del 2025 hasta 14 de Ene del 2026",
+      "title": "Trámite audiencia proyecto piloto Soluciones de flexibilidad en redes (S2F)",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/proyecto-piloto-s2f",
+      "plazo": "Desde 16 de Ene del 2026 hasta 13 de Feb del 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": null,
@@ -11413,6 +11402,17 @@
       "plazo": "Desde 29 de Dic del 2025 hasta 14 de Ene del 2026",
       "summary": "Consulta publica sobre la modificacion de los procedimientos de operacion 3.1, 3.2 y 7.2, que regulan la energia reactiva, las restricciones tecnicas y la calidad del suministro.",
       "impacto_ree": "Muy alta - REE como Operador del Sistema debe adaptar los POs 3.1, 3.2 y 7.2 directamente afectados.",
+      "published_date": null,
+      "estado": "Cerrada",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "source": "CNMC",
+      "title": "Consulta pública Solicitud exención CAM-NC",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/solicitud-exencion-cam-nc",
+      "plazo": "Desde 19 de Dic del 2025 hasta 07 de Ene del 2026",
+      "summary": null,
+      "impacto_ree": null,
       "published_date": null,
       "estado": "Cerrada",
       "scraped_at": "27/04/2026 00:14"
@@ -11474,9 +11474,20 @@
     },
     {
       "source": "CNMC",
-      "title": "Consulta pública Solicitud exención CAM-NC",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/solicitud-exencion-cam-nc",
-      "plazo": "Desde 19 de Dic del 2025 hasta 07 de Ene del 2026",
+      "title": "Consulta pública permisos de acceso flexibles de la demanda a la red de transporte y a las redes de distribución",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/permisos-acceso-flexibles-demanda-red-distribucion",
+      "plazo": "Desde 20 de Feb del 2026 hasta 20 de Mar del 2026",
+      "summary": "Audiencia sobre permisos de acceso flexible para la demanda a las redes de transporte y distribucion, ofreciendo opciones de acceso con limitacion de potencia y menores costes de conexion.",
+      "impacto_ree": "Alta - afecta directamente a la gestion de accesos de la demanda a la red de transporte de REE.",
+      "published_date": null,
+      "estado": "Cerrada",
+      "scraped_at": "27/04/2026 00:14"
+    },
+    {
+      "source": "CNMC",
+      "title": "Trámite audiencia - Propuesta de resolución criterios de liquidación del OS días 28 y 29 abril 2025",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/propuesta-resolucion-criterios-liquidacion-operador-sistema-28y29abril2025",
+      "plazo": "Desde 16 de Mar del 2026 hasta 15 de Abr del 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": null,
@@ -11496,20 +11507,9 @@
     },
     {
       "source": "CNMC",
-      "title": "Consulta pública permisos de acceso flexibles de la demanda a la red de transporte y a las redes de distribución",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/permisos-acceso-flexibles-demanda-red-distribucion",
-      "plazo": "Desde 20 de Feb del 2026 hasta 20 de Mar del 2026",
-      "summary": "Audiencia sobre permisos de acceso flexible para la demanda a las redes de transporte y distribucion, ofreciendo opciones de acceso con limitacion de potencia y menores costes de conexion.",
-      "impacto_ree": "Alta - afecta directamente a la gestion de accesos de la demanda a la red de transporte de REE.",
-      "published_date": null,
-      "estado": "Cerrada",
-      "scraped_at": "27/04/2026 00:14"
-    },
-    {
-      "source": "CNMC",
-      "title": "Trámite audiencia proyecto piloto Soluciones de flexibilidad en redes (S2F)",
-      "url": "https://www.cnmc.es/consultas-publicas/energia/proyecto-piloto-s2f",
-      "plazo": "Desde 16 de Ene del 2026 hasta 13 de Feb del 2026",
+      "title": "Consulta pública Segunda prórroga proyecto piloto control tensión",
+      "url": "https://www.cnmc.es/consultas-publicas/energia/segunda-prorroga-proyecto-piloto-control-tension",
+      "plazo": "Desde 19 de Dic del 2025 hasta 14 de Ene del 2026",
       "summary": null,
       "impacto_ree": null,
       "published_date": null,
