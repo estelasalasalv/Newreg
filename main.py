@@ -37,11 +37,18 @@ def main():
     else:
         logger.info("(Sin entradas BOE hoy — puede ser fin de semana o festivo)")
 
-    # ── CNMC web ────────────────────────────────────────────────────────
-    logger.info("=== Scraping CNMC (web) ===")
+    # ── CNMC consultas ───────────────────────────────────────────────────
+    logger.info("=== Scraping CNMC consultas ===")
     cnmc_entries = cnmc.scrape(max_pages=5)
     cnmc_new     = upsert_entries(cnmc_entries)
-    logger.info("CNMC web: %d entradas, %d nuevas en BD", len(cnmc_entries), cnmc_new)
+    logger.info("CNMC: %d entradas, %d nuevas en BD", len(cnmc_entries), cnmc_new)
+
+    # ── MITERD consultas ─────────────────────────────────────────────────
+    logger.info("=== Scraping MITERD consultas ===")
+    from scraper import miterd
+    mit_entries = miterd.scrape()
+    mit_new     = upsert_entries(mit_entries)
+    logger.info("MITERD: %d entradas, %d nuevas en BD", len(mit_entries), mit_new)
 
     # ── CNMC RSS ─────────────────────────────────────────────────────────
     logger.info("=== Scraping CNMC RSS ===")

@@ -1,8 +1,7 @@
-"""CNMC scraper — consultas públicas de energía.
+"""CNMC scraper — consultas públicas (todas las secciones energéticas).
 
-Target: https://www.cnmc.es/consultas-publicas/energia
-Tipo: consulta (no regulación)
-Excluye: audiovisual, telecomunicaciones, postal, ferroviario
+Target: https://www.cnmc.es/participa/consultas-publicas
+Filtra por términos energéticos y excluye sectores no energéticos.
 """
 import logging
 import re
@@ -15,17 +14,42 @@ logger = logging.getLogger(__name__)
 CNMC_URL  = "https://www.cnmc.es/consultas-publicas/energia"
 CNMC_BASE = "https://www.cnmc.es"
 
-EXCLUDED_KEYWORDS = [
-    "audiovisual", "telecomunicaciones", "postal",
-    "ferroviario", "ferrocarril", "telecomunicacion",
+EXCLUDED = ["audiovisual", "telecomunicacion", "postal", "ferroviario", "ferrocarril"]
+ENERGY_TERMS = [
+    "energí","energi","eléctri","electri","electricidad","gas","renovable","fotovoltaic",
+    "hidrógen","hidrogen","almacenamiento","red de transporte","sistema eléctrico",
+    "tarifa","peaje","retribuc","generación","generacion","transporte eléctrico",
+    "circular","cir/de","rap/de","cnmc/de",
 ]
 
 _HEADERS = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 
+_MONTHS = {
+    "ene":1,"feb":2,"mar":3,"abr":4,"may":5,"jun":6,
+    "jul":7,"ago":8,"sep":9,"oct":10,"nov":11,"dic":12,
+    "enero":1,"febrero":2,"marzo":3,"abril":4,"mayo":5,"junio":6,
+    "julio":7,"agosto":8,"septiembre":9,"octubre":10,"noviembre":11,"diciembre":12,
+}
 
 def _is_excluded(text: str) -> bool:
-    return any(kw in text.lower() for kw in EXCLUDED_KEYWORDS)
+    t = text.lower()
+    return any(kw in t for kw in EXCLUDED)
 
+def _is_energy(text: str) -> bool:
+    t = text.lower()
+    return any(kw in t for kw in ENERGY_TERMS)
+
+def _parse_date_cnmc(raw: str) -> Optional[str]:
+    """Convierte '09 Abr 2026' o '09/04/2026' → '2026-04-09'."""
+    m = re.search(r"(\d{1,2})\s+(\w{3,})\s+(\d{4})", raw)
+    if m:
+        mon = _MONTHS.get(m.group(2).lower()[:3])
+        if mon:
+            return f"{m.group(3)}-{mon:02d}-{int(m.group(1)):02d}"
+    m = re.search(r"(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})", raw)
+    if m:
+        return f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
+    return None
 
 def _fetch(url: str, page: int = 0) -> Optional[BeautifulSoup]:
     params = {"page": page} if page > 0 else {}
@@ -37,46 +61,47 @@ def _fetch(url: str, page: int = 0) -> Optional[BeautifulSoup]:
         logger.error("CNMC request failed (page=%d): %s", page, exc)
         return None
 
-
 def _fetch_plazo(url: str) -> str:
-    """Obtiene el plazo de la página individual de la consulta."""
     try:
         resp = requests.get(url, headers=_HEADERS, timeout=20)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "lxml")
-        # Busca el span con "Desde … hasta …"
         for el in soup.find_all(string=re.compile(r"hasta\s+\d", re.IGNORECASE)):
-            text = el.strip()
-            if text:
-                return text
-        # Fallback: frase de plazo
+            t = el.strip()
+            if t: return t
         for el in soup.find_all(string=re.compile(r"plazo.*finaliza", re.IGNORECASE)):
             return el.strip()[:120]
-    except Exception as exc:
-        logger.debug("No se pudo obtener plazo de %s: %s", url, exc)
+    except Exception:
+        pass
     return ""
 
-
-def _extract_entries(soup: BeautifulSoup) -> List[Dict]:
+def _extract(soup: BeautifulSoup) -> List[Dict]:
     entries = []
     rows = (
-        soup.select("div.view-content .views-row")
-        or soup.select("article.node--type-consulta-publica")
+        soup.select("div.border-bott.views-row")
+        or soup.select("div.view-content .views-row")
         or soup.select("div.views-row")
-        or soup.select("div.border-bott.views-row")
     )
-
     for row in rows:
         link_el = row.select_one("a[href]")
         if not link_el:
             continue
         title = link_el.get_text(strip=True)
         href  = link_el.get("href", "")
-        if href.startswith("/"):
-            href = CNMC_BASE + href
+        if href.startswith("/"): href = CNMC_BASE + href
 
         if _is_excluded(title):
             continue
+
+        # Estado desde la etiqueta de color
+        tag = row.select_one("span.tag, span.green-tag, [class*=tag]")
+        tag_text = tag.get_text(strip=True).lower() if tag else ""
+        if "marcha" in tag_text or "abierta" in tag_text or "curso" in tag_text:
+            estado = "Abierta"
+        elif "cerrada" in tag_text or "finalizada" in tag_text:
+            estado = "Cerrada"
+        else:
+            estado = "Abierta"
 
         slug        = href.rstrip("/").split("/")[-1]
         external_id = f"cnmc-{slug}"
@@ -88,35 +113,31 @@ def _extract_entries(soup: BeautifulSoup) -> List[Dict]:
             "title":          title,
             "published_date": None,
             "url":            href,
-            "section":        "Consultas públicas CNMC",
+            "section":        "Consultas CNMC",
             "department":     "CNMC",
             "summary":        None,
-            "plazo":          None,   # se rellena después
+            "plazo":          None,
+            "estado":         estado,
         })
-
     return entries
 
-
 def scrape(max_pages: int = 5, fetch_plazos: bool = True) -> List[Dict]:
-    """Scrape CNMC consultas públicas de energía."""
     results: List[Dict] = []
-
     for page in range(max_pages):
         soup = _fetch(CNMC_URL, page)
-        if soup is None:
+        if not soup:
             break
-        entries = _extract_entries(soup)
+        entries = _extract(soup)
         if not entries:
             break
         results.extend(entries)
-        if not soup.select_one("a[title='Página siguiente'], a.pager__item--next, li.pager-next a"):
+        if not soup.select_one("a[title='Página siguiente'], a.pager__item--next"):
             break
 
-    # Obtener plazo de cada consulta
     if fetch_plazos:
         for e in results:
-            e["plazo"] = _fetch_plazo(e["url"])
-            logger.debug("Plazo [%s]: %s", e["title"][:40], e["plazo"])
+            if not e.get("plazo") or "hasta" not in (e["plazo"] or "").lower():
+                e["plazo"] = _fetch_plazo(e["url"]) or e["plazo"]
 
     logger.info("CNMC consultas: %d entradas", len(results))
     return results

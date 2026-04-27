@@ -317,6 +317,41 @@
     .panel { display: none; }
     .panel.active { display: block; }
 
+    /* ── Org filter buttons en consultas ───────────────────────── */
+    .org-filter {
+      padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--gray2); background: var(--white); cursor: pointer;
+      color: var(--gray4); transition: all .15s;
+    }
+    .org-filter:hover  { background: var(--gray1); }
+    .org-filter.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+    /* Badges organismo */
+    .badge-cnmc   { background: rgba(0,43,69,.1);  color: var(--navy); }
+    .badge-miterd { background: rgba(46,125,50,.15); color: #2e7d32; }
+    .badge-open   { background: rgba(46,125,50,.2); color: #2e7d32; }
+    .badge-closed { background: var(--gray2); color: var(--gray4); }
+
+    /* Consulta card mejorada */
+    .consulta-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 14px 16px; box-shadow: var(--shadow);
+      border-left: 3px solid var(--teal2); margin-bottom: 10px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 14px; align-items: start;
+      transition: box-shadow .12s;
+    }
+    .consulta-card:hover { box-shadow: 0 4px 18px rgba(0,43,69,.13); }
+    .consulta-card.cerrada { border-left-color: var(--gray3); opacity: .75; }
+    .consulta-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+    .consulta-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
+    .consulta-title a { color: var(--text); text-decoration: none; }
+    .consulta-title a:hover { color: var(--teal2); }
+    .consulta-fechas { font-size: 11px; color: var(--gray4); margin-bottom: 5px; }
+    .days-badge { font-size: 22px; font-weight: 800; text-align: center; line-height: 1; }
+    .days-label { font-size: 9px; color: var(--gray3); text-align: center; text-transform: uppercase; letter-spacing:.5px; }
+    @media (max-width: 480px) { .consulta-card { grid-template-columns: 1fr; } }
+
     /* ── FOOTER ────────────────────────────────────────────────── */
     footer {
       text-align: center; font-size: 10.5px; color: var(--gray3);
@@ -343,7 +378,6 @@
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
     <div class="mobile-tab active"  data-panel="todas">📋 Todas</div>
-    <div class="mobile-tab"         data-panel="boe"  >📅 BOE Trimestre</div>
     <div class="mobile-tab"         data-panel="esp"  >🇪🇸 Q1</div>
     <div class="mobile-tab"         data-panel="con"  >📬 Consultas</div>
   </div>
@@ -359,14 +393,11 @@
       <div class="sidebar-item active" data-panel="todas">
         <span class="icon">📋</span> Todas las fuentes
       </div>
-      <div class="sidebar-item" data-panel="boe">
-        <span class="icon">📅</span> BOE Último Trimestre
-      </div>
       <div class="sidebar-item" data-panel="esp">
         <span class="icon">🇪🇸</span> Regulación Española Q1
       </div>
       <div class="sidebar-item" data-panel="con">
-        <span class="icon">📬</span> Consultas CNMC
+        <span class="icon">📬</span> Consultas Públicas
       </div>
     </div>
 
@@ -414,17 +445,6 @@
     </div>
 
     <!-- ══ PANEL: BOE TRIMESTRE ══ -->
-    <div id="panel-boe" class="panel">
-      <div class="search-bar">
-        <input type="search" id="boe-search" placeholder="Buscar en BOE del último trimestre…"
-               autocomplete="off" spellcheck="false"/>
-        <span class="result-count" id="boe-count"></span>
-      </div>
-      <div id="boe-loading" class="state-msg">Cargando…</div>
-      <div id="boe-entries"></div>
-      <div id="boe-empty" class="state-msg" style="display:none">Sin resultados.</div>
-    </div>
-
     <!-- ══ PANEL: REGULACIÓN ESPAÑOLA Q1 ══ -->
     <div id="panel-esp" class="panel">
       <div class="search-bar">
@@ -451,11 +471,17 @@
       <div id="esp-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
-    <!-- ══ PANEL: CONSULTAS CNMC ══ -->
+    <!-- ══ PANEL: CONSULTAS PÚBLICAS (CNMC + MITERD) ══ -->
     <div id="panel-con" class="panel">
       <div class="search-bar">
-        <input type="search" id="con-search" placeholder="Buscar consulta CNMC…"
+        <input type="search" id="con-search" placeholder="Buscar en consultas públicas…"
                autocomplete="off" spellcheck="false"/>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="org-filter active" data-org="ALL">Todas</button>
+          <button class="org-filter" data-org="CNMC">CNMC</button>
+          <button class="org-filter" data-org="MITERD">MITERD</button>
+          <button class="org-filter" data-org="Abierta">Solo abiertas</button>
+        </div>
         <span class="result-count" id="con-count"></span>
       </div>
       <div id="con-loading" class="state-msg">Cargando…</div>
@@ -474,7 +500,6 @@
 <script>
   /* ── Estado ────────────────────────────────────────────────── */
   let allEntries    = [];
-  let boeTrimestre  = [];
   let regEspanola   = { boe: [], cnmc: [], year: '', rango: '' };
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
@@ -565,7 +590,6 @@
       const json = await r.json();
       document.getElementById('last-updated').textContent = 'Act.: ' + (json.updated_at || '—');
       allEntries    = json.entries        || [];
-      boeTrimestre  = json.boe_trimestre  || [];
       regEspanola   = json.reg_espanola   || { boe:[], cnmc:[], year:'', rango:'' };
       cnmcConsultas = json.cnmc_consultas || [];
       renderAll();
@@ -578,7 +602,7 @@
   }
 
   function renderAll() {
-    renderTodas(); renderBoe(); renderEsp(); renderConsultas();
+    renderTodas(); renderEsp(); renderConsultas();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -635,21 +659,30 @@
   }
 
   function consultaCard(e) {
-    const days = daysRemaining(e.plazo);
-    const ree  = reeImpact('', e.title||'');
+    const days    = daysRemaining(e.plazo);
+    const ree     = e.impacto_ree || reeImpact('', e.title||'');
+    const abierta = (e.estado||'Abierta') === 'Abierta';
+    const org     = e.source || 'CNMC';
+    const orgCls  = org === 'CNMC' ? 'badge-cnmc' : 'badge-miterd';
     return `
-    <div class="consulta-card">
+    <div class="consulta-card ${abierta ? '' : 'cerrada'}">
       <div>
+        <div class="consulta-badges">
+          <span class="badge ${abierta ? 'badge-open' : 'badge-closed'}">${abierta ? 'Abierta' : 'Cerrada'}</span>
+          <span class="badge ${orgCls}">${org}</span>
+          ${e.section && e.section !== 'Consultas CNMC' && e.section !== 'Consultas MITERD'
+            ? `<span class="badge badge-closed">${esc(e.section)}</span>` : ''}
+        </div>
         <div class="consulta-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
-        ${e.plazo ? `<div class="consulta-plazo">📅 ${esc(e.plazo)}</div>` : ''}
-        ${e.summary ? `<div class="norm-card-summary" style="margin-top:5px">${esc(e.summary.slice(0,200))}</div>` : ''}
+        ${e.plazo ? `<div class="consulta-fechas">📅 ${esc(e.plazo)}</div>` : ''}
+        ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,220))}</div>` : ''}
         ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
       </div>
-      ${days !== null ? `
-      <div style="text-align:center;min-width:44px">
-        <div class="days-badge" style="color:${days<7?'#e53935':days<30?'#f9a825':'var(--teal2)'}">${days<0?'0':days}</div>
+      ${days !== null && days >= 0 ? `
+      <div style="text-align:center;min-width:48px">
+        <div class="days-badge" style="color:${days<7?'#e53935':days<30?'#f9a825':'var(--teal2)'}">${days}</div>
         <div class="days-label">días</div>
       </div>` : ''}
     </div>`;
@@ -673,23 +706,6 @@
       }
       return cnmcRegCard(e);
     }).join('');
-  }
-
-  function renderBoe() {
-    const q        = document.getElementById('boe-search').value.toLowerCase().trim();
-    const soloImp  = document.getElementById('chk-importante').checked;
-    const el       = document.getElementById('boe-entries');
-    document.getElementById('boe-loading').style.display = 'none';
-    const filtered = boeTrimestre.filter(e => {
-      if (soloImp && e.importante !== 'Sí') return false;
-      if (!q) return true;
-      return (e.texto+' '+(e.organismo||'')+' '+(e.seccion||'')+' '+(e.palabras_clave||'')).toLowerCase().includes(q);
-    });
-    document.getElementById('boe-count').textContent = filtered.length + ' entrada' + (filtered.length!==1?'s':'');
-    document.getElementById('boe-empty').style.display = filtered.length ? 'none' : 'block';
-    el.innerHTML = filtered.map(e =>
-      normCardBOE(e, 'texto', 'fecha', 'palabras_clave', 'seccion', 'organismo', 'subseccion', 'enlace')
-    ).join('');
   }
 
   function renderEsp() {
@@ -723,14 +739,22 @@
     document.getElementById('esp-empty').style.display = (total===0&&q) ? 'block' : 'none';
   }
 
+  let activeOrg = 'ALL';
+
   function renderConsultas() {
     const q  = document.getElementById('con-search').value.toLowerCase().trim();
     const el = document.getElementById('con-entries');
     document.getElementById('con-loading').style.display = 'none';
-    const filtered = cnmcConsultas.filter(e =>
-      !q || (e.title+' '+(e.plazo||'')).toLowerCase().includes(q)
-    );
-    document.getElementById('con-count').textContent = filtered.length + ' consulta' + (filtered.length!==1?'s':'');
+
+    const filtered = cnmcConsultas.filter(e => {
+      if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
+      if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
+      if (!q) return true;
+      return ((e.title||'')+' '+(e.plazo||'')+' '+(e.source||'')).toLowerCase().includes(q);
+    });
+
+    document.getElementById('con-count').textContent =
+      filtered.length + ' consulta' + (filtered.length!==1?'s':'');
     document.getElementById('con-empty').style.display = filtered.length ? 'none' : 'block';
     el.innerHTML = filtered.map(consultaCard).join('');
   }
@@ -768,11 +792,18 @@
 
   /* ── Búsquedas ──────────────────────────────────────────────── */
   document.getElementById('search').addEventListener('input', renderTodas);
-  document.getElementById('boe-search').addEventListener('input', renderBoe);
   document.getElementById('esp-search').addEventListener('input', renderEsp);
   document.getElementById('con-search').addEventListener('input', renderConsultas);
-  document.getElementById('chk-importante').addEventListener('change', renderBoe);
   document.getElementById('chk-esp-importante').addEventListener('change', renderEsp);
+
+  document.querySelectorAll('.org-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.org-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeOrg = btn.dataset.org;
+      renderConsultas();
+    });
+  });
 
   /* ── Recarga al volver a la pestaña ─────────────────────────── */
   document.addEventListener('visibilitychange', () => {

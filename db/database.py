@@ -56,9 +56,10 @@ def init_db():
     );
     CREATE INDEX IF NOT EXISTS idx_reg_date ON regulatory_entries(published_date DESC);
     -- Añadir columnas si no existen (migraciones seguras)
-    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tipo       VARCHAR(20) DEFAULT 'regulacion';
-    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo      TEXT;
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tipo        VARCHAR(20) DEFAULT 'regulacion';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo       TEXT;
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS estado      VARCHAR(20) DEFAULT 'Abierta';
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
     """
     with get_connection() as conn:
@@ -98,18 +99,18 @@ def upsert_entries(entries: List[Dict]) -> int:
         return 0
     sql = """
     INSERT INTO regulatory_entries
-        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo)
+        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo, estado)
     VALUES
         (%(source)s, %(external_id)s, %(title)s, %(published_date)s,
          %(url)s, %(section)s, %(department)s, %(summary)s,
-         %(tipo)s, %(plazo)s)
-    ON CONFLICT (external_id) DO UPDATE SET plazo = EXCLUDED.plazo
+         %(tipo)s, %(plazo)s, %(estado)s)
+    ON CONFLICT (external_id) DO UPDATE SET plazo = EXCLUDED.plazo, estado = EXCLUDED.estado
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo")}
+                row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"), "estado": e.get("estado", "Abierta")}
                 cur.execute(sql, row)
                 inserted += cur.rowcount
         conn.commit()
@@ -117,14 +118,18 @@ def upsert_entries(entries: List[Dict]) -> int:
 
 
 def fetch_cnmc_consultas() -> List[Dict]:
-    """Devuelve consultas públicas CNMC (scraping web)."""
+    """Devuelve consultas públicas de CNMC y MITERD."""
     sql = """
-    SELECT title, url, plazo, summary, impacto_ree, section,
+    SELECT source, title, url, plazo, summary, impacto_ree,
+           TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
+           COALESCE(estado, 'Abierta') AS estado,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
     FROM   regulatory_entries
-    WHERE  source = 'CNMC'
-      AND  tipo   = 'consulta'
-    ORDER  BY scraped_at DESC
+    WHERE  source IN ('CNMC', 'MITERD')
+      AND  tipo = 'consulta'
+    ORDER  BY
+           CASE WHEN COALESCE(estado,'Abierta') = 'Abierta' THEN 0 ELSE 1 END,
+           scraped_at DESC
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
