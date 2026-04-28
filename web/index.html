@@ -352,6 +352,12 @@
     .days-label { font-size: 9px; color: var(--gray3); text-align: center; text-transform: uppercase; letter-spacing:.5px; }
     @media (max-width: 480px) { .consulta-card { grid-template-columns: 1fr; } }
 
+
+    /* ── Art.64 Infracciones ── */
+    .badge-art64-gs  { background:#c62828;color:#fff;font-weight:700; }
+    .badge-art64-dg  { background:#e65100;color:#fff;font-weight:700; }
+    .badge-art64-nc  { background:#1565c0;color:#fff;font-weight:700; }
+    .badge-art64-sin { background:#2e7d32;color:#fff;font-weight:700; }
     /* ── Badge NUEVO ── */
     .badge-new { background:#e53935;color:#fff;animation:pulse-new 1.5s ease-in-out infinite;font-weight:700; }
     @keyframes pulse-new { 0%,100%{opacity:1} 50%{opacity:.65} }
@@ -630,6 +636,15 @@
   function esc(s) {
     if (!s) return '';
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+
+  function art64Badge(v) {
+    if (!v || !v.startsWith('Art.64')) return '';
+    if (v.includes('Con riesgo GS'))   return '<span class="badge badge-art64-gs">⚡ ' + v + '</span>';
+    if (v.includes('Con da\u00f1o grave')) return '<span class="badge badge-art64-dg">\u26a0\ufe0f ' + v + '</span>';
+    if (v.includes('Sin riesgo GS'))   return '<span class="badge badge-art64-sin">\u2713 ' + v + '</span>';
+    return '<span class="badge badge-art64-nc">\U0001f4cb ' + v + '</span>';
   }
 
   function autoSummary(title) {

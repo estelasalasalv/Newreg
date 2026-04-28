@@ -76,18 +76,19 @@ def upsert_boe(entries: List[Dict]) -> int:
     sql = """
     INSERT INTO boe_entries
         (external_id, fecha, fuente, seccion, tipo, organismo, subseccion,
-         texto, enlace, palabras_clave, resumen, importante, acceso_conexion, publicable)
+         texto, enlace, palabras_clave, resumen, importante, acceso_conexion, publicable, impacto_ree)
     VALUES
         (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(tipo)s,
          %(organismo)s, %(subseccion)s, %(texto)s, %(enlace)s, %(palabras_clave)s,
-         %(resumen)s, %(importante)s, %(acceso_conexion)s, %(publicable)s)
+         %(resumen)s, %(importante)s, %(acceso_conexion)s, %(publicable)s,
+         %(impacto_ree)s)
     ON CONFLICT (external_id) DO NOTHING
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                cur.execute(sql, e)
+                cur.execute(sql, {**e, "impacto_ree": e.get("impacto_ree")})
                 inserted += cur.rowcount
         conn.commit()
     return inserted

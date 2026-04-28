@@ -63,6 +63,27 @@ def _enrich_from_description(title: str, text: str) -> str:
     return title
 
 
+_ART64_RE    = re.compile(r"art[ií]culo\s+64|art\.?\s*64", re.IGNORECASE)
+_RIESGO_GS   = re.compile(r"riesgo.*garant[ií]a.*suministro|garant[ií]a.*suministro.*riesgo|"
+                           r"riesgo.*seguridad.*suministro|riesgo.*suministro", re.IGNORECASE)
+_RIESGO_DG   = re.compile(r"da[ñn]o\s+grave|riesgo.*da[ñn]o|perjuicio.*grave", re.IGNORECASE)
+_SIN_RIESGO  = re.compile(r"sin\s+riesgo", re.IGNORECASE)
+
+
+def _clasificar_riesgo(text: str, titulo: str) -> str:
+    """Detecta la clasificación de riesgo para infracciones del Art. 64 LSE."""
+    combined = (text or "") + " " + (titulo or "")
+    if _SIN_RIESGO.search(combined):
+        return "Art.64 — Sin riesgo GS"
+    if _RIESGO_GS.search(combined):
+        return "Art.64 — Con riesgo GS"
+    if _RIESGO_DG.search(combined):
+        return "Art.64 — Con daño grave"
+    if _ART64_RE.search(combined):
+        return "Art.64 — Sin clasificar"
+    return ""
+
+
 def _fetch_page_info(url: str) -> Dict[str, str]:
     """
     Navega a la página individual del acuerdo y extrae:
@@ -70,8 +91,9 @@ def _fetch_page_info(url: str) -> Dict[str, str]:
     - num_expediente: número de referencia (ej. 'SNC/DE/079/26')
     - fecha: fecha del acuerdo
     - ambito: ámbito sectorial
+    - riesgo: clasificación Art.64 si aplica
     """
-    info = {"expediente": "", "num_expediente": "", "fecha": "", "ambito": ""}
+    info = {"expediente": "", "num_expediente": "", "fecha": "", "ambito": "", "riesgo": ""}
     try:
         resp = requests.get(url, headers=_HEADERS, timeout=20)
         resp.raise_for_status()
@@ -91,6 +113,9 @@ def _fetch_page_info(url: str) -> Dict[str, str]:
         m = re.search(r"Fecha\s+(\d{1,2}\s+\w+\s+\d{4})", text)
         if m:
             info["fecha"] = m.group(1).strip()
+
+        # Clasificación de riesgo Art.64
+        info["riesgo"] = _clasificar_riesgo(text, info.get("expediente",""))
 
         # Ámbito
         m = re.search(r"[AÁ]mbito\s+(\w[\w\s]*?)(?:\s+Tipo|\s+Fecha|\s+Expediente)", text)
@@ -168,6 +193,16 @@ def scrape() -> List[Dict]:
             if extra:
                 summary = extra + (" | " + summary[:300] if summary else "")
 
+        # Detectar infracción Art.64 también desde el título enriquecido
+        riesgo = ""
+        if _GENERIC_TITLES.match(title):
+            riesgo = _clasificar_riesgo(summary or "", enriched)
+        else:
+            riesgo = _clasificar_riesgo("", enriched)
+
+        # Art.64 → siempre importante
+        es_importante_art64 = bool(riesgo)
+
         results.append({
             "source":         "CNMC",
             "external_id":    external_id,
@@ -177,6 +212,11 @@ def scrape() -> List[Dict]:
             "section":        "CNMC RSS",
             "department":     "CNMC",
             "summary":        summary[:500] if summary else None,
+            "impacto_ree":    riesgo if riesgo else None,
+            "tipo":           "regulacion",
+            "plazo":          None,
+            "estado":         "Abierta",
+            "sector":         "electricidad",
         })
 
     logger.info("CNMC RSS: %d/%d entradas relevantes", len(results), len(items))

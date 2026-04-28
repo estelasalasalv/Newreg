@@ -199,6 +199,27 @@ def _detect_tipo(titulo: str, epigrafe: str = "") -> str:
     return epigrafe.strip() or "—"
 
 
+# Detección de infracciones Art.64 LSE
+_ART64_RE   = re.compile(r"art[ií]culo\s+64|art\.?\s*64\b", re.IGNORECASE)
+_RIESGO_GS  = re.compile(r"riesgo.*garant[ií]a.*suministro|garant[ií]a.*suministro.*riesgo|"
+                          r"riesgo.*seguridad.*suministro", re.IGNORECASE)
+_RIESGO_DG  = re.compile(r"da[ñn]o\s+grave|riesgo.*da[ñn]o", re.IGNORECASE)
+_SIN_RIESGO_RE = re.compile(r"sin\s+riesgo", re.IGNORECASE)
+
+
+def _clasificar_art64(titulo: str) -> str:
+    """Devuelve la clasificación de riesgo Art.64 o cadena vacía si no aplica."""
+    if not _ART64_RE.search(titulo):
+        return ""
+    if _SIN_RIESGO_RE.search(titulo):
+        return "Art.64 — Sin riesgo GS"
+    if _RIESGO_GS.search(titulo):
+        return "Art.64 — Con riesgo GS"
+    if _RIESGO_DG.search(titulo):
+        return "Art.64 — Con daño grave"
+    return "Art.64 — Sin clasificar"
+
+
 _NOM_IMP_DEPTS = [
     "presidencia del gobierno",
     "ministerio para la transicion ecologica y el reto demografico",
@@ -299,10 +320,11 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             if not _should_include(titulo, ep_nombre, dept_nombre):
                                 continue
 
-                            kw      = _find_keywords(titulo, ep_nombre)
-                            tipo    = _detect_tipo(titulo, ep_nombre)
-                            imp     = _is_importante(tipo, dept_nombre, titulo)
-                            acceso  = _detect_acceso(titulo)
+                            kw       = _find_keywords(titulo, ep_nombre)
+                            tipo     = _detect_tipo(titulo, ep_nombre)
+                            art64    = _clasificar_art64(titulo)
+                            imp      = "Sí" if art64 else _is_importante(tipo, dept_nombre, titulo)
+                            acceso   = _detect_acceso(titulo)
 
                             items.append({
                                 "external_id":   doc_id,
@@ -318,6 +340,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                                 "resumen":       None,
                                 "importante":    imp,
                                 "acceso_conexion": acceso,
+                                "impacto_ree":   art64 if art64 else None,
                                 "publicable":    "NO",
                             })
     except (KeyError, TypeError) as exc:
