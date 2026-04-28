@@ -24,7 +24,8 @@ _HEADERS     = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 
 # Títulos genéricos que requieren navegar a la página individual
 _GENERIC_TITLES = re.compile(
-    r"^(acuerdo de la direcci[oó]n|resoluci[oó]n|auto|providencia|notificaci[oó]n)",
+    r"^(acuerdo de la direcci[oó]n|resoluci[oó]n|auto|providencia|notificaci[oó]n|"
+    r"informe del consejo|acuerdo del consejo)",
     re.IGNORECASE,
 )
 
@@ -99,10 +100,23 @@ def _fetch_page_info(url: str) -> Dict[str, str]:
         resp.raise_for_status()
         text = BeautifulSoup(resp.text, "lxml").get_text(" ", strip=True)
 
-        # Nombre del expediente/empresa: aparece justo antes de "NW Menu"
-        m = re.search(r"Expediente\s+(.+?)\s+NW Menu", text)
-        if m:
-            info["expediente"] = m.group(1).strip()
+        # Título descriptivo del expediente (en mayúsculas, tras el último "Expediente")
+        # Patrón: "...Expediente TITULO EN MAYÚSCULAS Documentos|NW Menu"
+        # Puede haber dos "Expediente": primero el número, luego el título
+        # El título descriptivo aparece después de "Fecha DD Mes YYYY Expediente"
+        desc_matches = re.findall(
+            r"Fecha\s+\d+\s+\w+\s+\d{4}\s+Expediente\s+(.+?)"
+            r"\s+(?:Documentos asociados|NW Menu)",
+            text
+        )
+        if desc_matches:
+            # Quedarnos con el más largo/descriptivo
+            info["expediente"] = max(desc_matches, key=len).strip()
+        else:
+            # Fallback: cualquier cosa antes de "NW Menu"
+            m = re.search(r"Expediente\s+(.+?)\s+NW Menu", text)
+            if m:
+                info["expediente"] = m.group(1).strip()
 
         # Número de expediente: "Nº Expediente XXX/YY/ZZZ/NN"
         m = re.search(r"N[ºo°]\s*Expediente\s+(\S+)", text, re.IGNORECASE)
