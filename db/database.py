@@ -360,23 +360,45 @@ def fetch_reg_espanola_q1() -> Dict:
     }
 
 
+YEAR_FILTER = 2026   # Solo mostrar datos de este año hasta nuevo aviso
+
+
+def _filter_year(items: list, year: int) -> list:
+    """Filtra una lista de entradas por año (campo fecha_real o published_date o fecha)."""
+    def _matches(e):
+        for field in ("fecha_real", "published_date", "fecha"):
+            v = e.get(field, "") or ""
+            if str(year) in str(v):
+                return True
+        return False
+    return [e for e in items if _matches(e)]
+
+
 def export_to_json(path: str = "web/data.json", limit: int = 300):
-    """Exporta datos al JSON que consume la web estática."""
+    """Exporta datos al JSON que consume la web estática.
+    Solo incluye datos del YEAR_FILTER (datos históricos se conservan en BD).
+    """
     entries        = fetch_recent(limit)
     boe_trimestre  = fetch_boe_trimestre(92)
     reg_espanola   = fetch_reg_espanola_q1()
     consultas      = fetch_cnmc_consultas()
     acceso_con     = fetch_acceso_conexion()
     eurlex         = fetch_eurlex(500)
+
+    # Aplicar filtro de año (solo visualización — datos históricos intactos en BD)
+    entries_f   = _filter_year(entries,    YEAR_FILTER)
+    acceso_f    = _filter_year(acceso_con, YEAR_FILTER)
+    eurlex_f    = _filter_year(eurlex,     YEAR_FILTER)
+
     payload = {
         "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
-        "total":         len(entries),
-        "entries":       entries,        # pestaña Todas
-        "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre
-        "reg_espanola":  reg_espanola,   # pestaña Regulación Española (Q1)
-        "cnmc_consultas": consultas,     # pestaña Consultas CNMC
-        "acceso_conexion": acceso_con,  # pestaña Acceso y Conexión
-        "eurlex":          eurlex,      # pestaña Normativa Europea
+        "total":         len(entries_f),
+        "entries":       entries_f,      # pestaña Todas (solo 2026)
+        "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre (ya es reciente)
+        "reg_espanola":  reg_espanola,   # pestaña Regulación Española (Q1 2026)
+        "cnmc_consultas": consultas,     # pestaña Consultas (siempre actuales)
+        "acceso_conexion": acceso_f,     # pestaña Acceso/Conexión (solo 2026)
+        "eurlex":          eurlex_f,     # pestaña Normativa Europea (solo 2026)
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
