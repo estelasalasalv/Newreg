@@ -352,6 +352,48 @@
     .days-label { font-size: 9px; color: var(--gray3); text-align: center; text-transform: uppercase; letter-spacing:.5px; }
     @media (max-width: 480px) { .consulta-card { grid-template-columns: 1fr; } }
 
+
+    /* ── Art.64 Infracciones ── */
+    .badge-art64-gs  { background:#c62828;color:#fff;font-weight:700; }
+    .badge-art64-dg  { background:#e65100;color:#fff;font-weight:700; }
+    .badge-art64-nc  { background:#1565c0;color:#fff;font-weight:700; }
+    .badge-art64-sin { background:#2e7d32;color:#fff;font-weight:700; }
+    /* ── Badge NUEVO ── */
+    .badge-new { background:#e53935;color:#fff;animation:pulse-new 1.5s ease-in-out infinite;font-weight:700; }
+    @keyframes pulse-new { 0%,100%{opacity:1} 50%{opacity:.65} }
+
+    /* ── Vista calendario consultas ── */
+    .cal-week { margin-bottom:20px; }
+    .cal-week-header {
+      display:flex;align-items:center;gap:10px;
+      padding:7px 12px;margin-bottom:8px;
+      background:var(--navy);color:var(--white);
+      border-radius:8px;font-size:11.5px;font-weight:700;
+    }
+    .cal-week-header .cal-range { opacity:.7;font-weight:400;font-size:10.5px; }
+    .cal-week-header .cal-count { margin-left:auto;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;font-size:10px; }
+    .cal-week-urgent { background:#c62828; }
+    .cal-week-soon   { background:#e65100; }
+    .cal-week-past   { background:var(--gray4); }
+    .cal-item {
+      display:flex;align-items:flex-start;gap:10px;
+      background:var(--white);border-radius:8px;
+      padding:10px 12px;margin-bottom:6px;
+      box-shadow:var(--shadow);border-left:3px solid var(--teal2);
+      transition:box-shadow .12s;
+    }
+    .cal-item:hover { box-shadow:0 4px 14px rgba(0,43,69,.12); }
+    .cal-item.cerrada { opacity:.6;border-left-color:var(--gray3); }
+    .cal-days { min-width:44px;text-align:center;flex-shrink:0; }
+    .cal-days-num { font-size:20px;font-weight:800;line-height:1; }
+    .cal-days-lbl { font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray3); }
+    .cal-body { flex:1;min-width:0; }
+    .cal-title { font-size:12.5px;font-weight:600;line-height:1.4;margin-bottom:4px; }
+    .cal-title a { color:var(--text);text-decoration:none; }
+    .cal-title a:hover { color:var(--teal2); }
+    .cal-meta  { font-size:10.5px;color:var(--gray4); }
+    .cal-plazo { font-size:10.5px;color:var(--gray4);margin-top:2px; }
+
     /* ── FOOTER ────────────────────────────────────────────────── */
     footer {
       text-align: center; font-size: 10.5px; color: var(--gray3);
@@ -554,10 +596,17 @@
           color:var(--gray4); transition:all .15s; margin-left:auto;">
           + Ver otros sectores
         </button>
+        <button id="btn-vista-cal" style="
+          padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
+          border:1px solid var(--border,#dde3ec); background:var(--white); cursor:pointer;
+          color:var(--gray4,#607d8b); transition:all .15s;">
+          📅 Vista calendario
+        </button>
         <span class="result-count" id="con-count"></span>
       </div>
       <div id="con-loading" class="state-msg">Cargando…</div>
       <div id="con-entries"></div>
+      <div id="con-calendar" style="display:none"></div>
       <div id="con-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
@@ -587,6 +636,15 @@
   function esc(s) {
     if (!s) return '';
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+
+  function art64Badge(v) {
+    if (!v || !v.startsWith('Art.64')) return '';
+    if (v.includes('Con riesgo GS'))   return '<span class="badge badge-art64-gs">⚡ ' + v + '</span>';
+    if (v.includes('Con da\u00f1o grave')) return '<span class="badge badge-art64-dg">\u26a0\ufe0f ' + v + '</span>';
+    if (v.includes('Sin riesgo GS'))   return '<span class="badge badge-art64-sin">\u2713 ' + v + '</span>';
+    return '<span class="badge badge-art64-nc">\U0001f4cb ' + v + '</span>';
   }
 
   function autoSummary(title) {
@@ -992,7 +1050,86 @@
   }
 
   let activeOrg = 'ALL';
+  let vistaCalendario = false;
   let mostrarOtrosSectores = false;
+
+  // ── Vista calendario semanal ─────────────────────────────────────
+  function renderCalendario(items) {
+    // Agrupar por semana de cierre del plazo
+    const refISO = (allEntries[0] && allEntries[0].fecha_real) || new Date().toISOString().slice(0,10);
+    const [ry,rm,rd] = refISO.split('-').map(Number);
+    const hoy = new Date(ry, rm-1, rd);
+
+    function weekKey(days) {
+      if (days === null)  return 'sin-fecha';
+      if (days < 0)       return 'finalizada';
+      if (days <= 7)      return 'semana-0';
+      if (days <= 14)     return 'semana-1';
+      if (days <= 21)     return 'semana-2';
+      if (days <= 35)     return 'semana-3';
+      return 'mas';
+    }
+    function weekLabel(key) {
+      const m = {
+        'semana-0': { label:'Esta semana',  cls:'cal-week-urgent' },
+        'semana-1': { label:'Próxima semana', cls:'cal-week-soon' },
+        'semana-2': { label:'En 2 semanas',  cls:'' },
+        'semana-3': { label:'En 3–5 semanas',cls:'' },
+        'mas':      { label:'Más de 5 semanas', cls:'' },
+        'finalizada':{ label:'Finalizadas',  cls:'cal-week-past' },
+        'sin-fecha': { label:'Sin fecha de cierre', cls:'' },
+      };
+      return m[key] || {label:key, cls:''};
+    }
+
+    const order = ['semana-0','semana-1','semana-2','semana-3','mas','sin-fecha','finalizada'];
+    const groups = {};
+    order.forEach(k => groups[k] = []);
+
+    items.forEach(e => {
+      const d = daysRemaining(e.plazo);
+      groups[weekKey(d)].push({...e, _days: d});
+    });
+
+    let html = '';
+    order.forEach(key => {
+      const list = groups[key];
+      if (!list.length) return;
+      const {label, cls} = weekLabel(key);
+      html += `<div class="cal-week">
+        <div class="cal-week-header ${cls}">
+          ${label}
+          <span class="cal-count">${list.length} consulta${list.length!==1?'s':''}</span>
+        </div>`;
+      list.sort((a,b) => {
+        if (a._days===null && b._days===null) return 0;
+        if (a._days===null) return 1; if (b._days===null) return -1;
+        return a._days - b._days;
+      });
+      list.forEach(e => {
+        const cerrada = e._days !== null && e._days < 0;
+        const col = e._days===null?'var(--gray3)':e._days<=7?'#e53935':e._days<=20?'#f9a825':'var(--teal2)';
+        const org = e.source || 'CNMC';
+        html += `<div class="cal-item ${cerrada?'cerrada':''}">
+          <div class="cal-days">
+            ${e._days !== null && !cerrada
+              ? `<div class="cal-days-num" style="color:${col}">${e._days}</div><div class="cal-days-lbl">días</div>`
+              : `<div class="cal-days-num" style="color:var(--gray3);font-size:12px">${cerrada?'✓':'—'}</div>`}
+          </div>
+          <div class="cal-body">
+            <div class="cal-title">${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>`:esc(e.title)}</div>
+            <div class="cal-meta">
+              <span class="badge badge-${org==='CNMC'?'cnmc':'miterd'}" style="font-size:.68rem">${org}</span>
+              ${e.es_nuevo?'<span class="badge badge-new" style="font-size:.68rem;margin-left:3px">NUEVO</span>':''}
+            </div>
+            ${e.plazo?`<div class="cal-plazo">📅 ${esc(e.plazo)}</div>`:''}
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+    return html;
+  }
 
   function renderConsultas() {
     const q  = document.getElementById('con-search').value.toLowerCase().trim();
@@ -1040,7 +1177,20 @@
     document.getElementById('con-count').textContent =
       filtered.length + ' consulta' + (filtered.length!==1?'s':'');
     document.getElementById('con-empty').style.display = filtered.length ? 'none' : 'block';
-    el.innerHTML = filtered.map(consultaCard).join('');
+
+    const calEl  = document.getElementById('con-calendar');
+    const btnCal = document.getElementById('btn-vista-cal');
+    if (vistaCalendario) {
+      el.style.display   = 'none';
+      calEl.style.display = '';
+      calEl.innerHTML    = renderCalendario(filtered);
+      if (btnCal) { btnCal.textContent='☰ Vista lista'; btnCal.style.background='var(--teal)'; btnCal.style.color='var(--navy)'; }
+    } else {
+      el.style.display   = '';
+      calEl.style.display = 'none';
+      el.innerHTML       = filtered.map(consultaCard).join('');
+      if (btnCal) { btnCal.textContent='📅 Vista calendario'; btnCal.style.background=''; btnCal.style.color=''; }
+    }
   }
 
   /* ── Navegación ─────────────────────────────────────────────── */
@@ -1091,6 +1241,10 @@
   const espMasBtn = document.getElementById('esp-mas');
   if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
+  document.getElementById('btn-vista-cal').addEventListener('click', () => {
+    vistaCalendario = !vistaCalendario;
+    renderConsultas();
+  });
   document.getElementById('btn-otros-sectores').addEventListener('click', () => {
     mostrarOtrosSectores = !mostrarOtrosSectores;
     renderConsultas();
