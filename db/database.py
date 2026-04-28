@@ -60,7 +60,10 @@ def init_db():
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo       TEXT;
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS estado      VARCHAR(20) DEFAULT 'Abierta';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
+    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
+    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
