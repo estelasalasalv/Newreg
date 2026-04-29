@@ -61,6 +61,7 @@ def init_db():
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS estado      VARCHAR(20) DEFAULT 'Abierta';
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS importante  VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
@@ -203,7 +204,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         section,
         department,
         NULL::text                                              AS tipo,
-        NULL::text                                              AS importante,
+        COALESCE(importante, 'No')                             AS importante,
         NULL::text                                              AS acceso_conexion,
         summary,
         NULL::text                                              AS resumen,

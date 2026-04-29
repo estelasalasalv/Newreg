@@ -472,7 +472,7 @@
     <div class="sidebar-section">
       <div style="padding:4px 16px">
         <label class="imp-label">
-          <input type="checkbox" id="chk-esp-importante"/>
+          <input type="checkbox" id="chk-solo-importante"/>
           Solo importantes
         </label>
       </div>
@@ -638,6 +638,11 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+
+
+  function esImportante(e) {
+    return e.importante === 'Sí' || e.importante === 'Si' || e.importante === 'S';
+  }
 
   function art64Badge(v) {
     if (!v || !v.startsWith('Art.64')) return '';
@@ -970,6 +975,7 @@
     document.getElementById('ac-loading').style.display = 'none';
 
     const filtered = accesoDatos.filter(e => {
+      if (soloImportante && !esImportante(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (yr && String(e.anio) !== yr) return false;
       if (!q) return true;
@@ -991,6 +997,7 @@
     document.getElementById('loading').style.display = 'none';
     const todasYr = document.getElementById('todas-year').value;
     const filtered = allEntries.filter(e => {
+      if (soloImportante && !esImportante(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (todasYr && e.published_date && !e.published_date.endsWith(todasYr)) return false;
       if (!q) return true;
@@ -1027,6 +1034,7 @@
       + String(refDate.getDate()).padStart(2,'0');
 
     const filtered = allEntries.filter(e => {
+      if (soloImportante && !esImportante(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
@@ -1051,6 +1059,7 @@
 
   let activeOrg = 'ALL';
   let vistaCalendario = false;
+  let soloImportante   = false;
   let mostrarOtrosSectores = false;
 
   // ── Vista calendario semanal ─────────────────────────────────────
