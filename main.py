@@ -29,7 +29,8 @@ def main():
     logger.info("=== Scraping EUR-Lex (DOUE) ===")
     from scraper.eurlex import scrape as scrape_eurlex
     from db.database import upsert_eurlex
-    eu_entries = scrape_eurlex(days_back=2)
+    # days_back=7 para cubrir el lag de indexación del SPARQL de la UE
+    eu_entries = scrape_eurlex(days_back=7)
     eu_new     = upsert_eurlex(eu_entries)
     logger.info("EUR-Lex: %d actos, %d nuevos", len(eu_entries), eu_new)
 
