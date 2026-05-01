@@ -641,7 +641,8 @@
 
 
   function esImportante(e) {
-    return e.importante === 'Sí' || e.importante === 'Si' || e.importante === 'S';
+    const v = (e.importante || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    return v === 'si' || v === 's';
   }
 
   function art64Badge(v) {
@@ -1250,6 +1251,9 @@
   const espMasBtn = document.getElementById('esp-mas');
   if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
+  document.getElementById('chk-solo-importante').addEventListener('change', function() {
+    soloImportante = this.checked; renderAll();
+  });
   document.getElementById('btn-vista-cal').addEventListener('click', () => {
     vistaCalendario = !vistaCalendario;
     renderConsultas();
