@@ -93,9 +93,21 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
     CONTAINS(LCASE(STR(?title)), "decarboni") OR
     CONTAINS(LCASE(STR(?title)), "biofuel") OR
     CONTAINS(LCASE(STR(?title)), "biomass") OR
-    CONTAINS(LCASE(STR(?title)), "net zero")
+    CONTAINS(LCASE(STR(?title)), "net zero") OR
+    CONTAINS(LCASE(STR(?title)), "storage") OR
+    CONTAINS(LCASE(STR(?title)), "grid") OR
+    CONTAINS(LCASE(STR(?title)), "power") OR
+    CONTAINS(LCASE(STR(?title)), "nuclear") OR
+    CONTAINS(LCASE(STR(?title)), "eficiencia") OR
+    CONTAINS(LCASE(STR(?title)), "efficiency") OR
+    CONTAINS(LCASE(STR(?title)), "greenhouse") OR
+    CONTAINS(LCASE(STR(?title)), "invernadero") OR
+    CONTAINS(LCASE(STR(?title)), "fotovoltai") OR
+    CONTAINS(LCASE(STR(?title)), "offshore") OR
+    CONTAINS(LCASE(STR(?title)), "eolic") OR
+    CONTAINS(LCASE(STR(?title)), "aerogen")
   )
-}} ORDER BY ?work DESC(?date) LIMIT 1000
+}} ORDER BY ?work DESC(?date) LIMIT 2000
 """
     try:
         r = requests.post(
@@ -154,21 +166,14 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
         # Requiere marcador UE/EU
         if not EU_ACT_STRICT_RE.search(title):
             continue
-        # Requiere año numérico (actos adoptados) o número de acto
-        if not re.search(r"\b(20\d\d)[/\\]\d+|\b(20\d\d/\d+)", title):
-            continue
-        # El título debe EMPEZAR por el tipo de acto UE (no por legislación nacional)
-        EU_TITLE_START = re.compile(
-            r"^(Regulation|Commission Regulation|Commission Implementing Regulation|"
-            r"Commission Delegated Regulation|Delegated Regulation|"
-            r"Directive|Commission Directive|Implementing Directive|"
-            r"Decision|Commission Decision|Commission Implementing Decision|"
-            r"Commission Delegated Decision|Council Decision|Council Regulation|"
-            r"Reglamento|Directiva|Decisi[oó]n|"
-            r"Recommendation|Recomendaci[oó]n)",
+        # Excluir claramente legislación nacional que se coló
+        _NATIONAL_START = re.compile(
+            r"^(Decreto-Lei|Decreto Legislativo|Lei n\.|Arrêté|Ordonnance|"
+            r"Verordnung|Besluit|Wet van|Attuazione|Umsetzung|"
+            r"Proposal for a |Proposta di |Projeto de )",
             re.IGNORECASE
         )
-        if not EU_TITLE_START.match(title):
+        if _NATIONAL_START.match(title):
             continue
 
         # Deduplicar por título
