@@ -15,7 +15,7 @@ logger = logging.getLogger("main")
 
 
 def main():
-    from db.database import init_db, purge_excluded, backfill_sentencias, upsert_boe, upsert_entries, export_to_json, upsert_pinned_eurlex
+    from db.database import init_db, purge_excluded, backfill_sentencias, upsert_boe, upsert_entries, export_to_json
     from scraper import boe, cnmc
 
     if not os.environ.get("DATABASE_URL"):
@@ -25,7 +25,6 @@ def main():
     logger.info("=== Iniciando base de datos ===")
     init_db()
     purge_excluded()
-    upsert_pinned_eurlex()
     backfill_sentencias()
 
     # ── EUR-Lex (DOUE) ──────────────────────────────────────────────────
