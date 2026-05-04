@@ -29,6 +29,7 @@ TIPO_MAP = [
     (re.compile(r"\bDecision\b|Decisión|Decisi.n",                 re.I), "Decisión (UE)"),
     (re.compile(r"Recommendation|Recomendación",                    re.I), "Recomendación (UE)"),
     (re.compile(r"Commission Notice|Aviso de la Comisi[oó]n",      re.I), "Aviso/Comunicación UE"),
+    (re.compile(r"Court of Auditors|Tribunal de Cuentas",          re.I), "Dictamen Tribunal de Cuentas (UE)"),
     (re.compile(r"Corrigendum|Corrección de errores",               re.I), "Corrección de errores"),
 ]
 
@@ -58,9 +59,11 @@ _NON_LEGIS_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Avisos/Notices energéticos de la Comisión (serie C) — permitidos aunque no lleven (UE)
-_COMMISSION_NOTICE_RE = re.compile(
-    r"^COMMISSION NOTICE|^AVISO DE LA COMISI[OÓ]N",
+# Documentos serie C permitidos aunque no lleven (UE) en el título
+_SERIES_C_ALLOWED_RE = re.compile(
+    r"^COMMISSION NOTICE|^AVISO DE LA COMISI[OÓ]N"
+    r"|^Opinion.*Court of Auditors|^Dictamen.*Tribunal de Cuentas"
+    r"|^Special Report.*Court of Auditors|^Informe Especial.*Tribunal de Cuentas",
     re.IGNORECASE,
 )
 
@@ -82,7 +85,8 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
   FILTER(
     CONTAINS(STR(?title), "(UE)") OR CONTAINS(STR(?title), "(EU)") OR
     CONTAINS(STR(?title), "(EURATOM)") OR CONTAINS(STR(?title), "(Euratom)") OR
-    CONTAINS(STR(?title), "COMMISSION NOTICE") OR CONTAINS(STR(?title), "Commission notice")
+    CONTAINS(STR(?title), "COMMISSION NOTICE") OR CONTAINS(STR(?title), "Commission notice") OR
+    CONTAINS(STR(?title), "Court of Auditors") OR CONTAINS(STR(?title), "Tribunal de Cuentas")
   )
   FILTER(
     CONTAINS(LCASE(STR(?title)), "energ") OR
@@ -177,8 +181,8 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
         # Filtrar documentos no legislativos y legislación nacional no UE
         if _NON_LEGIS_RE.search(title):
             continue
-        # Requiere marcador UE/EU, salvo Commission Notices energéticos (serie C)
-        if not EU_ACT_STRICT_RE.search(title) and not _COMMISSION_NOTICE_RE.search(title):
+        # Requiere marcador UE/EU, salvo documentos serie C permitidos (Notices, ECA Opinions)
+        if not EU_ACT_STRICT_RE.search(title) and not _SERIES_C_ALLOWED_RE.search(title):
             continue
         # Excluir claramente legislación nacional que se coló
         _NATIONAL_START = re.compile(

@@ -1,5 +1,5 @@
 {
-  "updated_at": "05/05/2026 00:21",
+  "updated_at": "05/05/2026 00:29",
   "total": 300,
   "entries": [
     {
@@ -16273,6 +16273,23 @@
       "acceso_conexion": "No",
       "tramitaciones": "No",
       "fecha_real": "2026-03-27"
+    },
+    {
+      "external_id": "eu-71ca50f4-4451-11f1-8095-01aa75",
+      "fecha": "25/03/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Dictamen Tribunal de Cuentas (UE)",
+      "organismo": "Tribunal de Cuentas Europeo",
+      "texto": "Dictamen n.º 13/2026 del Tribunal de Cuentas Europeo sobre la propuesta de Reglamento del Parlamento Europeo y del Consejo por el que se establece un Fondo Europeo de Descarbonización — CELEX:52026AA0013 (C/2026/2586)",
+      "enlace": "https://eur-lex.europa.eu/legal-content/ES/ALL/?uri=CELEX:52026AA0013",
+      "palabras_clave": "descarbonizacion, fondo, decarbonisation",
+      "resumen": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-03-25"
     },
     {
       "external_id": "eu-regulationeu2022869oftheeuropean",
