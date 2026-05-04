@@ -425,6 +425,7 @@
     <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
     <div class="mobile-tab"         data-panel="eu"     >🇪🇺 Europea</div>
     <div class="mobile-tab"         data-panel="acceso" >🔌 Acceso/Conexión</div>
+    <div class="mobile-tab"         data-panel="acer"   >🏛️ ACER</div>
     <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
 </nav>
@@ -450,6 +451,9 @@
       </div>
       <div class="sidebar-item" data-panel="acceso">
         <span class="icon">🔌</span> Acceso y Conexión
+      </div>
+      <div class="sidebar-item" data-panel="acer">
+        <span class="icon">🏛️</span> ACER
       </div>
       <div class="sidebar-item" data-panel="todas">
         <span class="icon">📋</span> Todas las fuentes
@@ -479,6 +483,7 @@
         <button class="src-btn active" data-source="ALL">Todos</button>
         <button class="src-btn" data-source="CNMC">CNMC</button>
         <button class="src-btn" data-source="MITERD">MITERD</button>
+        <button class="src-btn" data-source="ACER">ACER</button>
       </div>
     </div>
   </aside>
@@ -524,6 +529,21 @@
       <div style="text-align:center;margin-top:12px">
         <button id="eu-mas" style="display:none;padding:8px 20px;background:var(--teal);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px">Mostrar más</button>
       </div>
+    </div>
+
+    <!-- ══ PANEL: ACER ══ -->
+    <div id="panel-acer" class="panel">
+      <div class="search-bar">
+        <input type="search" id="acer-search" placeholder="Buscar en ACER…"
+               autocomplete="off" spellcheck="false"/>
+        <select id="acer-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todos los años</option>
+        </select>
+        <span class="result-count" id="acer-count"></span>
+      </div>
+      <div id="acer-loading" class="state-msg">Cargando…</div>
+      <div id="acer-entries"></div>
+      <div id="acer-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
     <!-- ══ PANEL: ACCESO Y CONEXIÓN ══ -->
@@ -753,6 +773,7 @@
       cnmcConsultas = json.cnmc_consultas || [];
       accesoDatos   = json.acceso_conexion  || [];
       eurlex        = json.eurlex           || [];
+      acerData      = json.acer             || [];
       poblarSelectAnios();
       renderAll();
     } catch(e) {
@@ -764,7 +785,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas();
+    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -804,9 +825,13 @@
   }
 
   function cnmcRegCard(e) {
-    const ree = reeImpact('', e.title||'');
+    const ree     = reeImpact('', e.title||'');
+    const srcLabel= e.source || e.department || 'CNMC';
+    const isAcer  = srcLabel === 'ACER';
+    const chipStyle = isAcer ? 'background:rgba(0,63,138,.12);color:#003f8a' : '';
+    const borderCol = isAcer ? '#003f8a' : 'var(--teal2)';
     return `
-    <div class="norm-card" style="border-left-color:var(--teal2)">
+    <div class="norm-card" style="border-left-color:${borderCol}">
       <div class="norm-header">
         <div class="norm-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
@@ -815,10 +840,11 @@
         ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
       </div>
       <div class="norm-meta">
-        <span class="org-chip">CNMC</span>
+        <span class="org-chip" ${chipStyle ? `style="${chipStyle}"` : ''}>${srcLabel}</span>
         ${e.published_date ? `<span>${e.published_date}</span>` : ''}
         ${e.es_circular ? '<span class="badge badge-trimestre">📋 Circular</span>' : ''}
       </div>
+      ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
       ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
@@ -865,6 +891,56 @@
     </div>`;
   }
 
+  /* ── ACER card ──────────────────────────────────────────────────── */
+  function acerCard(e) {
+    const isDecision = (e.section||'').includes('Decisi');
+    const imp  = e.importante === 'Sí';
+    const ree  = e.impacto_ree || '';
+    return `
+    <div class="norm-card" style="border-left-color:#003f8a">
+      <div class="norm-header">
+        <div class="norm-title">
+          ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
+        </div>
+        ${recencyLabel(e.published_date)}
+        ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
+      </div>
+      <div class="norm-meta">
+        <span class="org-chip" style="background:rgba(0,63,138,.12);color:#003f8a">ACER</span>
+        ${e.published_date ? `<span>${e.published_date}</span>` : ''}
+        ${isDecision
+          ? '<span class="badge badge-acc">⚖️ Decisión</span>'
+          : '<span style="font-size:11px;color:var(--gray4)">📰 Noticia</span>'}
+        ${imp && !isDecision ? '<span class="badge badge-imp">★ Importante</span>' : ''}
+        ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
+      </div>
+      ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,300))}</div>` : ''}
+      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
+    </div>`;
+  }
+
+  function renderAcer() {
+    const q   = (document.getElementById('acer-search') || {value:''}).value.toLowerCase().trim();
+    const yr  = (document.getElementById('acer-year')   || {value:''}).value;
+    const el  = document.getElementById('acer-entries');
+    if (!el) return;
+    document.getElementById('acer-loading').style.display = 'none';
+
+    const filtered = acerData.filter(e => {
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
+      if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
+      if (!q) return true;
+      return ((e.title||'') + ' ' + (e.summary||'')).toLowerCase().includes(q);
+    });
+
+    document.getElementById('acer-count').textContent =
+      filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('acer-empty').style.display = filtered.length ? 'none' : 'block';
+    el.innerHTML = filtered.map(e => acerCard(e)).join('');
+  }
+
   function renderResumen() {
     // Normativa importante de los últimos 7 días
     const sevenDaysAgo = new Date();
@@ -881,14 +957,22 @@
       return !isNaN(d) && d >= sevenDaysAgo;
     }
 
-    const normImp = allEntries.filter(e =>
-      e.importante === 'Sí' && isThisWeek(e.published_date) &&
-      (activeSource === 'ALL' || (e.filtro||e.source) === activeSource)
-    );
+    const normImp = [
+      ...allEntries.filter(e =>
+        e.importante === 'Sí' && isThisWeek(e.published_date) &&
+        (activeSource === 'ALL' || (e.filtro||e.source) === activeSource)
+      ),
+      ...acerData.filter(e =>
+        e.importante === 'Sí' && isThisWeek(e.published_date) &&
+        (activeSource === 'ALL' || activeSource === 'ACER')
+      ),
+    ];
     const normEl = document.getElementById('resumen-norm-entries');
     document.getElementById('resumen-norm-empty').style.display = normImp.length ? 'none' : 'block';
     normEl.innerHTML = normImp.map(e =>
-      normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
+      e.source === 'ACER'
+        ? acerCard(e)
+        : normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
     ).join('');
 
     // Consultas abiertas con filtro de fuente
@@ -1073,6 +1157,7 @@
   let soloImportante        = false;
   let ocultarTramitaciones  = false;
   let mostrarOtrosSectores  = false;
+  let acerData = [];
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
@@ -1254,6 +1339,8 @@
   document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
   const euMasBtn = document.getElementById('eu-mas');
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
+  document.getElementById('acer-search').addEventListener('input', () => renderAcer());
+  document.getElementById('acer-year').addEventListener('change',  () => renderAcer());
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
