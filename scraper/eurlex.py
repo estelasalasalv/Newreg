@@ -107,7 +107,6 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
     CONTAINS(LCASE(STR(?title)), "offshore") OR
     CONTAINS(LCASE(STR(?title)), "eolic") OR
     CONTAINS(LCASE(STR(?title)), "aerogen") OR
-    CONTAINS(LCASE(STR(?title)), "building") OR
     CONTAINS(LCASE(STR(?title)), "warming potential") OR
     CONTAINS(LCASE(STR(?title)), "life-cycle")
   )
