@@ -62,15 +62,42 @@ def init_db():
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS estado      VARCHAR(20) DEFAULT 'Abierta';
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS importante  VARCHAR(3)  DEFAULT 'No';
-    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS impacto_ree TEXT;
-    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
-    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado  VARCHAR(1)  DEFAULT 'N';
+    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS impacto_ree        TEXT;
+    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS comprobado          VARCHAR(1)  DEFAULT 'N';
+    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
+    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
+    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado          VARCHAR(1)  DEFAULT 'N';
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql)
         conn.commit()
     logger.info("Base de datos inicializada (esquema nuevo).")
+
+
+def purge_excluded() -> int:
+    """Elimina de boe_entries y eurlex_entries las entradas cuyos títulos
+    coincidan con los patrones de exclusión definidos en los scrapers."""
+    sql_boe = """
+    DELETE FROM boe_entries
+    WHERE texto ILIKE '%eficiencia del servicio p_blico%'
+    """
+    sql_eu = """
+    DELETE FROM eurlex_entries
+    WHERE texto ILIKE '%eficiencia del servicio p_blico%'
+    """
+    deleted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql_boe)
+            deleted += cur.rowcount
+            cur.execute(sql_eu)
+            deleted += cur.rowcount
+        conn.commit()
+    if deleted:
+        logger.info("purge_excluded: eliminadas %d entradas excluidas.", deleted)
+    return deleted
 
 
 def upsert_boe(entries: List[Dict]) -> int:
@@ -80,19 +107,20 @@ def upsert_boe(entries: List[Dict]) -> int:
     sql = """
     INSERT INTO boe_entries
         (external_id, fecha, fuente, seccion, tipo, organismo, subseccion,
-         texto, enlace, palabras_clave, resumen, importante, acceso_conexion, publicable, impacto_ree)
+         texto, enlace, palabras_clave, resumen, importante, acceso_conexion,
+         tramitaciones, publicable, impacto_ree)
     VALUES
         (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(tipo)s,
          %(organismo)s, %(subseccion)s, %(texto)s, %(enlace)s, %(palabras_clave)s,
-         %(resumen)s, %(importante)s, %(acceso_conexion)s, %(publicable)s,
-         %(impacto_ree)s)
+         %(resumen)s, %(importante)s, %(acceso_conexion)s,
+         %(tramitaciones)s, %(publicable)s, %(impacto_ree)s)
     ON CONFLICT (external_id) DO NOTHING
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                cur.execute(sql, {**e, "impacto_ree": e.get("impacto_ree")})
+                cur.execute(sql, {**e, "impacto_ree": e.get("impacto_ree"), "tramitaciones": e.get("tramitaciones", "No")})
                 inserted += cur.rowcount
         conn.commit()
     return inserted
@@ -104,19 +132,23 @@ def upsert_entries(entries: List[Dict]) -> int:
         return 0
     sql = """
     INSERT INTO regulatory_entries
-        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo, estado, sector)
+        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo, estado, sector, tramitaciones)
     VALUES
         (%(source)s, %(external_id)s, %(title)s, %(published_date)s,
          %(url)s, %(section)s, %(department)s, %(summary)s,
-         %(tipo)s, %(plazo)s, %(estado)s, %(sector)s)
-    ON CONFLICT (external_id) DO UPDATE SET plazo = EXCLUDED.plazo, estado = EXCLUDED.estado
+         %(tipo)s, %(plazo)s, %(estado)s, %(sector)s, %(tramitaciones)s)
+    ON CONFLICT (external_id) DO UPDATE SET
+        plazo  = EXCLUDED.plazo,
+        estado = EXCLUDED.estado,
+        title  = EXCLUDED.title
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
                 row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
-                       "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad")}
+                       "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
+                       "tramitaciones": e.get("tramitaciones", "No")}
                 cur.execute(sql, row)
                 inserted += cur.rowcount
         conn.commit()
@@ -126,7 +158,7 @@ def upsert_entries(entries: List[Dict]) -> int:
 def fetch_cnmc_consultas() -> List[Dict]:
     """Devuelve consultas públicas de CNMC y MITERD."""
     sql = """
-    SELECT source, title, url, plazo, summary, impacto_ree,
+    SELECT source, title, url, plazo, summary, impacto_ree, tramitaciones,
            TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
            COALESCE(estado, 'Abierta') AS estado,
            COALESCE(sector, 'electricidad') AS sector,
@@ -153,10 +185,11 @@ def fetch_boe_trimestre(days: int = 92) -> List[Dict]:
         TO_CHAR(fecha, 'DD/MM/YYYY') AS fecha,
         fuente, seccion, tipo, organismo, subseccion,
         texto, enlace, palabras_clave, resumen, impacto_ree,
-        importante, acceso_conexion, publicable,
+        importante, acceso_conexion, tramitaciones, publicable,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
     FROM   boe_entries
     WHERE  fecha >= CURRENT_DATE - %(days)s
+      AND  texto NOT ILIKE '%%eficiencia del servicio p_blico%%'
     ORDER  BY fecha DESC, scraped_at DESC
     """
     with get_connection() as conn:
@@ -179,6 +212,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         tipo,
         importante,
         acceso_conexion,
+        tramitaciones,
         palabras_clave                                          AS summary,
         resumen,
         impacto_ree,
@@ -193,6 +227,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
         (scraped_at::date = CURRENT_DATE)                      AS es_nuevo
     FROM boe_entries
+    WHERE texto NOT ILIKE '%%eficiencia del servicio p_blico%%'
 
     UNION ALL
 
@@ -206,6 +241,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         NULL::text                                              AS tipo,
         COALESCE(importante, 'No')                             AS importante,
         NULL::text                                              AS acceso_conexion,
+        tramitaciones,
         summary,
         NULL::text                                              AS resumen,
         impacto_ree,
@@ -237,7 +273,7 @@ def fetch_acceso_conexion() -> List[Dict]:
         enlace                                                  AS url,
         seccion                                                 AS section,
         organismo                                               AS department,
-        tipo, importante, acceso_conexion, palabras_clave AS summary,
+        tipo, importante, acceso_conexion, tramitaciones, palabras_clave AS summary,
         resumen, impacto_ree,
         CASE
           WHEN LOWER(organismo) LIKE '%%transici%%ecol%%' OR LOWER(organismo) LIKE '%%miterd%%' THEN 'MITERD'
@@ -246,6 +282,7 @@ def fetch_acceso_conexion() -> List[Dict]:
         END AS filtro
     FROM boe_entries
     WHERE acceso_conexion != 'No'
+      AND texto NOT ILIKE '%eficiencia del servicio p_blico%'
     UNION ALL
     SELECT
         source, title,
@@ -253,6 +290,7 @@ def fetch_acceso_conexion() -> List[Dict]:
         EXTRACT(YEAR FROM COALESCE(published_date, scraped_at::date))::int AS anio,
         url, section, department,
         NULL::text AS tipo, NULL::text AS importante, 'Acceso/Conexion' AS acceso_conexion,
+        tramitaciones,
         summary, NULL::text AS resumen, impacto_ree, source AS filtro
     FROM regulatory_entries
     WHERE tipo = 'consulta'
@@ -280,7 +318,7 @@ def fetch_eurlex(limit: int = 500) -> List[Dict]:
         external_id, TO_CHAR(fecha,'DD/MM/YYYY') AS fecha,
         EXTRACT(YEAR FROM fecha)::int             AS anio,
         fuente, seccion, tipo, organismo, texto, enlace,
-        palabras_clave, resumen, importante, acceso_conexion,
+        palabras_clave, resumen, importante, acceso_conexion, tramitaciones,
         TO_CHAR(fecha,'YYYY-MM-DD')               AS fecha_real
     FROM   eurlex_entries
     ORDER  BY fecha DESC NULLS LAST
@@ -299,17 +337,18 @@ def upsert_eurlex(entries: List[Dict]) -> int:
     sql = """
     INSERT INTO eurlex_entries
         (external_id,fecha,fuente,seccion,tipo,organismo,subseccion,
-         texto,enlace,palabras_clave,resumen,importante,acceso_conexion,publicable)
+         texto,enlace,palabras_clave,resumen,importante,acceso_conexion,tramitaciones,publicable)
     VALUES
         (%(external_id)s,%(fecha)s,%(fuente)s,%(seccion)s,%(tipo)s,%(organismo)s,%(subseccion)s,
-         %(texto)s,%(enlace)s,%(palabras_clave)s,%(resumen)s,%(importante)s,%(acceso_conexion)s,%(publicable)s)
+         %(texto)s,%(enlace)s,%(palabras_clave)s,%(resumen)s,%(importante)s,%(acceso_conexion)s,
+         %(tramitaciones)s,%(publicable)s)
     ON CONFLICT (external_id) DO NOTHING
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                cur.execute(sql, e)
+                cur.execute(sql, {**e, "tramitaciones": e.get("tramitaciones", "No")})
                 inserted += cur.rowcount
         conn.commit()
     return inserted
@@ -326,9 +365,10 @@ def fetch_reg_espanola_q1() -> Dict:
     SELECT
         TO_CHAR(fecha, 'DD/MM/YYYY') AS fecha,
         fuente, seccion, tipo, organismo, subseccion,
-        texto, enlace, palabras_clave, resumen, impacto_ree, importante, acceso_conexion, publicable
+        texto, enlace, palabras_clave, resumen, impacto_ree, importante, acceso_conexion, tramitaciones, publicable
     FROM   boe_entries
     WHERE  fecha BETWEEN %(ini)s AND %(fin)s
+      AND  texto NOT ILIKE '%%eficiencia del servicio p_blico%%'
     ORDER  BY fecha DESC
     """
     # CNMC: la web de CNMC no expone fechas por consulta, así que
@@ -378,6 +418,53 @@ def _filter_year(items: list, year: int) -> list:
     return [e for e in items if _matches(e)]
 
 
+def backfill_sentencias() -> int:
+    """Enriquece con el expediente los títulos de sentencias CNMC ya en BD que aún no lo tienen."""
+    from scraper.cnmc import _fetch_sentencia_expediente
+    sql_select = """
+    SELECT id, title, url FROM regulatory_entries
+    WHERE LOWER(title) LIKE 'sentencia%%' AND title NOT LIKE '%%|%%'
+    """
+    sql_update = "UPDATE regulatory_entries SET title = %s WHERE id = %s"
+    updated = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql_select)
+            rows = cur.fetchall()
+        for row in rows:
+            exp = _fetch_sentencia_expediente(row["url"])
+            if exp:
+                new_title = f"{row['title']} | {exp}"
+                with conn.cursor() as cur:
+                    cur.execute(sql_update, (new_title, row["id"]))
+                updated += 1
+                logger.info("backfill_sentencias: %s → %s", row["title"][:60], new_title[:80])
+        conn.commit()
+    logger.info("backfill_sentencias: %d entradas actualizadas.", updated)
+    return updated
+
+
+def fetch_acer() -> List[Dict]:
+    """Devuelve todas las entradas ACER (noticias + decisiones)."""
+    sql = """
+    SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
+           COALESCE(importante, 'No')                                        AS importante,
+           TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
+           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
+           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
+           (scraped_at::date = CURRENT_DATE)                                AS es_nuevo
+    FROM   regulatory_entries
+    WHERE  source = 'ACER'
+    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
 def export_to_json(path: str = "web/data.json", limit: int = 300):
     """Exporta datos al JSON que consume la web estática.
     Solo incluye datos del YEAR_FILTER (datos históricos se conservan en BD).
@@ -388,11 +475,14 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     consultas      = fetch_cnmc_consultas()
     acceso_con     = fetch_acceso_conexion()
     eurlex         = fetch_eurlex(500)
+    acer           = fetch_acer()
 
     # Aplicar filtro de año (solo visualización — datos históricos intactos en BD)
     entries_f   = _filter_year(entries,    YEAR_FILTER)
     acceso_f    = _filter_year(acceso_con, YEAR_FILTER)
     eurlex_f    = _filter_year(eurlex,     YEAR_FILTER)
+
+    acer_f = _filter_year(acer, YEAR_FILTER)
 
     payload = {
         "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
@@ -403,6 +493,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "cnmc_consultas": consultas,     # pestaña Consultas (siempre actuales)
         "acceso_conexion": acceso_f,     # pestaña Acceso/Conexión (solo 2026)
         "eurlex":          eurlex_f,     # pestaña Normativa Europea (solo 2026)
+        "acer":            acer_f,       # pestaña ACER (solo 2026)
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)

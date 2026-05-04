@@ -15,7 +15,7 @@ logger = logging.getLogger("main")
 
 
 def main():
-    from db.database import init_db, upsert_boe, upsert_entries, export_to_json
+    from db.database import init_db, purge_excluded, backfill_sentencias, upsert_boe, upsert_entries, export_to_json
     from scraper import boe, cnmc
 
     if not os.environ.get("DATABASE_URL"):
@@ -24,6 +24,8 @@ def main():
 
     logger.info("=== Iniciando base de datos ===")
     init_db()
+    purge_excluded()
+    backfill_sentencias()
 
     # ── EUR-Lex (DOUE) ──────────────────────────────────────────────────
     logger.info("=== Scraping EUR-Lex (DOUE) ===")
@@ -72,6 +74,13 @@ def main():
     rss_entries = cnmc_rss.scrape()
     rss_new     = upsert_entries(rss_entries)
     logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
+
+    # ── ACER (novedades del día anterior) ────────────────────────────────
+    logger.info("=== Scraping ACER ===")
+    from scraper import acer as acer_scraper
+    acer_entries = acer_scraper.scrape(days_back=1)
+    acer_new     = upsert_entries(acer_entries)
+    logger.info("ACER: %d entradas, %d nuevas en BD", len(acer_entries), acer_new)
 
     # ── Exportar JSON para la web ───────────────────────────────────────
     logger.info("=== Exportando web/data.json ===")
