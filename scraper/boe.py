@@ -268,6 +268,7 @@ _EXCLUDED_TITLES = [
     re.compile(r"fiscal con destino", re.IGNORECASE),
     re.compile(r"seguridad jur[ií]dica y fe p[uú]blica", re.IGNORECASE),
     re.compile(r"eficiencia del servicio p[uú]blico", re.IGNORECASE),
+    re.compile(r"agencia estatal de meteorolog[ií]a", re.IGNORECASE),
 ]
 
 # Organismos aprobados para libre designación
