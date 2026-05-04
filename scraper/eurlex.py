@@ -28,6 +28,7 @@ TIPO_MAP = [
     (re.compile(r"Delegated Decision|Decisión Delegada",            re.I), "Decisión Delegada (UE)"),
     (re.compile(r"\bDecision\b|Decisión|Decisi.n",                 re.I), "Decisión (UE)"),
     (re.compile(r"Recommendation|Recomendación",                    re.I), "Recomendación (UE)"),
+    (re.compile(r"Commission Notice|Aviso de la Comisi[oó]n",      re.I), "Aviso/Comunicación UE"),
     (re.compile(r"Corrigendum|Corrección de errores",               re.I), "Corrección de errores"),
 ]
 
@@ -51,9 +52,15 @@ def _is_importante(tipo: str) -> str:
 
 _NON_LEGIS_RE = re.compile(
     r"^(REPORT FROM|COMMISSION STAFF WORKING|COMMUNICATION FROM|"
-    r"ANNEX TO|WORKING DOCUMENT|NOTICE |CORRIGENDUM TO|CORRIGENDUM$|"
+    r"ANNEX TO|WORKING DOCUMENT|CORRIGENDUM TO|CORRIGENDUM$|"
     r"Decreto-Lei|Decreto Legislativo|Lei n\.|Orden |Real Decreto|"
     r"SUMMARY RECORD|MINUTES OF|AGENDA OF)",
+    re.IGNORECASE,
+)
+
+# Avisos/Notices energéticos de la Comisión (serie C) — permitidos aunque no lleven (UE)
+_COMMISSION_NOTICE_RE = re.compile(
+    r"^COMMISSION NOTICE|^AVISO DE LA COMISI[OÓ]N",
     re.IGNORECASE,
 )
 
@@ -74,7 +81,8 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
   FILTER(?date >= "{date_from}"^^xsd:date AND ?date <= "{date_to}"^^xsd:date)
   FILTER(
     CONTAINS(STR(?title), "(UE)") OR CONTAINS(STR(?title), "(EU)") OR
-    CONTAINS(STR(?title), "(EURATOM)") OR CONTAINS(STR(?title), "(Euratom)")
+    CONTAINS(STR(?title), "(EURATOM)") OR CONTAINS(STR(?title), "(Euratom)") OR
+    CONTAINS(STR(?title), "COMMISSION NOTICE") OR CONTAINS(STR(?title), "Commission notice")
   )
   FILTER(
     CONTAINS(LCASE(STR(?title)), "energ") OR
@@ -108,7 +116,10 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
     CONTAINS(LCASE(STR(?title)), "eolic") OR
     CONTAINS(LCASE(STR(?title)), "aerogen") OR
     CONTAINS(LCASE(STR(?title)), "warming potential") OR
-    CONTAINS(LCASE(STR(?title)), "life-cycle")
+    CONTAINS(LCASE(STR(?title)), "life-cycle") OR
+    CONTAINS(LCASE(STR(?title)), "taxonomy") OR
+    CONTAINS(LCASE(STR(?title)), "remit") OR
+    CONTAINS(LCASE(STR(?title)), "omnibus")
   )
 }} ORDER BY ?work DESC(?date) LIMIT 2000
 """
@@ -166,8 +177,8 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
         # Filtrar documentos no legislativos y legislación nacional no UE
         if _NON_LEGIS_RE.search(title):
             continue
-        # Requiere marcador UE/EU
-        if not EU_ACT_STRICT_RE.search(title):
+        # Requiere marcador UE/EU, salvo Commission Notices energéticos (serie C)
+        if not EU_ACT_STRICT_RE.search(title) and not _COMMISSION_NOTICE_RE.search(title):
             continue
         # Excluir claramente legislación nacional que se coló
         _NATIONAL_START = re.compile(
