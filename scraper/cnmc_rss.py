@@ -14,7 +14,7 @@ from email.utils import parsedate_to_datetime
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 
-from scraper.boe import _find_keywords, _norm
+from scraper.boe import _find_keywords, _norm, _detect_tramitaciones
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +231,7 @@ def scrape() -> List[Dict]:
             "plazo":          None,
             "estado":         "Abierta",
             "sector":         "electricidad",
+            "tramitaciones":  _detect_tramitaciones(enriched),
         })
 
     logger.info("CNMC RSS: %d/%d entradas relevantes", len(results), len(items))

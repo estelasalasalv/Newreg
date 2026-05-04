@@ -144,6 +144,14 @@ _NOM_DEPTS = [_norm(d) for d in [
 # Palabras para campo acceso_conexion
 _ACCESS_RE = re.compile(r"\b(acceso|conexion|interconexion|peaje de acceso|red de transporte|red de distribucion)\b")
 
+# Patrón para autorizaciones administrativas de construcción/previa (AAP/AAC)
+_TRAMITACIONES_RE = re.compile(
+    r"autorizaci[oó]n administrativa\s+(previa|de construcci[oó]n)"
+    r"|\bAAP\b"
+    r"|\bAAC\b",
+    re.IGNORECASE,
+)
+
 
 # ── Detección de tipo de documento ───────────────────────────────────────────
 _TIPO_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -241,6 +249,10 @@ def _detect_acceso(titulo: str) -> str:
     return "Sí" if _ACCESS_RE.search(_norm(titulo)) else "No"
 
 
+def _detect_tramitaciones(titulo: str) -> str:
+    return "Sí" if _TRAMITACIONES_RE.search(titulo) else "No"
+
+
 def _dept_is_approved(dept_norm: str) -> bool:
     return any(frag in dept_norm for frag in _NOM_DEPTS)
 
@@ -253,6 +265,7 @@ _EXCLUDED_TITLES = [
     re.compile(r"instituto geogr[aá]fico nacional", re.IGNORECASE),
     re.compile(r"fiscal con destino", re.IGNORECASE),
     re.compile(r"seguridad jur[ií]dica y fe p[uú]blica", re.IGNORECASE),
+    re.compile(r"eficiencia del servicio p[uú]blico", re.IGNORECASE),
 ]
 
 # Organismos aprobados para libre designación
@@ -325,6 +338,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             art64    = _clasificar_art64(titulo)
                             imp      = "Sí" if art64 else _is_importante(tipo, dept_nombre, titulo)
                             acceso   = _detect_acceso(titulo)
+                            autorizacion = _detect_tramitaciones(titulo)
 
                             items.append({
                                 "external_id":   doc_id,
@@ -340,6 +354,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                                 "resumen":       None,
                                 "importante":    imp,
                                 "acceso_conexion": acceso,
+                                "tramitaciones": autorizacion,
                                 "impacto_ree":   art64 if art64 else None,
                                 "publicable":    "NO",
                             })
