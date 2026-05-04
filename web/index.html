@@ -82,20 +82,20 @@
       overflow-y: auto;
       flex-shrink: 0;
     }
-    .sidebar-section { margin-bottom: 20px; }
+    .sidebar-section { margin-bottom: 12px; }
     .sidebar-label {
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.2px;
       opacity: .45;
-      padding: 0 16px 6px;
+      padding: 0 16px 4px;
     }
     .sidebar-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 9px 16px;
+      padding: 6px 16px;
       font-size: 12.5px;
       font-weight: 500;
       cursor: pointer;
@@ -113,7 +113,7 @@
       font-weight: 700;
     }
     .sidebar-item .icon { font-size: 14px; width: 20px; text-align: center; }
-    .sidebar-divider { height: 1px; background: rgba(255,255,255,.07); margin: 8px 16px; }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.07); margin: 5px 16px; }
 
     /* Filtros de fuente en sidebar */
     .src-filters { padding: 4px 16px 0; display: flex; flex-direction: column; gap: 4px; }
@@ -263,6 +263,7 @@
     .badge-semestre  { background: rgba(249,168,37,.2);  color: #b45309; }
     .badge-anio      { background: var(--gray2);         color: var(--gray4); }
     .badge-acc       { background: rgba(0,184,176,.12);  color: var(--teal2); }
+    .badge-auth      { background: rgba(99,102,241,.12); color: #4f46e5; }
     .badge-imp       { background: rgba(249,168,37,.2);  color: #b45309; }
 
     /* ── CONSULTA CARD (CNMC) ──────────────────────────────────── */
@@ -458,23 +459,26 @@
     <div class="sidebar-divider"></div>
 
     <div class="sidebar-section">
-      <div class="sidebar-label">Filtrar fuente</div>
-      <div class="src-filters">
-        <button class="src-btn active" data-source="ALL">Todos</button>
-
-        <button class="src-btn" data-source="CNMC">CNMC</button>
-        <button class="src-btn" data-source="MITERD">MITERD</button>
+      <div style="padding:4px 16px 8px;display:flex;flex-direction:column;gap:6px">
+        <label class="imp-label">
+          <input type="checkbox" id="chk-solo-importante"/>
+          Solo importantes
+        </label>
+        <label class="imp-label">
+          <input type="checkbox" id="chk-ocultar-tramitaciones"/>
+          Ocultar tramitaciones
+        </label>
       </div>
     </div>
 
     <div class="sidebar-divider"></div>
 
     <div class="sidebar-section">
-      <div style="padding:4px 16px">
-        <label class="imp-label">
-          <input type="checkbox" id="chk-solo-importante"/>
-          Solo importantes
-        </label>
+      <div class="sidebar-label">Filtrar fuente</div>
+      <div class="src-filters">
+        <button class="src-btn active" data-source="ALL">Todos</button>
+        <button class="src-btn" data-source="CNMC">CNMC</button>
+        <button class="src-btn" data-source="MITERD">MITERD</button>
       </div>
     </div>
   </aside>
@@ -790,6 +794,7 @@
         ${fecha ? `<span>${fecha}</span>` : ''}
         ${org   ? `<span class="org-chip">${esc(org.length>40?org.slice(0,40)+'…':org)}</span>` : ''}
         ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
+        ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
       </div>
       ${sec||sub ? `<div class="norm-section">${esc(sec)}${sub?' › '+esc(sub):''}</div>` : ''}
       ${kw  ? `<div style="font-size:10.5px;color:var(--gray3);margin:4px 0 6px">🔑 ${esc(kw)}</div>` : ''}
@@ -932,6 +937,7 @@
     const filtered = eurlex.filter(e => {
       if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
       if (soloImp && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (yr && String(e.anio) !== yr) return false;
       if (!q) return true;
       return ((e.texto||'')+' '+(e.tipo||'')).toLowerCase().includes(q);
@@ -977,6 +983,7 @@
 
     const filtered = accesoDatos.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (yr && String(e.anio) !== yr) return false;
       if (!q) return true;
@@ -999,6 +1006,7 @@
     const todasYr = document.getElementById('todas-year').value;
     const filtered = allEntries.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (todasYr && e.published_date && !e.published_date.endsWith(todasYr)) return false;
       if (!q) return true;
@@ -1036,6 +1044,7 @@
 
     const filtered = allEntries.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
@@ -1060,8 +1069,9 @@
 
   let activeOrg = 'ALL';
   let vistaCalendario = false;
-  let soloImportante   = false;
-  let mostrarOtrosSectores = false;
+  let soloImportante        = false;
+  let ocultarTramitaciones  = false;
+  let mostrarOtrosSectores  = false;
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
@@ -1253,6 +1263,9 @@
   document.getElementById('con-search').addEventListener('input', renderConsultas);
   document.getElementById('chk-solo-importante').addEventListener('change', function() {
     soloImportante = this.checked; renderAll();
+  });
+  document.getElementById('chk-ocultar-tramitaciones').addEventListener('change', function() {
+    ocultarTramitaciones = this.checked; renderAll();
   });
   document.getElementById('btn-vista-cal').addEventListener('click', () => {
     vistaCalendario = !vistaCalendario;
