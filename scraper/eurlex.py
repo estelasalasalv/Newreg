@@ -12,6 +12,7 @@ import logging
 import requests
 from datetime import date, timedelta
 from typing import List, Dict, Optional
+from scraper.boe import _detect_tramitaciones
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,10 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
     CONTAINS(LCASE(STR(?title)), "fotovoltai") OR
     CONTAINS(LCASE(STR(?title)), "offshore") OR
     CONTAINS(LCASE(STR(?title)), "eolic") OR
-    CONTAINS(LCASE(STR(?title)), "aerogen")
+    CONTAINS(LCASE(STR(?title)), "aerogen") OR
+    CONTAINS(LCASE(STR(?title)), "building") OR
+    CONTAINS(LCASE(STR(?title)), "warming potential") OR
+    CONTAINS(LCASE(STR(?title)), "life-cycle")
   )
 }} ORDER BY ?work DESC(?date) LIMIT 2000
 """
@@ -175,6 +179,8 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
         )
         if _NATIONAL_START.match(title):
             continue
+        if re.search(r"eficiencia del servicio p[uú]blico", title, re.IGNORECASE):
+            continue
 
         # Deduplicar por título
         key = re.sub(r"\s+", " ", title[:100])
@@ -186,9 +192,10 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
         cellar_id = work.replace(CELLAR_BASE, "").split(".")[0] if CELLAR_BASE in work else ""
         enlace = f"https://eur-lex.europa.eu/resource.html?uri=cellar:{cellar_id}" if cellar_id else work
 
-        tipo       = _detect_tipo(title)
-        importante = _is_importante(tipo)
-        ext_id     = f"eu-{cellar_id[:30]}" if cellar_id else f"eu-{re.sub(r'[^a-z0-9]','', title[:40].lower())}"
+        tipo          = _detect_tipo(title)
+        importante    = _is_importante(tipo)
+        tramitaciones = _detect_tramitaciones(title)
+        ext_id        = f"eu-{cellar_id[:30]}" if cellar_id else f"eu-{re.sub(r'[^a-z0-9]','', title[:40].lower())}"
 
         results.append({
             "external_id":     ext_id,
@@ -204,6 +211,7 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
             "resumen":         None,
             "importante":      importante,
             "acceso_conexion": "No",
+            "tramitaciones":   tramitaciones,
             "publicable":      "NO",
         })
 
