@@ -8,6 +8,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
+from scraper.boe import _detect_tramitaciones
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,25 @@ def _fetch(url: str, page: int = 0) -> Optional[BeautifulSoup]:
         logger.error("CNMC request failed (page=%d): %s", page, exc)
         return None
 
+def _fetch_sentencia_expediente(url: str) -> str:
+    """Obtiene el título del expediente de la página de detalle de una sentencia CNMC."""
+    try:
+        resp = requests.get(url, headers=_HEADERS, timeout=20)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "lxml")
+        wrapper = soup.select_one("div.event-bottom-title-wrapper")
+        if wrapper:
+            h2 = wrapper.find("h2")
+            if h2:
+                h2.extract()
+            text = wrapper.get_text(strip=True)
+            if text:
+                return text
+    except Exception:
+        pass
+    return ""
+
+
 def _fetch_plazo(url: str) -> str:
     try:
         resp = requests.get(url, headers=_HEADERS, timeout=20)
@@ -128,6 +148,7 @@ def _extract(soup: BeautifulSoup) -> List[Dict]:
             "plazo":          None,
             "estado":         estado,
             "sector":         _detect_sector(title),
+            "tramitaciones":  _detect_tramitaciones(title),
         })
     return entries
 
@@ -148,6 +169,13 @@ def scrape(max_pages: int = 5, fetch_plazos: bool = True) -> List[Dict]:
         for e in results:
             if not e.get("plazo") or "hasta" not in (e["plazo"] or "").lower():
                 e["plazo"] = _fetch_plazo(e["url"]) or e["plazo"]
+
+    # Enriquecer títulos de sentencias con el expediente de la página de detalle
+    for e in results:
+        if e["title"].lower().startswith("sentencia") and " | " not in e["title"]:
+            exp = _fetch_sentencia_expediente(e["url"])
+            if exp:
+                e["title"] = f"{e['title']} | {exp}"
 
     logger.info("CNMC consultas: %d entradas", len(results))
     return results
