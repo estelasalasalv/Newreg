@@ -76,6 +76,79 @@ def init_db():
     logger.info("Base de datos inicializada (esquema nuevo).")
 
 
+# Entradas ancla: insertadas manualmente, no capturables por SPARQL.
+# Se reinsertan en cada ejecución para garantizar que no se pierdan.
+_PINNED_EURLEX = [
+    {
+        "external_id":  "eu-d956c221-4450-11f1-8095-01aa75",
+        "fecha":        "2026-04-30",
+        "fuente":       "DOUE",
+        "seccion":      "DOUE — Serie C",
+        "tipo":         "Aviso/Comunicación UE",
+        "organismo":    "Unión Europea",
+        "subseccion":   "",
+        "texto": (
+            "Aviso de la Comisión sobre la interpretación y aplicación de determinadas "
+            "disposiciones jurídicas del Acto Delegado sobre divulgación de información "
+            "en virtud del artículo 8 del Reglamento de Taxonomía UE, modificado por el "
+            "Acto Delegado Ómnibus, en materia de actividades y activos económicos "
+            "elegibles y alineados con la Taxonomía (cuarto aviso) — CELEX:52026XC02558"
+        ),
+        "enlace":        "https://eur-lex.europa.eu/legal-content/ES/ALL/?uri=CELEX:52026XC02558",
+        "palabras_clave": "taxonomia, divulgacion, omnibus",
+        "resumen":       None,
+        "importante":    "No",
+        "acceso_conexion": "No",
+        "tramitaciones": "No",
+        "publicable":    "NO",
+    },
+    {
+        "external_id":  "eu-71ca50f4-4451-11f1-8095-01aa75",
+        "fecha":        "2026-03-25",
+        "fuente":       "DOUE",
+        "seccion":      "DOUE — Serie C",
+        "tipo":         "Dictamen Tribunal de Cuentas (UE)",
+        "organismo":    "Tribunal de Cuentas Europeo",
+        "subseccion":   "",
+        "texto": (
+            "Dictamen n.º 13/2026 del Tribunal de Cuentas Europeo sobre la propuesta "
+            "de Reglamento del Parlamento Europeo y del Consejo por el que se establece "
+            "un Fondo Europeo de Descarbonización — CELEX:52026AA0013 (C/2026/2586)"
+        ),
+        "enlace":        "https://eur-lex.europa.eu/legal-content/ES/ALL/?uri=CELEX:52026AA0013",
+        "palabras_clave": "descarbonizacion, fondo, decarbonisation",
+        "resumen":       None,
+        "importante":    "No",
+        "acceso_conexion": "No",
+        "tramitaciones": "No",
+        "publicable":    "NO",
+    },
+]
+
+
+def upsert_pinned_eurlex() -> None:
+    """Garantiza que las entradas ancla siempre están en eurlex_entries."""
+    sql = """
+    INSERT INTO eurlex_entries
+        (external_id, fecha, fuente, seccion, tipo, organismo, subseccion,
+         texto, enlace, palabras_clave, resumen, importante, acceso_conexion, tramitaciones, publicable)
+    VALUES
+        (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(tipo)s, %(organismo)s, %(subseccion)s,
+         %(texto)s, %(enlace)s, %(palabras_clave)s, %(resumen)s, %(importante)s,
+         %(acceso_conexion)s, %(tramitaciones)s, %(publicable)s)
+    ON CONFLICT (external_id) DO UPDATE SET
+        texto    = EXCLUDED.texto,
+        enlace   = EXCLUDED.enlace,
+        fecha    = EXCLUDED.fecha
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for entry in _PINNED_EURLEX:
+                cur.execute(sql, entry)
+        conn.commit()
+    logger.info("upsert_pinned_eurlex: %d entradas ancla garantizadas.", len(_PINNED_EURLEX))
+
+
 def purge_excluded() -> int:
     """Elimina de boe_entries y eurlex_entries las entradas cuyos títulos
     coincidan con los patrones de exclusión definidos en los scrapers."""
