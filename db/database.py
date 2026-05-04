@@ -77,27 +77,9 @@ def init_db():
 
 
 def purge_excluded() -> int:
-    """Elimina de boe_entries y eurlex_entries las entradas cuyos títulos
-    coincidan con los patrones de exclusión definidos en los scrapers."""
-    sql_boe = """
-    DELETE FROM boe_entries
-    WHERE texto ILIKE '%eficiencia del servicio p_blico%'
-    """
-    sql_eu = """
-    DELETE FROM eurlex_entries
-    WHERE texto ILIKE '%eficiencia del servicio p_blico%'
-    """
-    deleted = 0
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql_boe)
-            deleted += cur.rowcount
-            cur.execute(sql_eu)
-            deleted += cur.rowcount
-        conn.commit()
-    if deleted:
-        logger.info("purge_excluded: eliminadas %d entradas excluidas.", deleted)
-    return deleted
+    """Sin operación: la exclusión se aplica en los scrapers antes del INSERT
+    y en los SELECT de fetch_* con NOT ILIKE. No se borran datos de la BD."""
+    return 0
 
 
 def upsert_boe(entries: List[Dict]) -> int:
