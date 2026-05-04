@@ -75,10 +75,10 @@ def main():
     rss_new     = upsert_entries(rss_entries)
     logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
 
-    # ── ACER (novedades del día anterior) ────────────────────────────────
+    # ── ACER (dos ejecuciones diarias, cubre hoy y ayer) ────────────────
     logger.info("=== Scraping ACER ===")
     from scraper import acer as acer_scraper
-    acer_entries = acer_scraper.scrape(days_back=1)
+    acer_entries = acer_scraper.scrape(days_back=2)
     acer_new     = upsert_entries(acer_entries)
     logger.info("ACER: %d entradas, %d nuevas en BD", len(acer_entries), acer_new)
 
