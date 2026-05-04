@@ -166,15 +166,21 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
     for work, titles_list in work_titles.items():
         fecha = work_dates.get(work, "")
 
-        # Preferir español, luego inglés, luego el primero disponible
+        # Preferir español (es, spa, es-*), luego inglés, luego lo que haya
+        _ES = {"es", "spa"}
+        _EN = {"en", "eng"}
         title = ""
-        for lang_pref in ["es", "en", ""]:
-            matches = [t for l, t in titles_list if l.lower().startswith(lang_pref)]
+        for lang_set in [_ES, _EN, None]:
+            if lang_set is None:
+                title = titles_list[0][1] if titles_list else ""
+                break
+            matches = [
+                t for l, t in titles_list
+                if l.lower() in lang_set or l.lower().startswith("es-")
+            ]
             if matches:
                 title = matches[0]
                 break
-        if not title and titles_list:
-            title = titles_list[0][1]
         if not title:
             continue
 
