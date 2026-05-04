@@ -342,6 +342,8 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             imp      = "Sí" if art64 else _is_importante(tipo, dept_nombre, titulo)
                             acceso   = _detect_acceso(titulo)
                             autorizacion = _detect_tramitaciones(titulo)
+                            if autorizacion == "Sí" and acceso == "No":
+                                acceso = "Sí"
 
                             items.append({
                                 "external_id":   doc_id,
