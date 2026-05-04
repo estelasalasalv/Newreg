@@ -812,6 +812,7 @@
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
         ${recencyLabel(e.published_date)}
+        ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
       </div>
       <div class="norm-meta">
         <span class="org-chip">CNMC</span>
