@@ -819,6 +819,7 @@
         ${e.published_date ? `<span>${e.published_date}</span>` : ''}
         ${e.es_circular ? '<span class="badge badge-trimestre">📋 Circular</span>' : ''}
       </div>
+      ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
       ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
