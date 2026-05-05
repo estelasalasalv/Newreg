@@ -271,7 +271,21 @@
     .resumen-section-title {
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: .8px; color: var(--gray4); margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+      padding: 6px 8px; border-radius: 6px; transition: background .15s;
     }
+    .resumen-section-title:hover { background: var(--gray1); }
+    .resumen-section-toggle {
+      font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border: 1px solid var(--gray2); border-radius: 4px;
+      background: var(--white); color: var(--gray4); cursor: pointer;
+      white-space: nowrap; transition: all .15s;
+    }
+    .resumen-section-title:hover .resumen-section-toggle {
+      border-color: var(--teal); color: var(--teal);
+    }
+    .resumen-section-body { overflow: hidden; transition: none; }
     .resumen-periodo-label {
       font-size: 11px; color: var(--gray3); margin-left: 6px; font-style: italic;
     }
@@ -519,30 +533,50 @@
 
       <!-- Regulación Nacional -->
       <div style="margin-bottom:22px">
-        <div class="resumen-section-title">🇪🇸 Regulación nacional</div>
-        <div id="resumen-nacional-entries"></div>
-        <div id="resumen-nacional-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+        <div class="resumen-section-title" data-section="nacional">
+          <span>🇪🇸 Regulación nacional</span>
+          <span class="resumen-section-toggle" id="toggle-nacional">▼ Ocultar</span>
+        </div>
+        <div class="resumen-section-body" id="body-nacional">
+          <div id="resumen-nacional-entries"></div>
+          <div id="resumen-nacional-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+        </div>
       </div>
 
       <!-- Normativa Internacional -->
       <div style="margin-bottom:22px">
-        <div class="resumen-section-title">🇪🇺 Normativa internacional (DOUE)</div>
-        <div id="resumen-eu-entries"></div>
-        <div id="resumen-eu-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+        <div class="resumen-section-title" data-section="eu">
+          <span>🇪🇺 Normativa internacional (DOUE)</span>
+          <span class="resumen-section-toggle" id="toggle-eu">▼ Ocultar</span>
+        </div>
+        <div class="resumen-section-body" id="body-eu">
+          <div id="resumen-eu-entries"></div>
+          <div id="resumen-eu-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+        </div>
       </div>
 
       <!-- ACER -->
       <div style="margin-bottom:22px">
-        <div class="resumen-section-title">🏛️ ACER</div>
-        <div id="resumen-acer-entries"></div>
-        <div id="resumen-acer-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+        <div class="resumen-section-title" data-section="acer">
+          <span>🏛️ ACER</span>
+          <span class="resumen-section-toggle" id="toggle-acer">▼ Ocultar</span>
+        </div>
+        <div class="resumen-section-body" id="body-acer">
+          <div id="resumen-acer-entries"></div>
+          <div id="resumen-acer-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+        </div>
       </div>
 
       <!-- Consultas Públicas -->
       <div>
-        <div class="resumen-section-title">📬 Consultas públicas</div>
-        <div id="resumen-con-entries"></div>
-        <div id="resumen-con-empty" class="state-msg" style="display:none;padding:.75rem">Sin consultas en este período.</div>
+        <div class="resumen-section-title" data-section="con">
+          <span>📬 Consultas públicas</span>
+          <span class="resumen-section-toggle" id="toggle-con">▼ Ocultar</span>
+        </div>
+        <div class="resumen-section-body" id="body-con">
+          <div id="resumen-con-entries"></div>
+          <div id="resumen-con-empty" class="state-msg" style="display:none;padding:.75rem">Sin consultas en este período.</div>
+        </div>
       </div>
     </div>
 
@@ -1095,6 +1129,9 @@
     });
     document.getElementById('resumen-con-empty').style.display = conFilt.length ? 'none' : 'block';
     document.getElementById('resumen-con-entries').innerHTML = conFilt.map(consultaCard).join('');
+
+    // Restaurar estados de colapso tras renderizar
+    if (typeof initCollapseStates === 'function') initCollapseStates();
   }
 
 
@@ -1467,6 +1504,35 @@
       renderResumen();
     });
   });
+
+  // ── Secciones colapsables del Resumen mensual (estado en localStorage) ──
+  const RESUMEN_SECTIONS = ['nacional', 'eu', 'acer', 'con'];
+  const LS_KEY = sec => `resumen-collapsed-${sec}`;
+
+  function applyCollapseState(sec) {
+    const collapsed = localStorage.getItem(LS_KEY(sec)) === 'true';
+    const body   = document.getElementById(`body-${sec}`);
+    const toggle = document.getElementById(`toggle-${sec}`);
+    if (!body || !toggle) return;
+    body.style.display   = collapsed ? 'none' : '';
+    toggle.textContent   = collapsed ? '▶ Extender' : '▼ Ocultar';
+  }
+
+  function initCollapseStates() {
+    RESUMEN_SECTIONS.forEach(applyCollapseState);
+  }
+
+  document.querySelectorAll('.resumen-section-title[data-section]').forEach(title => {
+    title.addEventListener('click', function() {
+      const sec = this.dataset.section;
+      const current = localStorage.getItem(LS_KEY(sec)) === 'true';
+      localStorage.setItem(LS_KEY(sec), current ? 'false' : 'true');
+      applyCollapseState(sec);
+    });
+  });
+
+  // Restaurar estados al cargar la página
+  initCollapseStates();
   document.getElementById('btn-vista-cal').addEventListener('click', () => {
     vistaCalendario = !vistaCalendario;
     renderConsultas();
