@@ -4,15 +4,16 @@ Fuentes:
   - RSS:       https://www.acer.europa.eu/rss.xml  (noticias)
   - Decisions: https://www.acer.europa.eu/documents/official-documents/individual-decisions
 
-Solo carga entradas publicadas en los últimos days_back días (por defecto 1 = ayer).
-Las entradas antiguas ya están en BD; el upsert garantiza que no se duplican.
+El RSS de ACER tiene formato no estándar:
+  - <title> contiene un <a href="..."> HTML en lugar de texto plano
+  - <link> contiene la URL del <a> codificada como HTML
+  - <pubDate> usa formato propio "Thu, 04/30/2026 - 10:14"
 """
 import re
 import logging
 import requests
 import xml.etree.ElementTree as ET
 from datetime import date, timedelta
-from email.utils import parsedate_to_datetime
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 
@@ -23,27 +24,32 @@ ACER_DEC_URL = "https://www.acer.europa.eu/documents/official-documents/individu
 ACER_BASE    = "https://www.acer.europa.eu"
 _HEADERS     = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 
+# Fecha RSS: "Thu, 04/30/2026 - 10:14"  →  "2026-04-30"
+_RSS_DATE_RE = re.compile(r"(\d{2})/(\d{2})/(\d{4})")
+
+# Fecha decisiones HTML: "29.04.2026" → "2026-04-29"
+_DOT_DATE_RE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
+
 
 def _parse_rss_date(pub_date: str) -> Optional[str]:
-    if not pub_date:
-        return None
-    try:
-        return parsedate_to_datetime(pub_date).strftime("%Y-%m-%d")
-    except Exception:
-        return None
+    m = _RSS_DATE_RE.search(pub_date or "")
+    if m:
+        month, day, year = m.groups()
+        return f"{year}-{month}-{day}"
+    return None
 
 
 def _parse_dot_date(text: str) -> Optional[str]:
-    """Convierte '29.04.2026' → '2026-04-29'."""
-    m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})", text or "")
+    m = _DOT_DATE_RE.search(text or "")
     if m:
-        return f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
+        day, month, year = m.groups()
+        return f"{year}-{month}-{day}"
     return None
 
 
 def _is_recent(fecha_iso: Optional[str], cutoff: date) -> bool:
     if not fecha_iso:
-        return True  # sin fecha → incluir por si acaso
+        return True
     try:
         return date.fromisoformat(fecha_iso) >= cutoff
     except ValueError:
@@ -73,8 +79,8 @@ def _make_ext_id(prefix: str, text: str) -> str:
     return f"{prefix}-{re.sub(r'[^a-z0-9]', '', text[-55:].lower())}"
 
 
-def scrape_rss(days_back: int = 1) -> List[Dict]:
-    """Descarga el RSS de ACER y devuelve entradas recientes."""
+def scrape_rss(days_back: int = 2) -> List[Dict]:
+    """Descarga el RSS de ACER y extrae noticias recientes."""
     cutoff = date.today() - timedelta(days=days_back)
 
     try:
@@ -84,10 +90,11 @@ def scrape_rss(days_back: int = 1) -> List[Dict]:
         logger.error("Error al descargar ACER RSS: %s", exc)
         return []
 
+    # Parsear el XML (el <title> contiene HTML, lo tratamos con BeautifulSoup)
     try:
         root = ET.fromstring(resp.content)
     except ET.ParseError as exc:
-        logger.error("Error al parsear ACER RSS: %s", exc)
+        logger.error("Error al parsear ACER RSS XML: %s", exc)
         return []
 
     results: List[Dict] = []
@@ -95,24 +102,42 @@ def scrape_rss(days_back: int = 1) -> List[Dict]:
     logger.info("ACER RSS: %d ítems en el feed", len(items))
 
     for item in items:
-        title   = (item.findtext("title")       or "").strip()
-        link    = (item.findtext("link")        or "").strip()
-        pub_raw = (item.findtext("pubDate")     or "").strip()
-        desc    = (item.findtext("description") or "").strip()
+        # El <title> contiene un <a href="...">Texto</a> como elemento XML hijo.
+        # ET.findtext() solo devuelve el texto directo (vacío), hay que usar tostring.
+        title_el  = item.find("title")
+        desc      = item.findtext("description") or ""
+        pub_raw   = item.findtext("pubDate") or ""
 
-        if not title or not link:
+        if title_el is not None:
+            # Serializar el elemento completo y parsear con BeautifulSoup
+            raw_xml   = ET.tostring(title_el, encoding="unicode")
+            title_soup = BeautifulSoup(raw_xml, "html.parser")
+            a_tag = title_soup.find("a")
+            if a_tag:
+                title = a_tag.get_text(strip=True)
+                href  = a_tag.get("href", "")
+            else:
+                title = title_soup.get_text(strip=True)
+                href  = ""
+        else:
+            title = ""
+            href  = ""
+
+        if not title:
             continue
 
-        fecha = _parse_rss_date(pub_raw)
+        fecha    = _parse_rss_date(pub_raw)
+        full_url = (ACER_BASE + href) if href and not href.startswith("http") else href
+        if not full_url:
+            full_url = ACER_BASE
+
         if not _is_recent(fecha, cutoff):
             continue
 
-        full_url = link if link.startswith("http") else ACER_BASE + link
-        tipo     = _detect_tipo(title, "ACER Noticias")
-
+        tipo = _detect_tipo(title, "ACER Noticias")
         results.append({
             "source":         "ACER",
-            "external_id":    _make_ext_id("acer-rss", link),
+            "external_id":    _make_ext_id("acer-rss", href or title),
             "title":          title,
             "published_date": fecha,
             "url":            full_url,
@@ -131,13 +156,13 @@ def scrape_rss(days_back: int = 1) -> List[Dict]:
     return results
 
 
-def scrape_decisions(days_back: int = 1, max_pages: int = 2) -> List[Dict]:
+def scrape_decisions(days_back: int = 2, max_pages: int = 3) -> List[Dict]:
     """Scrape de decisiones individuales ACER recientes."""
     cutoff  = date.today() - timedelta(days=days_back)
     results: List[Dict] = []
 
     for page in range(max_pages):
-        url = f"{ACER_DEC_URL}?page={page}"
+        url = f"{ACER_DEC_URL}?page={page}" if page > 0 else ACER_DEC_URL
         try:
             resp = requests.get(url, headers=_HEADERS, timeout=30)
             resp.raise_for_status()
@@ -146,23 +171,34 @@ def scrape_decisions(days_back: int = 1, max_pages: int = 2) -> List[Dict]:
             break
 
         soup = BeautifulSoup(resp.text, "lxml")
-        items = soup.select(".decision-item, .views-row")
-        found_any = False
+        # Estructura: div.document > div.department_date > div.date
+        #                           > div.title > a
+        documents = soup.find_all("div", class_="document")
+        if not documents:
+            break
 
-        if items:
-            for it in items:
-                a_tag = it.find("a")
-                if not a_tag:
-                    continue
-                title    = a_tag.get_text(strip=True)
-                href     = a_tag.get("href", "")
-                date_tag = it.find(class_=re.compile(r"date"))
-                fecha    = _parse_dot_date(date_tag.get_text() if date_tag else it.get_text())
+        page_had_recent = False
+        for doc in documents:
+            # Fecha
+            date_div = doc.find("div", class_="date")
+            fecha    = _parse_dot_date(date_div.get_text() if date_div else "")
 
-                if not _is_recent(fecha, cutoff):
-                    continue  # más antiguo que el corte → no añadir (pero seguir por si hay saltos)
+            # Solo incluir el documento principal (div.title), no los anexos
+            title_div = doc.find("div", class_="title")
+            if not title_div:
+                continue
+            a_tag = title_div.find("a")
+            if not a_tag:
+                continue
 
-                found_any = True
+            title = a_tag.get_text(strip=True)
+            href  = a_tag.get("href", "")
+
+            if not title or len(title) < 10:
+                continue
+
+            if _is_recent(fecha, cutoff):
+                page_had_recent = True
                 full_url  = href if href.startswith("http") else ACER_BASE + href
                 tipo      = _detect_tipo(title, "ACER Decisión")
                 results.append({
@@ -181,39 +217,9 @@ def scrape_decisions(days_back: int = 1, max_pages: int = 2) -> List[Dict]:
                     "tramitaciones":  "No",
                     "importante":     _is_importante(tipo),
                 })
-        else:
-            # Fallback HTML libre
-            for a in soup.find_all("a", href=re.compile(r"[Dd]ecision", re.I)):
-                title = a.get_text(strip=True)
-                href  = a.get("href", "")
-                if not title or len(title) < 10:
-                    continue
-                parent_text = a.parent.get_text(" ", strip=True) if a.parent else ""
-                fecha    = _parse_dot_date(parent_text)
-                if not _is_recent(fecha, cutoff):
-                    continue
-                found_any = True
-                full_url  = href if href.startswith("http") else ACER_BASE + href
-                tipo      = _detect_tipo(title, "ACER Decisión")
-                results.append({
-                    "source":         "ACER",
-                    "external_id":    _make_ext_id("acer-dec", href),
-                    "title":          title,
-                    "published_date": fecha,
-                    "url":            full_url,
-                    "section":        "ACER Decisión",
-                    "department":     "ACER",
-                    "summary":        None,
-                    "tipo":           "regulacion",
-                    "plazo":          None,
-                    "estado":         "Abierta",
-                    "sector":         "electricidad",
-                    "tramitaciones":  "No",
-                    "importante":     "Sí",
-                })
 
-        if not found_any:
-            break  # página sin entradas recientes → parar
+        if not page_had_recent:
+            break  # No hay más entradas recientes en páginas siguientes
 
     # Deduplicar
     seen: set = set()
@@ -227,10 +233,10 @@ def scrape_decisions(days_back: int = 1, max_pages: int = 2) -> List[Dict]:
     return unique
 
 
-def scrape(days_back: int = 1) -> List[Dict]:
+def scrape(days_back: int = 2) -> List[Dict]:
     """Combina RSS y decisiones recientes, deduplica por external_id."""
     rss  = scrape_rss(days_back=days_back)
-    decs = scrape_decisions(days_back=days_back, max_pages=2)
+    decs = scrape_decisions(days_back=days_back, max_pages=3)
 
     seen: set = set()
     combined = []
