@@ -260,6 +260,21 @@
     .badge-semana    { background: rgba(0,184,176,.2);   color: var(--teal2); }
     .badge-mes       { background: rgba(25,118,210,.15); color: #1565c0; }
     .badge-trimestre { background: rgba(123,31,162,.15); color: #6a1b9a; }
+    /* ── Resumen mensual ── */
+    .resumen-periodo-btn {
+      padding: 5px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--gray2); border-radius: 6px;
+      background: var(--white); color: var(--gray4); transition: all .15s;
+    }
+    .resumen-periodo-btn:hover  { background: var(--gray1); color: var(--text); }
+    .resumen-periodo-btn.active { background: var(--teal); color: var(--navy); border-color: var(--teal); }
+    .resumen-section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--gray4); margin-bottom: 10px;
+    }
+    .resumen-periodo-label {
+      font-size: 11px; color: var(--gray3); margin-left: 6px; font-style: italic;
+    }
     .badge-semestre  { background: rgba(249,168,37,.2);  color: #b45309; }
     .badge-anio      { background: var(--gray2);         color: var(--gray4); }
     .badge-acc       { background: rgba(0,184,176,.12);  color: var(--teal2); }
@@ -420,7 +435,7 @@
 <!-- MOBILE NAV -->
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
-    <div class="mobile-tab active"  data-panel="resumen">📊 Resumen</div>
+    <div class="mobile-tab active"  data-panel="resumen">📊 Mensual</div>
     <div class="mobile-tab"         data-panel="esp"    >📑 Normativa</div>
     <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
     <div class="mobile-tab"         data-panel="eu"     >🇪🇺 Europea</div>
@@ -438,7 +453,7 @@
     <div class="sidebar-section">
       <div class="sidebar-label">Navegación</div>
       <div class="sidebar-item active" data-panel="resumen">
-        <span class="icon">📊</span> Resumen semanal
+        <span class="icon">📊</span> Resumen mensual
       </div>
       <div class="sidebar-item" data-panel="esp">
         <span class="icon">🇪🇸</span> Normativa
@@ -491,21 +506,43 @@
   <!-- MAIN -->
   <div class="main">
 
-    <!-- ══ PANEL: RESUMEN SEMANAL ══ -->
+    <!-- ══ PANEL: RESUMEN MENSUAL ══ -->
     <div id="panel-resumen" class="panel active">
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray4);margin-bottom:10px">
-          📌 Normativa importante (últimos 7 días)
-        </div>
-        <div id="resumen-norm-entries"></div>
-        <div id="resumen-norm-empty" class="state-msg" style="display:none;padding:1rem">Sin normativa importante esta semana.</div>
+      <!-- Selector de período -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="resumen-periodo-btn" data-periodo="mes-anterior">Mes anterior</button>
+        <button class="resumen-periodo-btn active" data-periodo="mes-curso">Mes en curso</button>
+        <button class="resumen-periodo-btn" data-periodo="semana-curso">Semana en curso</button>
+        <button class="resumen-periodo-btn" data-periodo="dia-curso">Hoy</button>
+        <span class="resumen-periodo-label" id="resumen-periodo-label"></span>
       </div>
-      <div style="margin-top:20px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray4);margin-bottom:10px">
-          📬 Consultas públicas abiertas
-        </div>
+
+      <!-- Regulación Nacional -->
+      <div style="margin-bottom:22px">
+        <div class="resumen-section-title">🇪🇸 Regulación nacional</div>
+        <div id="resumen-nacional-entries"></div>
+        <div id="resumen-nacional-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+      </div>
+
+      <!-- Normativa Internacional -->
+      <div style="margin-bottom:22px">
+        <div class="resumen-section-title">🇪🇺 Normativa internacional (DOUE)</div>
+        <div id="resumen-eu-entries"></div>
+        <div id="resumen-eu-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+      </div>
+
+      <!-- ACER -->
+      <div style="margin-bottom:22px">
+        <div class="resumen-section-title">🏛️ ACER</div>
+        <div id="resumen-acer-entries"></div>
+        <div id="resumen-acer-empty" class="state-msg" style="display:none;padding:.75rem">Sin entradas en este período.</div>
+      </div>
+
+      <!-- Consultas Públicas -->
+      <div>
+        <div class="resumen-section-title">📬 Consultas públicas</div>
         <div id="resumen-con-entries"></div>
-        <div id="resumen-con-empty" class="state-msg" style="display:none;padding:1rem">Sin consultas abiertas.</div>
+        <div id="resumen-con-empty" class="state-msg" style="display:none;padding:.75rem">Sin consultas en este período.</div>
       </div>
     </div>
 
@@ -879,11 +916,13 @@
           <span class="badge ${orgCls}">${org}</span>
           ${e.section && e.section !== 'Consultas CNMC' && e.section !== 'Consultas MITERD'
             ? `<span class="badge badge-closed">${esc(e.section)}</span>` : ''}
+          ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.68rem">NUEVO</span>' : ''}
         </div>
         <div class="consulta-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
         ${e.plazo ? `<div class="consulta-fechas">📅 ${esc(e.plazo)}</div>` : ''}
+        ${e.scraped_at ? `<div style="font-size:10px;color:var(--gray3);margin-top:3px">🗄️ Cargado: ${esc(e.scraped_at)}</div>` : ''}
         ${resumen ? `<div class="norm-card-summary">${esc(resumen.slice(0,240))}</div>` : ''}
         ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
       </div>
@@ -941,56 +980,121 @@
     el.innerHTML = filtered.map(e => acerCard(e)).join('');
   }
 
-  function renderResumen() {
-    // Normativa importante de los últimos 7 días
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0,0,0,0);
+  // ── Período activo en el Resumen mensual ────────────────────────
+  let resumenPeriodo = 'mes-curso';
 
-    function isThisWeek(dateStr) {
-      if (!dateStr) return false;
-      let d;
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-        const [day,mon,yr] = dateStr.split('/');
-        d = new Date(+yr, +mon-1, +day);
-      } else { d = new Date(dateStr); }
-      return !isNaN(d) && d >= sevenDaysAgo;
+  function getResumenRange() {
+    const hoy = new Date();
+    let desde, hasta = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
+    if (resumenPeriodo === 'mes-anterior') {
+      const primeroDiaMesActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      const ultimoDiaMesAnterior = new Date(primeroDiaMesActual - 1);
+      desde = new Date(ultimoDiaMesAnterior.getFullYear(), ultimoDiaMesAnterior.getMonth(), 1);
+      hasta = new Date(ultimoDiaMesAnterior.getFullYear(), ultimoDiaMesAnterior.getMonth(), ultimoDiaMesAnterior.getDate(), 23, 59, 59);
+    } else if (resumenPeriodo === 'mes-curso') {
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    } else if (resumenPeriodo === 'semana-curso') {
+      const dow = hoy.getDay();
+      const diffLunes = dow === 0 ? -6 : 1 - dow;
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + diffLunes);
+    } else {
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
     }
+    return { desde, hasta };
+  }
 
-    const normImp = [
-      ...allEntries.filter(e =>
-        e.importante === 'Sí' && isThisWeek(e.published_date) &&
-        (activeSource === 'ALL' || (e.filtro||e.source) === activeSource)
-      ),
-      ...acerData.filter(e =>
-        e.importante === 'Sí' && isThisWeek(e.published_date) &&
-        (activeSource === 'ALL' || activeSource === 'ACER')
-      ),
-    ];
-    const normEl = document.getElementById('resumen-norm-entries');
-    document.getElementById('resumen-norm-empty').style.display = normImp.length ? 'none' : 'block';
-    normEl.innerHTML = normImp.map(e =>
-      e.source === 'ACER'
-        ? acerCard(e)
-        : normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
+  function parseDateStr(s) {
+    if (!s) return null;
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return new Date(s.slice(0,10));
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+      const [d, m, y] = s.split('/');
+      return new Date(+y, +m-1, +d);
+    }
+    const t = new Date(s);
+    return isNaN(t) ? null : t;
+  }
+
+  function isInResumenRange(dateStr) {
+    const d = parseDateStr(dateStr);
+    if (!d) return false;
+    const { desde, hasta } = getResumenRange();
+    return d >= desde && d <= hasta;
+  }
+
+  function resumenPeriodoLabel() {
+    const { desde, hasta } = getResumenRange();
+    const fmt = d => d.toLocaleDateString('es-ES', {day:'2-digit',month:'short',year:'numeric'});
+    return `${fmt(desde)} – ${fmt(hasta)}`;
+  }
+
+  function renderResumen() {
+    const srcOK = src => activeSource === 'ALL' || (e => (e.filtro||e.source) === activeSource)(src);
+
+    // Etiqueta de período
+    const lbl = document.getElementById('resumen-periodo-label');
+    if (lbl) lbl.textContent = resumenPeriodoLabel();
+
+    // ── Regulación nacional (BOE + CNMC, excluye ACER/DOUE) ──────
+    const nacional = allEntries.filter(e => {
+      if (e.source === 'ACER') return false;
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource && activeSource !== 'ACER') return false;
+      return isInResumenRange(e.fecha_real || e.published_date);
+    }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
+    document.getElementById('resumen-nacional-empty').style.display = nacional.length ? 'none' : 'block';
+    document.getElementById('resumen-nacional-entries').innerHTML = nacional.map(e =>
+      normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
     ).join('');
 
-    // Consultas abiertas con filtro de fuente
-    const conAbiertas = cnmcConsultas.filter(e => {
-      const d = daysRemaining(e.plazo);
-      if (activeSource !== 'ALL' && activeSource !== 'BOE' && e.source !== activeSource) return false;
-      if (activeSource === 'BOE') return false;
-      return (e.estado||'Abierta') === 'Abierta' && (d === null || d >= 0);
+    // ── Normativa internacional DOUE ──────────────────────────────
+    const euFilt = eurlex.filter(e => {
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
+      return isInResumenRange(e.fecha_real || e.fecha);
+    }).sort((a,b) => (b.fecha_real||b.fecha||'').localeCompare(a.fecha_real||a.fecha||''));
+    document.getElementById('resumen-eu-empty').style.display = euFilt.length ? 'none' : 'block';
+    document.getElementById('resumen-eu-entries').innerHTML = euFilt.map(e =>
+      '<div class="norm-card" style="border-left-color:#003399">' +
+        '<div class="norm-header">' +
+          '<div class="norm-title">' + (e.enlace ? '<a href="'+esc(e.enlace)+'" target="_blank" rel="noopener">'+esc(e.texto)+'</a>' : esc(e.texto)) + '</div>' +
+          recencyLabel(e.fecha) +
+        '</div>' +
+        '<div class="norm-meta">' +
+          (e.tipo ? '<span class="type-chip">'+esc(e.tipo)+'</span>' : '') +
+          (e.fecha ? '<span>'+e.fecha+'</span>' : '') +
+          '<span class="org-chip" style="background:rgba(0,51,153,.1);color:#003399">🇪🇺 DOUE</span>' +
+        '</div>' +
+        (e.resumen ? '<div class="norm-card-summary">'+esc(e.resumen)+'</div>' : '') +
+      '</div>'
+    ).join('');
+
+    // ── ACER ──────────────────────────────────────────────────────
+    const acerFilt = acerData.filter(e => {
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
+      return isInResumenRange(e.fecha_real || e.published_date);
+    }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
+    document.getElementById('resumen-acer-empty').style.display = acerFilt.length ? 'none' : 'block';
+    document.getElementById('resumen-acer-entries').innerHTML = acerFilt.map(e => acerCard(e)).join('');
+
+    // ── Consultas públicas ────────────────────────────────────────
+    const conFilt = cnmcConsultas.filter(e => {
+      if (activeSource !== 'ALL' && activeSource !== 'BOE' && e.source !== activeSource && activeSource !== 'CNMC' && activeSource !== 'MITERD') return false;
+      if (activeSource === 'BOE' || activeSource === 'ACER') return false;
+      const pubDate = e.published_date;
+      return isInResumenRange(pubDate) || (e.estado||'Abierta') === 'Abierta';
     });
-    conAbiertas.sort((a,b) => {
+    conFilt.sort((a,b) => {
       const da = daysRemaining(a.plazo), db = daysRemaining(b.plazo);
       if (da===null && db===null) return 0;
       if (da===null) return 1; if (db===null) return -1;
       return da - db;
     });
-    const conEl = document.getElementById('resumen-con-entries');
-    document.getElementById('resumen-con-empty').style.display = conAbiertas.length ? 'none' : 'block';
-    conEl.innerHTML = conAbiertas.map(consultaCard).join('');
+    document.getElementById('resumen-con-empty').style.display = conFilt.length ? 'none' : 'block';
+    document.getElementById('resumen-con-entries').innerHTML = conFilt.map(consultaCard).join('');
   }
 
 
@@ -1354,6 +1458,14 @@
   });
   document.getElementById('chk-ocultar-tramitaciones').addEventListener('change', function() {
     ocultarTramitaciones = this.checked; renderAll();
+  });
+  document.querySelectorAll('.resumen-periodo-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.resumen-periodo-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      resumenPeriodo = this.dataset.periodo;
+      renderResumen();
+    });
   });
   document.getElementById('btn-vista-cal').addEventListener('click', () => {
     vistaCalendario = !vistaCalendario;
