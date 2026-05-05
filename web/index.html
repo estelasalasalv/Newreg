@@ -916,11 +916,13 @@
           <span class="badge ${orgCls}">${org}</span>
           ${e.section && e.section !== 'Consultas CNMC' && e.section !== 'Consultas MITERD'
             ? `<span class="badge badge-closed">${esc(e.section)}</span>` : ''}
+          ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.68rem">NUEVO</span>' : ''}
         </div>
         <div class="consulta-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
         ${e.plazo ? `<div class="consulta-fechas">📅 ${esc(e.plazo)}</div>` : ''}
+        ${e.scraped_at ? `<div style="font-size:10px;color:var(--gray3);margin-top:3px">🗄️ Cargado: ${esc(e.scraped_at)}</div>` : ''}
         ${resumen ? `<div class="norm-card-summary">${esc(resumen.slice(0,240))}</div>` : ''}
         ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
       </div>

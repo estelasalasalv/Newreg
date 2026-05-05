@@ -145,7 +145,7 @@ def fetch_cnmc_consultas() -> List[Dict]:
            COALESCE(estado, 'Abierta') AS estado,
            COALESCE(sector, 'electricidad') AS sector,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date = CURRENT_DATE) AS es_nuevo
+           (scraped_at::date >= CURRENT_DATE - 7) AS es_nuevo
     FROM   regulatory_entries
     WHERE  source IN ('CNMC', 'MITERD')
       AND  tipo = 'consulta'
