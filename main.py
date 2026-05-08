@@ -75,6 +75,13 @@ def main():
     rss_new     = upsert_entries(rss_entries)
     logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
 
+    # ── CNMC_N Actuaciones energía ────────────────────────────────────────
+    logger.info("=== Scraping CNMC_N Actuaciones ===")
+    from scraper import cnmc_n
+    cnmc_n_entries = cnmc_n.scrape(days_back=2)
+    cnmc_n_new     = upsert_entries(cnmc_n_entries)
+    logger.info("CNMC_N: %d entradas, %d nuevas en BD", len(cnmc_n_entries), cnmc_n_new)
+
     # ── ACER (dos ejecuciones diarias, cubre hoy y ayer) ────────────────
     logger.info("=== Scraping ACER ===")
     from scraper import acer as acer_scraper

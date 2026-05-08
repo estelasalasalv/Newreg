@@ -136,7 +136,7 @@ def _extract(soup: BeautifulSoup) -> List[Dict]:
         external_id = f"cnmc-{slug}"
 
         entries.append({
-            "source":         "CNMC",
+            "source":         "CNMC_C",
             "tipo":           "consulta",
             "external_id":    external_id,
             "title":          title,

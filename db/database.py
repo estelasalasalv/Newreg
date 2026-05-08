@@ -147,7 +147,7 @@ def fetch_cnmc_consultas() -> List[Dict]:
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at,
            (scraped_at::date >= CURRENT_DATE - 7) AS es_nuevo
     FROM   regulatory_entries
-    WHERE  source IN ('CNMC', 'MITERD')
+    WHERE  source IN ('CNMC_C', 'MITERD')
       AND  tipo = 'consulta'
     ORDER  BY
            CASE WHEN COALESCE(estado,'Abierta') = 'Abierta' THEN 0 ELSE 1 END,
@@ -202,7 +202,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
           WHEN LOWER(organismo) LIKE '%%transici%%ecol%%' OR LOWER(organismo) LIKE '%%miterd%%'
                OR LOWER(organismo) LIKE '%%miteco%%' THEN 'MITERD'
           WHEN LOWER(organismo) LIKE '%%mercados%%competencia%%'
-               OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC'
+               OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC_C'
           ELSE 'BOE'
         END                                                     AS filtro,
         TO_CHAR(fecha, 'YYYY-MM-DD')                            AS fecha_real,
@@ -244,6 +244,28 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
     return [dict(r) for r in rows]
 
 
+def fetch_cnmc_n(limit: int = 200) -> List[Dict]:
+    """Devuelve actuaciones CNMC_N energéticas."""
+    sql = """
+    SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
+           COALESCE(importante, 'No')                                        AS importante,
+           TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
+           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
+           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
+           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+    FROM   regulatory_entries
+    WHERE  source = 'CNMC_N'
+    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
+    LIMIT  %(limit)s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, {"limit": limit})
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
 def fetch_acceso_conexion() -> List[Dict]:
     """Devuelve todas las entradas BOE+consultas relacionadas con acceso y conexión."""
     sql = """
@@ -259,7 +281,7 @@ def fetch_acceso_conexion() -> List[Dict]:
         resumen, impacto_ree,
         CASE
           WHEN LOWER(organismo) LIKE '%%transici%%ecol%%' OR LOWER(organismo) LIKE '%%miterd%%' THEN 'MITERD'
-          WHEN LOWER(organismo) LIKE '%%mercados%%competencia%%' OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC'
+          WHEN LOWER(organismo) LIKE '%%mercados%%competencia%%' OR LOWER(organismo) LIKE '%%cnmc%%' THEN 'CNMC_C'
           ELSE 'BOE'
         END AS filtro
     FROM boe_entries
@@ -367,7 +389,7 @@ def fetch_reg_espanola_q1() -> Dict:
         summary, impacto_ree,
         (LOWER(title) LIKE '%%circular%%') AS es_circular
     FROM   regulatory_entries
-    WHERE  source = 'CNMC'
+    WHERE  source = 'CNMC_C'
       AND  (tipo = 'regulacion' OR tipo IS NULL)
     ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
     """
@@ -458,6 +480,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     acceso_con     = fetch_acceso_conexion()
     eurlex         = fetch_eurlex(500)
     acer           = fetch_acer()
+    cnmc_n         = fetch_cnmc_n()
 
     # Aplicar filtro de año (solo visualización — datos históricos intactos en BD)
     entries_f   = _filter_year(entries,    YEAR_FILTER)
@@ -476,6 +499,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "acceso_conexion": acceso_f,     # pestaña Acceso/Conexión (solo 2026)
         "eurlex":          eurlex_f,     # pestaña Normativa Europea (solo 2026)
         "acer":            acer_f,       # pestaña ACER (solo 2026)
+        "cnmc_n":          _filter_year(cnmc_n, YEAR_FILTER),  # pestaña CNMC_N actuaciones
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
