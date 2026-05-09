@@ -117,7 +117,7 @@ def _scrape_page(url: str) -> List[Dict]:
     return results
 
 
-def scrape(days_back: int = 1) -> List[Dict]:
+def _scrape_actuaciones(days_back: int = 2) -> List[Dict]:
     """Descarga actuaciones CNMC energéticas de los últimos days_back días."""
     today    = date.today()
     cutoff   = today - timedelta(days=days_back - 1)
@@ -151,3 +151,108 @@ def scrape(days_back: int = 1) -> List[Dict]:
 
     logger.info("CNMC_N: %d actuaciones energéticas", len(all_entries))
     return all_entries
+
+
+# ── Noticias de energía CNMC ─────────────────────────────────────────────────
+
+NEWS_URL = (
+    "https://www.cnmc.es/prensa/noticias"
+    "?field_tags_target_id=9"          # Energía = 9
+    "&created[min]={date_from}"
+    "&created[max]={date_to}"
+    "&page={page}"
+)
+NEWS_BASE = "https://www.cnmc.es"
+
+
+def _parse_iso_date(dt_attr: str) -> Optional[str]:
+    """'2026-05-06T13:48:10+02:00' → '2026-05-06'"""
+    if dt_attr and len(dt_attr) >= 10:
+        return dt_attr[:10]
+    return None
+
+
+def scrape_noticias(days_back: int = 2) -> List[Dict]:
+    """Descarga noticias de energía CNMC de los últimos days_back días."""
+    today   = date.today()
+    cutoff  = today - timedelta(days=days_back - 1)
+    results: List[Dict] = []
+    seen: set = set()
+
+    for page in range(5):  # máximo 5 páginas = 50 noticias
+        url = NEWS_URL.format(
+            date_from=cutoff.strftime("%Y-%m-%d"),
+            date_to=today.strftime("%Y-%m-%d"),
+            page=page,
+        )
+        try:
+            r = requests.get(url, headers=_HEADERS, timeout=30)
+            r.raise_for_status()
+        except requests.RequestException as exc:
+            logger.error("CNMC_N noticias error p%d: %s", page, exc)
+            break
+
+        soup  = BeautifulSoup(r.text, "lxml")
+        items = soup.select(".views-row")
+        if not items:
+            break
+
+        for it in items:
+            time_el  = it.find("time")
+            a_el     = it.find("a", href=True)
+            sector_d = it.find("div", class_="views-field-field-tags")
+
+            if not a_el:
+                continue
+
+            fecha_iso = _parse_iso_date(time_el.get("datetime", "") if time_el else "")
+            title     = a_el.get_text(strip=True)
+            href      = a_el.get("href", "").split("?")[0]  # quitar ?back=news
+            full_url  = NEWS_BASE + href if href.startswith("/") else href
+            sector_t  = sector_d.get_text(strip=True) if sector_d else "Energía"
+
+            ext_id = f"cnmc-n-noticia-{href.strip('/').replace('/', '-')}"
+            if ext_id in seen:
+                continue
+            seen.add(ext_id)
+
+            results.append({
+                "source":         "CNMC_N",
+                "external_id":    ext_id,
+                "title":          title,
+                "published_date": fecha_iso,
+                "url":            full_url,
+                "section":        f"Noticia CNMC — {sector_t}",
+                "department":     "CNMC",
+                "summary":        None,
+                "tipo":           "regulacion",
+                "plazo":          None,
+                "estado":         "Abierta",
+                "sector":         "electricidad",
+                "tramitaciones":  "No",
+                "importante":     "No",
+                "expediente":     "",
+            })
+
+        # Si hay menos items que una página completa, no hay más páginas
+        if len(items) < 10:
+            break
+
+    logger.info("CNMC_N noticias: %d entradas (desde %s)", len(results), cutoff)
+    return results
+
+
+def scrape(days_back: int = 2) -> List[Dict]:
+    """Combina actuaciones y noticias energéticas CNMC recientes."""
+    actuaciones = _scrape_actuaciones(days_back)
+    noticias    = scrape_noticias(days_back)
+
+    seen: set = set()
+    combined = []
+    for e in actuaciones + noticias:
+        if e["external_id"] not in seen:
+            seen.add(e["external_id"])
+            combined.append(e)
+
+    logger.info("CNMC_N total: %d entradas", len(combined))
+    return combined
