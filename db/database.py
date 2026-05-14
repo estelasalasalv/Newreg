@@ -66,6 +66,7 @@ def init_db():
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS comprobado          VARCHAR(1)  DEFAULT 'N';
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
+    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS impacto_ree        TEXT;
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado          VARCHAR(1)  DEFAULT 'N';
     """
@@ -322,7 +323,7 @@ def fetch_eurlex(limit: int = 500) -> List[Dict]:
         external_id, TO_CHAR(fecha,'DD/MM/YYYY') AS fecha,
         EXTRACT(YEAR FROM fecha)::int             AS anio,
         fuente, seccion, tipo, organismo, texto, enlace,
-        palabras_clave, resumen, importante, acceso_conexion, tramitaciones,
+        palabras_clave, resumen, impacto_ree, importante, acceso_conexion, tramitaciones,
         TO_CHAR(fecha,'YYYY-MM-DD')               AS fecha_real
     FROM   eurlex_entries
     ORDER  BY fecha DESC NULLS LAST

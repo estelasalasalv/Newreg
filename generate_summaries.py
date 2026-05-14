@@ -129,6 +129,7 @@ def save_regulatory(id_: int, resumen: str, impacto: str):
 def save_eurlex(id_: int, resumen: str, impacto: str):
     with get_connection() as conn:
         with conn.cursor() as cur:
+            # impacto_ree añadida con ALTER TABLE IF NOT EXISTS en init_db
             cur.execute(
                 "UPDATE eurlex_entries SET resumen=%s, impacto_ree=%s WHERE id=%s",
                 (resumen, impacto, id_),
