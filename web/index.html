@@ -1080,7 +1080,7 @@
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       if (!q) return true;
       return ((e.title||'') + ' ' + (e.summary||'')).toLowerCase().includes(q);
-    });
+    }).sort((a, b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
 
     document.getElementById('acer-count').textContent =
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
