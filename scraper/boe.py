@@ -314,6 +314,22 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
         if pat.search(norm_titulo):
             return True
 
+    # Regla 3: Leyes y Decretos-Leyes de rango alto (Sección I) siempre incluidos.
+    # Pueden contener disposiciones energéticas, fiscales sobre instalaciones
+    # eléctricas, tasas municipales por tramitación de líneas/subestaciones, etc.
+    _ALTO_RANGO_RE = re.compile(
+        r"^(ley\s+de\s+|ley\s+\d|ley\s+org[aá]nica\s+\d|decreto.?ley\s+\d|real\s+decreto.?ley\s+\d)",
+        re.IGNORECASE
+    )
+    _EP_NO_ENERGIA = re.compile(
+        r"educaci[oó]n|sanidad|cultura|deporte|igualdad|servicios\s+sociales|dependencia|"
+        r"vivienda\s+social|turismo|agricultura(?!\s+energ)|ganadería|pesca",
+        re.IGNORECASE
+    )
+    if _ALTO_RANGO_RE.search(titulo):
+        if not _EXCLUDED_ORGANISMS.search(dept) and not _EP_NO_ENERGIA.search(epigrafe):
+            return True
+
     return False
 
 
