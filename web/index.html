@@ -295,6 +295,42 @@
     .badge-auth      { background: rgba(99,102,241,.12); color: #4f46e5; }
     .badge-imp       { background: rgba(249,168,37,.2);  color: #b45309; }
 
+    /* ── MODAL DE DETALLE ───────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.55); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--white); border-radius: 12px;
+      max-width: 680px; width: 92%; max-height: 82vh;
+      overflow-y: auto; padding: 28px 30px; position: relative;
+      box-shadow: 0 8px 40px rgba(0,0,0,.22);
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      font-size: 20px; cursor: pointer; color: var(--gray4);
+      background: none; border: none; line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 14px; line-height: 1.4; }
+    .modal-section { margin-top: 16px; }
+    .modal-section-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--gray4); margin-bottom: 6px;
+    }
+    .modal-body { font-size: 13px; color: var(--text); line-height: 1.65; white-space: pre-line; }
+    .modal-impact { font-size: 13px; color: #1a4a2e; line-height: 1.65; white-space: pre-line;
+      background: rgba(0,184,176,.06); border-left: 3px solid var(--teal); padding: 10px 14px; border-radius: 4px; }
+    .btn-detalle {
+      margin-top: 10px; font-size: 11px; padding: 3px 10px;
+      border: 1px solid var(--gray2); border-radius: 5px;
+      background: var(--white); color: var(--teal2); cursor: pointer;
+      font-weight: 600; transition: all .15s;
+    }
+    .btn-detalle:hover { background: var(--teal); color: var(--navy); border-color: var(--teal); }
+
     /* ── CONSULTA CARD (CNMC) ──────────────────────────────────── */
     .consulta-card {
       background: var(--white);
@@ -1061,8 +1097,9 @@
         ${imp && !isDecision ? '<span class="badge badge-imp">★ Importante</span>' : ''}
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
       </div>
-      ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,300))}</div>` : ''}
-      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
+      ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,260))}${e.summary.length>260?'…':''}</div>` : ''}
+      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree.slice(0,200))}${ree.length>200?'…':''}</div>` : ''}
+      ${(e.summary || ree) ? `<button class="btn-detalle" onclick="openModal(${JSON.stringify(e.title)},${JSON.stringify(e.summary||'')},${JSON.stringify(ree)},${JSON.stringify(e.url||'')})">📄 Ver resumen completo</button>` : ''}
     </div>`;
   }
 
@@ -1646,6 +1683,59 @@
   });
 
   loadData();
+
+  // ── Modal de detalle ────────────────────────────────────────────
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalTitle   = document.getElementById('modal-title');
+  const modalBody    = document.getElementById('modal-body');
+  const modalImpact  = document.getElementById('modal-impact');
+  const modalLink    = document.getElementById('modal-link');
+  const modalImpactSection = document.getElementById('modal-impact-section');
+
+  function openModal(title, summary, impact, url) {
+    modalTitle.textContent  = title;
+    modalBody.textContent   = summary || 'Sin resumen disponible.';
+    if (impact) {
+      modalImpact.textContent = impact;
+      modalImpactSection.style.display = '';
+    } else {
+      modalImpactSection.style.display = 'none';
+    }
+    if (url) {
+      modalLink.href        = url;
+      modalLink.style.display = '';
+    } else {
+      modalLink.style.display = 'none';
+    }
+    modalOverlay.classList.add('open');
+  }
+
+  document.getElementById('modal-close').addEventListener('click', () => modalOverlay.classList.remove('open'));
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') modalOverlay.classList.remove('open'); });
 </script>
+
+<!-- ── Modal de detalle ───────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-section">
+      <div class="modal-section-label">Resumen</div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+    <div class="modal-section" id="modal-impact-section">
+      <div class="modal-section-label">Impacto para transportista / operador del sistema</div>
+      <div class="modal-impact" id="modal-impact"></div>
+    </div>
+    <div class="modal-section" style="margin-top:18px">
+      <a id="modal-link" href="#" target="_blank" rel="noopener"
+         style="font-size:12px;color:var(--teal2);font-weight:600">
+        🔗 Ver documento oficial
+      </a>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
