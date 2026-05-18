@@ -5,7 +5,6 @@ on:
     # 08:00 y 12:00 hora peninsular España
     # Verano CEST (UTC+2): 06:00 y 10:00 UTC
     # Invierno CET  (UTC+1): 07:00 y 11:00 UTC
-    # Usamos horario verano como referencia (abril–octubre)
     - cron: '0 6 * * 1-6'   # Lunes–Sábado 08:00 CEST
     - cron: '0 10 * * 1-5'  # Lunes–Viernes 12:00 CEST
   workflow_dispatch:          # Permite ejecución manual desde GitHub
@@ -19,7 +18,7 @@ env:
 jobs:
   scrape-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25   # Ampliado: CNMC puede tardar con timeouts
 
     steps:
       # ── 1. Checkout ──────────────────────────────────────────────────────
@@ -38,8 +37,8 @@ jobs:
       - name: Scrape BOE + CNMC → PostgreSQL → web/data.json
         env:
           DATABASE_URL: ${{ secrets.BBDD }}
-          BOE_KEYWORDS:  ${{ vars.BOE_KEYWORDS }}
         run: python main.py
+        continue-on-error: false   # Fallo crítico — sin datos no desplegamos
 
       # ── 4. Generar resúmenes e impacto REE (solo entradas nuevas) ────────
       - name: Generar resúmenes con Claude Haiku
@@ -47,7 +46,7 @@ jobs:
           DATABASE_URL:      ${{ secrets.BBDD }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python generate_summaries.py --limit 30
-        continue-on-error: true   # no bloquea el deploy si falla
+        continue-on-error: true   # No bloquea el deploy si falla la API
 
       # ── 5. Deploy web/ to GitHub Pages ──────────────────────────────────
       - name: Deploy to GitHub Pages
