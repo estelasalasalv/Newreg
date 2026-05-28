@@ -79,6 +79,67 @@ def _make_ext_id(prefix: str, text: str) -> str:
     return f"{prefix}-{re.sub(r'[^a-z0-9]', '', text[-55:].lower())}"
 
 
+# Traducciones de términos frecuentes en títulos ACER (inglés → español)
+_TRADUCCIONES = [
+    (re.compile(r"\bACER calls for\b", re.I),          "ACER solicita"),
+    (re.compile(r"\bACER recommends\b", re.I),          "ACER recomienda"),
+    (re.compile(r"\bACER launches\b", re.I),            "ACER lanza"),
+    (re.compile(r"\bACER publishes\b", re.I),           "ACER publica"),
+    (re.compile(r"\bACER approves\b", re.I),            "ACER aprueba"),
+    (re.compile(r"\bACER welcomes\b", re.I),            "ACER acoge favorablemente"),
+    (re.compile(r"\bACER provides\b", re.I),            "ACER emite"),
+    (re.compile(r"\bACER warns\b", re.I),               "ACER advierte"),
+    (re.compile(r"\bACER to amend\b", re.I),            "ACER modificará"),
+    (re.compile(r"\bACER will consult\b", re.I),        "ACER consultará sobre"),
+    (re.compile(r"\bDecision No\b", re.I),              "Decisión n.º"),
+    (re.compile(r"\belectricity\b", re.I),              "electricidad"),
+    (re.compile(r"\bnatural gas\b", re.I),              "gas natural"),
+    (re.compile(r"\bgas storage\b", re.I),              "almacenamiento de gas"),
+    (re.compile(r"\bLNG\b"),                             "GNL"),
+    (re.compile(r"\bnetwork tariffs\b", re.I),          "tarifas de red"),
+    (re.compile(r"\btransmission tariffs\b", re.I),     "tarifas de transporte"),
+    (re.compile(r"\bday-ahead\b", re.I),                "mercado a día siguiente"),
+    (re.compile(r"\bcapacity calculation\b", re.I),     "cálculo de capacidad"),
+    (re.compile(r"\binterconnection\b", re.I),          "interconexión"),
+    (re.compile(r"\bsecurity of supply\b", re.I),       "seguridad de suministro"),
+    (re.compile(r"\benergy markets\b", re.I),           "mercados energéticos"),
+    (re.compile(r"\bgrid\b", re.I),                     "red eléctrica"),
+    (re.compile(r"\btransparency\b", re.I),             "transparencia"),
+    (re.compile(r"\bmeasures\b", re.I),                 "medidas"),
+    (re.compile(r"\bimprovement[s]?\b", re.I),          "mejoras"),
+    (re.compile(r"\bmonitoring\b", re.I),               "seguimiento"),
+    (re.compile(r"\bregion\b", re.I),                   "región"),
+    (re.compile(r"\breserve needs\b", re.I),            "necesidades de reserva"),
+    (re.compile(r"\badequacy assessment\b", re.I),      "evaluación de adecuación"),
+    (re.compile(r"\bEuropean Resource Adequacy Assessment\b", re.I),
+     "Evaluación Europea de Adecuación de Recursos"),
+    (re.compile(r"\binvestment\b", re.I),               "inversión"),
+    (re.compile(r"\bcost[s]? and benefit[s]?\b", re.I),"costes y beneficios"),
+    (re.compile(r"\bderogation[s]?\b", re.I),          "derogaciones"),
+    (re.compile(r"\benforcement\b", re.I),              "aplicación normativa"),
+    (re.compile(r"\btrading intermediar\w+\b", re.I),  "intermediarios comerciales"),
+    (re.compile(r"\bquarterly\b", re.I),                "trimestral"),
+    (re.compile(r"\bis out\b", re.I),                   "ya disponible"),
+    (re.compile(r"\bhighlights\b", re.I),              "destaca"),
+    (re.compile(r"\bmitigate\b", re.I),                "mitigar"),
+    (re.compile(r"\bstress\b", re.I),                  "tensión"),
+    (re.compile(r"\bspikes?\b", re.I),                 "picos"),
+    (re.compile(r"\bsurveillance\b", re.I),            "vigilancia"),
+    (re.compile(r"\bmarket risks\b", re.I),            "riesgos de mercado"),
+    (re.compile(r"\bexpansion\b", re.I),               "expansión"),
+    (re.compile(r"\brecord high\b", re.I),             "máximos históricos"),
+    (re.compile(r"\bfilling\b", re.I),                 "llenado de"),
+]
+
+
+def _traducir(titulo: str) -> str:
+    """Aplica traducciones parciales de términos frecuentes de ACER al español."""
+    for pat, reemplazo in _TRADUCCIONES:
+        titulo = pat.sub(reemplazo, titulo)
+    # Capitalizar primera letra
+    return titulo[0].upper() + titulo[1:] if titulo else titulo
+
+
 def scrape_rss(days_back: int = 2) -> List[Dict]:
     """Descarga el RSS de ACER y extrae noticias recientes."""
     cutoff = date.today() - timedelta(days=days_back)
@@ -138,7 +199,7 @@ def scrape_rss(days_back: int = 2) -> List[Dict]:
         results.append({
             "source":         "ACER",
             "external_id":    _make_ext_id("acer-rss", href or title),
-            "title":          title,
+            "title":          _traducir(title),
             "published_date": fecha,
             "url":            full_url,
             "section":        "ACER Noticias",
@@ -204,7 +265,7 @@ def scrape_decisions(days_back: int = 2, max_pages: int = 3) -> List[Dict]:
                 results.append({
                     "source":         "ACER",
                     "external_id":    _make_ext_id("acer-dec", href),
-                    "title":          title,
+                    "title":          _traducir(title),
                     "published_date": fecha,
                     "url":            full_url,
                     "section":        "ACER Decisión",
