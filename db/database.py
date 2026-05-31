@@ -123,7 +123,10 @@ def upsert_entries(entries: List[Dict]) -> int:
     ON CONFLICT (external_id) DO UPDATE SET
         plazo  = EXCLUDED.plazo,
         estado = EXCLUDED.estado,
-        title  = EXCLUDED.title
+        title  = CASE
+                   WHEN EXCLUDED.title LIKE '<%' THEN regulatory_entries.title
+                   ELSE EXCLUDED.title
+                 END
     """
     inserted = 0
     with get_connection() as conn:

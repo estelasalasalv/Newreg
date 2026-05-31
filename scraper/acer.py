@@ -197,16 +197,21 @@ def scrape_rss(days_back: int = 2) -> List[Dict]:
         pub_raw   = item.findtext("pubDate") or ""
 
         if title_el is not None:
-            # Serializar el elemento completo y parsear con BeautifulSoup
-            raw_xml   = ET.tostring(title_el, encoding="unicode")
-            title_soup = BeautifulSoup(raw_xml, "html.parser")
-            a_tag = title_soup.find("a")
-            if a_tag:
-                title = a_tag.get_text(strip=True)
-                href  = a_tag.get("href", "")
+            # ET parsea el <a> hijo directamente (html.parser trataba <title> como RCDATA)
+            a_el = title_el.find("a")
+            if a_el is not None:
+                title = (a_el.text or "").strip()
+                href  = a_el.get("href", "")
             else:
-                title = title_soup.get_text(strip=True)
+                # Título plano sin <a> hijo
+                title = "".join(title_el.itertext()).strip()
                 href  = ""
+            # Seguridad: si el título sigue teniendo HTML, limpiar con regex
+            if "<" in title:
+                import re as _re
+                href_m = _re.search(r'href="([^"]+)"', title)
+                href   = href_m.group(1) if href_m and not href else href
+                title  = _re.sub(r"<[^>]+>", "", title).strip()
         else:
             title = ""
             href  = ""
