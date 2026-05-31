@@ -78,9 +78,25 @@ def init_db():
 
 
 def purge_excluded() -> int:
-    """Sin operación: la exclusión se aplica en los scrapers antes del INSERT
-    y en los SELECT de fetch_* con NOT ILIKE. No se borran datos de la BD."""
-    return 0
+    """Elimina entradas duplicadas o con external_id incorrecto conocido.
+    No borra por contenido; solo por external_id exacto y source."""
+    _BLACKLIST = [
+        # ACER: duplicado parcialmente traducido de 'lower-congestion-levels...'
+        ("ACER", "acer-rss-evels2024and2025pointnewequilibriumeugasmarket"),
+    ]
+    deleted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for source, ext_id in _BLACKLIST:
+                cur.execute(
+                    "DELETE FROM regulatory_entries WHERE source=%s AND external_id=%s",
+                    (source, ext_id),
+                )
+                deleted += cur.rowcount
+        conn.commit()
+    if deleted:
+        logger.info("purge_excluded: %d entradas duplicadas eliminadas.", deleted)
+    return deleted
 
 
 def upsert_boe(entries: List[Dict]) -> int:
