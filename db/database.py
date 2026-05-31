@@ -81,9 +81,18 @@ def purge_excluded() -> int:
     """Elimina entradas duplicadas o con external_id incorrecto conocido.
     No borra por contenido; solo por external_id exacto y source."""
     _BLACKLIST = [
-        # ACER: duplicado parcialmente traducido de 'lower-congestion-levels...'
+        # ACER: duplicados de 'lower-congestion-levels-2024-and-2025...' (ext_id variable)
         ("ACER", "acer-rss-evels2024and2025pointnewequilibriumeugasmarket"),
     ]
+    # También eliminar por URL duplicada dentro de ACER (mantiene la entrada más antigua)
+    sql_url_dup = """
+    DELETE FROM regulatory_entries
+    WHERE source = 'ACER' AND id NOT IN (
+        SELECT MIN(id) FROM regulatory_entries
+        WHERE source = 'ACER'
+        GROUP BY url
+    )
+    """
     deleted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -93,6 +102,9 @@ def purge_excluded() -> int:
                     (source, ext_id),
                 )
                 deleted += cur.rowcount
+            # Eliminar duplicados ACER por URL (conserva la entrada más antigua)
+            cur.execute(sql_url_dup)
+            deleted += cur.rowcount
         conn.commit()
     if deleted:
         logger.info("purge_excluded: %d entradas duplicadas eliminadas.", deleted)
@@ -144,15 +156,32 @@ def upsert_entries(entries: List[Dict]) -> int:
                    ELSE EXCLUDED.title
                  END
     """
+    # Pre-cargar URLs ya existentes de la misma fuente para evitar duplicados por URL
+    sources_in_batch = list({e.get("source") for e in entries if e.get("source")})
+    existing_urls: set = set()
+    if sources_in_batch:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT url FROM regulatory_entries WHERE source = ANY(%s) AND url IS NOT NULL",
+                    (sources_in_batch,),
+                )
+                existing_urls = {r[0] for r in cur.fetchall()}
+
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
+                # Omitir si la URL ya existe (previene duplicados con external_id distinto)
+                if e.get("url") and e["url"] in existing_urls:
+                    continue
                 row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
                        "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
                        "tramitaciones": e.get("tramitaciones", "No")}
                 cur.execute(sql, row)
-                inserted += cur.rowcount
+                if cur.rowcount:
+                    inserted += cur.rowcount
+                    existing_urls.add(e.get("url"))  # actualizar el set en memoria
         conn.commit()
     return inserted
 

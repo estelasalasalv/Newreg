@@ -227,10 +227,12 @@ def scrape_rss(days_back: int = 2) -> List[Dict]:
         if not _is_recent(fecha, cutoff):
             continue
 
+        # Clave estable: slug final de la URL (último segmento del path)
+        slug = href.rstrip("/").split("/")[-1] if href else ""
         tipo = _detect_tipo(title, "ACER Noticias")
         results.append({
             "source":         "ACER",
-            "external_id":    _make_ext_id("acer-rss", href or title),
+            "external_id":    _make_ext_id("acer-rss", slug or title),
             "title":          _traducir(title),
             "published_date": fecha,
             "url":            full_url,
