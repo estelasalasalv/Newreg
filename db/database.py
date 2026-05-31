@@ -124,7 +124,7 @@ def upsert_entries(entries: List[Dict]) -> int:
         plazo  = EXCLUDED.plazo,
         estado = EXCLUDED.estado,
         title  = CASE
-                   WHEN EXCLUDED.title LIKE '<%' THEN regulatory_entries.title
+                   WHEN EXCLUDED.title LIKE '<%%' THEN regulatory_entries.title
                    ELSE EXCLUDED.title
                  END
     """
