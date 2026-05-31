@@ -1099,7 +1099,7 @@
       </div>
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,260))}${e.summary.length>260?'…':''}</div>` : ''}
       ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree.slice(0,200))}${ree.length>200?'…':''}</div>` : ''}
-      ${(e.summary || ree) ? `<button class="btn-detalle" onclick="openModal(${JSON.stringify(e.title)},${JSON.stringify(e.summary||'')},${JSON.stringify(ree)},${JSON.stringify(e.url||'')})">📄 Ver resumen completo</button>` : ''}
+      ${(e.summary || ree) ? `<button class="btn-detalle" data-title="${esc(e.title)}" data-summary="${esc(e.summary||'')}" data-impact="${esc(ree)}" data-url="${esc(e.url||'')}" onclick="openModalFromBtn(this)">📄 Ver resumen completo</button>` : ''}
     </div>`;
   }
 
@@ -1691,6 +1691,15 @@
   const modalImpact  = document.getElementById('modal-impact');
   const modalLink    = document.getElementById('modal-link');
   const modalImpactSection = document.getElementById('modal-impact-section');
+
+  function openModalFromBtn(btn) {
+    // Lee los datos desde atributos data-* (ya escapados por esc())
+    const title   = btn.dataset.title   || '';
+    const summary = btn.dataset.summary || '';
+    const impact  = btn.dataset.impact  || '';
+    const url     = btn.dataset.url     || '';
+    openModal(title, summary, impact, url);
+  }
 
   function openModal(title, summary, impact, url) {
     modalTitle.textContent  = title;
