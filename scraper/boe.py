@@ -176,7 +176,11 @@ _TRAMITACIONES_RE = re.compile(
     r"|utilidad p[uú]blica"
     r"|ocupaci[oó]n de bienes"
     r"|informe de impacto ambiental"
-    r"|declaraci[oó]n de impacto ambiental",
+    r"|declaraci[oó]n de impacto ambiental"
+    r"|levantamiento de actas"
+    r"|actas previas a la ocupaci[oó]n"
+    r"|registro de la propiedad"
+    r"|nota de afecci[oó]n",
     re.IGNORECASE,
 )
 
