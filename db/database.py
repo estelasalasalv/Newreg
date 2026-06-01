@@ -160,13 +160,14 @@ def upsert_entries(entries: List[Dict]) -> int:
     sources_in_batch = list({e.get("source") for e in entries if e.get("source")})
     existing_urls: set = set()
     if sources_in_batch:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
+        import psycopg2 as _pg2
+        with _pg2.connect(os.environ["DATABASE_URL"]) as _conn:
+            with _conn.cursor() as _cur:
+                _cur.execute(
                     "SELECT url FROM regulatory_entries WHERE source = ANY(%s) AND url IS NOT NULL",
                     (sources_in_batch,),
                 )
-                existing_urls = {r[0] for r in cur.fetchall()}
+                existing_urls = {r[0] for r in _cur.fetchall()}
 
     inserted = 0
     with get_connection() as conn:
