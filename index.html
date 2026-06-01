@@ -293,6 +293,7 @@
     .badge-anio      { background: var(--gray2);         color: var(--gray4); }
     .badge-acc       { background: rgba(0,184,176,.12);  color: var(--teal2); }
     .badge-auth      { background: rgba(99,102,241,.12); color: #4f46e5; }
+    .badge-gas       { background: rgba(234,179,8,.15);  color: #92400e; }
     .badge-imp       { background: rgba(249,168,37,.2);  color: #b45309; }
 
     /* ── MODAL DE DETALLE ───────────────────────────────────────── */
@@ -540,6 +541,10 @@
         <label class="imp-label">
           <input type="checkbox" id="chk-ocultar-tramitaciones"/>
           Ocultar tramitaciones
+        </label>
+        <label class="imp-label">
+          <input type="checkbox" id="chk-ocultar-gas"/>
+          Ocultar gas
         </label>
       </div>
     </div>
@@ -945,6 +950,7 @@
         ${org   ? `<span class="org-chip">${esc(org.length>40?org.slice(0,40)+'…':org)}</span>` : ''}
         ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
+        ${esGasOnly(e) ? '<span class="badge badge-gas">⛽ Gas</span>' : ''}
       </div>
       ${sec||sub ? `<div class="norm-section">${esc(sec)}${sub?' › '+esc(sub):''}</div>` : ''}
       ${kw  ? `<div style="font-size:10.5px;color:var(--gray3);margin:4px 0 6px">🔑 ${esc(kw)}</div>` : ''}
@@ -1055,6 +1061,7 @@
     const filtered = cnmcNData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'CNMC_N') return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       if (!q) return true;
@@ -1114,6 +1121,7 @@
     const filtered = acerData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       if (!q) return true;
@@ -1184,6 +1192,7 @@
     const cnmcNNacional = cnmcNData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'CNMC_N') return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     });
@@ -1192,6 +1201,7 @@
         if (e.source === 'ACER') return false;
         if (soloImportante && e.importante !== 'Sí') return false;
         if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
         if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource && activeSource !== 'ACER') return false;
         return isInResumenRange(e.fecha_real || e.published_date);
       }),
@@ -1208,6 +1218,7 @@
     const euFilt = eurlex.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
       return isInResumenRange(e.fecha_real || e.fecha);
     }).sort((a,b) => (b.fecha_real||b.fecha||'').localeCompare(a.fecha_real||a.fecha||''));
@@ -1233,6 +1244,7 @@
     const acerFilt = acerData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
@@ -1319,6 +1331,7 @@
       if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
       if (soloImp && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (yr && String(e.anio) !== yr) return false;
       if (!q) return true;
       return ((e.texto||'')+' '+(e.tipo||'')).toLowerCase().includes(q);
@@ -1367,6 +1380,7 @@
     const filtered = accesoDatos.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (yr && String(e.anio) !== yr) return false;
       if (!q) return true;
@@ -1390,6 +1404,7 @@
     const filtered = allEntries.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (todasYr && e.published_date && !e.published_date.endsWith(todasYr)) return false;
       if (!q) return true;
@@ -1428,6 +1443,7 @@
     const filtered = allEntries.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
@@ -1454,6 +1470,15 @@
   let vistaCalendario = false;
   let soloImportante        = false;
   let ocultarTramitaciones  = false;
+  let ocultarGas            = false;
+
+  // Detecta si una entrada es exclusivamente de gas (sin contenido eléctrico relevante)
+  const _GAS_RE   = /gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|red de gas|instalaci[oó]n de gas|enagas|redexis|nedgia|gas natural/i;
+  const _ELEC_RE  = /el[eé]ctric|fotovolt|aerogen|parque (solar|e[oó]lico)|subestaci[oó]n|\bkv\b|l[ií]nea de transporte/i;
+  function esGasOnly(e) {
+    const t = (e.texto || e.title || '') + ' ' + (e.palabras_clave || e.summary || '');
+    return _GAS_RE.test(t) && !_ELEC_RE.test(t);
+  }
   let mostrarOtrosSectores  = false;
   let acerData  = [];
   let cnmcNData = [];
@@ -1655,6 +1680,9 @@
   });
   document.getElementById('chk-ocultar-tramitaciones').addEventListener('change', function() {
     ocultarTramitaciones = this.checked; renderAll();
+  });
+  document.getElementById('chk-ocultar-gas').addEventListener('change', function() {
+    ocultarGas = this.checked; renderAll();
   });
   document.querySelectorAll('.resumen-periodo-btn').forEach(btn => {
     btn.addEventListener('click', function() {
