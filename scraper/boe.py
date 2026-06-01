@@ -146,11 +146,18 @@ _NOM_DEPTS = [_norm(d) for d in [
 # Palabras para campo acceso_conexion
 _ACCESS_RE = re.compile(r"\b(acceso|conexion|interconexion|peaje de acceso|red de transporte|red de distribucion)\b")
 
-# Patrón para autorizaciones administrativas de construcción/previa (AAP/AAC)
+# Patrón para autorizaciones administrativas de construcción/previa (AAP/AAC) y utilidad pública
 _TRAMITACIONES_RE = re.compile(
     r"autorizaci[oó]n administrativa\s+(previa|de construcci[oó]n)"
     r"|\bAAP\b"
-    r"|\bAAC\b",
+    r"|\bAAC\b"
+    r"|utilidad p[uú]blica",
+    re.IGNORECASE,
+)
+
+# Interconexiones internacionales: tramitaciones marcadas como importantes
+_INTERCONEXION_INT_RE = re.compile(
+    r"\b(Marruecos|Maroc|Francia|France|Italia|Italy|Portugal)\b",
     re.IGNORECASE,
 )
 
@@ -358,8 +365,13 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             imp      = "Sí" if art64 else _is_importante(tipo, dept_nombre, titulo)
                             acceso   = _detect_acceso(titulo)
                             autorizacion = _detect_tramitaciones(titulo)
-                            if autorizacion == "Sí" and acceso == "No":
-                                acceso = "Sí"
+                            if autorizacion == "Sí":
+                                # Tramitaciones ordinarias no son importantes salvo
+                                # interconexiones internacionales (Francia, Portugal, etc.)
+                                if not _INTERCONEXION_INT_RE.search(titulo):
+                                    imp = "No"
+                                if acceso == "No":
+                                    acceso = "Sí"
 
                             items.append({
                                 "external_id":   doc_id,
