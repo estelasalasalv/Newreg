@@ -1221,7 +1221,9 @@
         '<div class="norm-meta">' +
           (e.tipo ? '<span class="type-chip">'+esc(e.tipo)+'</span>' : '') +
           (e.fecha ? '<span>'+e.fecha+'</span>' : '') +
-          '<span class="org-chip" style="background:rgba(0,51,153,.1);color:#003399">🇪🇺 DOUE</span>' +
+          (e.fuente === 'NoticiaCE'
+            ? '<span class="org-chip" style="background:rgba(0,120,215,.12);color:#0078d7">📰 NoticiaCE</span>'
+            : '<span class="org-chip" style="background:rgba(0,51,153,.1);color:#003399">🇪🇺 DOUE</span>') +
         '</div>' +
         (e.resumen ? '<div class="norm-card-summary">'+esc(e.resumen)+'</div>' : '') +
       '</div>'
@@ -1341,7 +1343,9 @@
         '<div class="norm-meta">' +
           (e.tipo ? '<span class="type-chip'+(imp?' imp':'')+'">'+esc(e.tipo)+'</span>' : '') +
           (e.fecha ? '<span>'+e.fecha+'</span>' : '') +
-          '<span class="org-chip" style="background:rgba(0,51,153,.1);color:#003399">🇪🇺 DOUE</span>' +
+          (e.fuente === 'NoticiaCE'
+            ? '<span class="org-chip" style="background:rgba(0,120,215,.12);color:#0078d7">📰 NoticiaCE</span>'
+            : '<span class="org-chip" style="background:rgba(0,51,153,.1);color:#003399">🇪🇺 DOUE</span>') +
         '</div>' +
         (e.resumen ? '<div class="norm-card-summary">'+esc(e.resumen)+'</div>' : '') +
       '</div>';
