@@ -42,7 +42,9 @@ _ENERGY_SPECIFIC_RE = re.compile(
     r"subestaci[oó]n|parque.*energ|planta.*energ|planta.*solar|"
     r"autorizaci[oó]n.*instalaci.*el[eé]ctric|"
     r"almacenamiento.*energ|hidroel[eé]ctric|hidr[oó]geno|biomasa|biog[aá]s|"
-    r"aerogenerador|molino.*viento|energ[ií]a.*renovable",
+    r"aerogenerador|molino.*viento|energ[ií]a.*renovable|"
+    r"red el[eé]ctrica|REE\b|Redesa|gasoducto|biometano|"
+    r"registro de la propiedad.*energ|notificaci[oó]n.*el[eé]ctric",
     re.IGNORECASE,
 )
 
