@@ -1422,6 +1422,16 @@
     }).join('');
   }
 
+  // Compara texto con query soportando * como comodín (uno o más caracteres)
+  function matchQuery(text, q) {
+    if (!q) return true;
+    const t = text.toLowerCase();
+    if (!q.includes('*')) return t.includes(q);
+    // Convierte * en regex .*
+    const pattern = q.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+');
+    try { return new RegExp(pattern).test(t); } catch { return t.includes(q.replace(/\*/g,'')); }
+  }
+
   function renderEsp() {
     const q    = document.getElementById('esp-search').value.toLowerCase().trim();
     const dias = parseInt(document.getElementById('esp-dias').value || '14');
@@ -1447,8 +1457,7 @@
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
-      if (!q) return true;
-      return ((e.title||'')+' '+(e.department||'')+' '+(e.section||'')).toLowerCase().includes(q);
+      return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||''), q);
     });
 
     filtered.sort((a,b) => (b.fecha_real||'').localeCompare(a.fecha_real||''));
