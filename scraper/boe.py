@@ -276,6 +276,8 @@ _EXCLUDED_TITLES = [
     re.compile(r"seguridad jur[ií]dica y fe p[uú]blica", re.IGNORECASE),
     re.compile(r"eficiencia del servicio p[uú]blico", re.IGNORECASE),
     re.compile(r"agencia estatal de meteorolog[ií]a", re.IGNORECASE),
+    re.compile(r"elecciones?\s+(al|para\s+el|para\s+las?)\s+(parlamento|juntas?\s+generales?|asamblea|cortes?)", re.IGNORECASE),
+    re.compile(r"r[eé]gimen electoral", re.IGNORECASE),
 ]
 
 # Organismos aprobados para libre designación
