@@ -283,6 +283,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         (scraped_at::date = CURRENT_DATE)                      AS es_nuevo
     FROM regulatory_entries
     WHERE (tipo = 'regulacion' OR tipo IS NULL)
+      AND source != 'ACER'   -- ACER tiene su propia pestaña y fetch_acer()
 
     ORDER BY fecha_real DESC NULLS LAST, scraped_at DESC
     LIMIT %(limit)s
