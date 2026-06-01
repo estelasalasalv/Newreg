@@ -1,5 +1,5 @@
 {
-  "updated_at": "01/06/2026 14:26",
+  "updated_at": "01/06/2026 14:37",
   "total": 300,
   "entries": [
     {
@@ -171,7 +171,7 @@
       "filtro": "CNMC_C",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -190,7 +190,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -209,7 +209,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -228,7 +228,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -247,7 +247,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -266,7 +266,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -285,7 +285,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -304,7 +304,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",
@@ -323,7 +323,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-05-30",
       "scraped_at": "30/05/2026 10:26",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "CNMC_N",
@@ -342,7 +342,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-05-29",
       "scraped_at": "30/05/2026 10:27",
-      "es_nuevo": false
+      "es_nuevo": true
     },
     {
       "source": "BOE",

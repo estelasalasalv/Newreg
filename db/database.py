@@ -257,7 +257,8 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         END                                                     AS filtro,
         TO_CHAR(fecha, 'YYYY-MM-DD')                            AS fecha_real,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-        (scraped_at::date = CURRENT_DATE)                      AS es_nuevo
+        -- El lunes (DOW=1) ampliar ventana al sábado anterior (2 días atrás)
+        (fecha::date >= CURRENT_DATE - CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 1 THEN 2 ELSE 0 END) AS es_nuevo
     FROM boe_entries
     WHERE texto NOT ILIKE '%%eficiencia del servicio p_blico%%'
 
@@ -280,7 +281,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         source                                                  AS filtro,
         TO_CHAR(published_date, 'YYYY-MM-DD')                   AS fecha_real,
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-        (scraped_at::date = CURRENT_DATE)                      AS es_nuevo
+        (scraped_at::date >= CURRENT_DATE - CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 1 THEN 2 ELSE 0 END) AS es_nuevo
     FROM regulatory_entries
     WHERE (tipo = 'regulacion' OR tipo IS NULL)
       AND source != 'ACER'   -- ACER tiene su propia pestaña y fetch_acer()
@@ -508,7 +509,7 @@ def fetch_acer() -> List[Dict]:
            TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
            EXTRACT(YEAR FROM published_date)::int                           AS anio,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date = CURRENT_DATE)                                AS es_nuevo
+           (scraped_at::date >= CURRENT_DATE - CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 1 THEN 2 ELSE 0 END) AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'ACER'
     ORDER  BY published_date DESC NULLS LAST, scraped_at DESC

@@ -36,16 +36,20 @@ def main():
     eu_new     = upsert_eurlex(eu_entries)
     logger.info("EUR-Lex: %d actos, %d nuevos", len(eu_entries), eu_new)
 
+    # El lunes ampliar a 3 días para capturar también el sábado anterior
+    from datetime import date as _date
+    _boe_days = 3 if _date.today().weekday() == 0 else 1
+
     # ── BOE Sección V Anuncios (HTML) ──────────────────────────────────
     logger.info("=== Scraping BOE Anuncios Sección V ===")
     from scraper.boe_anuncios import scrape as scrape_anuncios
-    anuncios = scrape_anuncios(days_back=1)
+    anuncios = scrape_anuncios(days_back=_boe_days)
     anuncios_new = upsert_boe(anuncios)
     logger.info("BOE Anuncios: %d encontrados, %d nuevos", len(anuncios), anuncios_new)
 
-    # ── BOE: solo el día actual ─────────────────────────────────────────
-    logger.info("=== Scraping BOE (hoy) ===")
-    boe_entries = boe.scrape(days_back=1)
+    # ── BOE: hoy (+ sábado si es lunes) ────────────────────────────────
+    logger.info("=== Scraping BOE (days_back=%d) ===", _boe_days)
+    boe_entries = boe.scrape(days_back=_boe_days)
     boe_new     = upsert_boe(boe_entries)
     logger.info("BOE: %d entradas encontradas, %d nuevas en BD", len(boe_entries), boe_new)
 
