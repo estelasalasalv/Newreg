@@ -152,7 +152,9 @@ _TRAMITACIONES_RE = re.compile(
     r"|\bAAP\b"
     r"|\bAAC\b"
     r"|utilidad p[uú]blica"
-    r"|ocupaci[oó]n de bienes",
+    r"|ocupaci[oó]n de bienes"
+    r"|informe de impacto ambiental"
+    r"|declaraci[oó]n de impacto ambiental",
     re.IGNORECASE,
 )
 
