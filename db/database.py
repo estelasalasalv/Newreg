@@ -69,12 +69,104 @@ def init_db():
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS impacto_ree        TEXT;
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado          VARCHAR(1)  DEFAULT 'N';
+
+    -- Tabla BOE-N: anuncios de Registros de la Propiedad con Red Eléctrica confirmada
+    CREATE TABLE IF NOT EXISTS boe_n_entries (
+        id              SERIAL PRIMARY KEY,
+        external_id     VARCHAR(200) UNIQUE NOT NULL,
+        fecha           DATE,
+        organismo       TEXT,
+        texto           TEXT NOT NULL,
+        enlace          TEXT,
+        scraped_at      TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_boe_n_fecha ON boe_n_entries(fecha DESC);
+
+    -- Tabla BOE-N descarte: sin Red Eléctrica — se puede borrar cuando convenga
+    CREATE TABLE IF NOT EXISTS boe_n_descarte (
+        id              SERIAL PRIMARY KEY,
+        external_id     VARCHAR(200) UNIQUE NOT NULL,
+        fecha           DATE,
+        organismo       TEXT,
+        texto           TEXT NOT NULL,
+        enlace          TEXT,
+        scraped_at      TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_boe_n_desc_fecha ON boe_n_descarte(fecha DESC);
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql)
         conn.commit()
     logger.info("Base de datos inicializada (esquema nuevo).")
+
+
+def upsert_boe_n_staging(entries: List[Dict]) -> int:
+    """Inserta en boe_n_staging (tabla temporal) todos los anuncios del suplemento BOE-N."""
+    if not entries:
+        return 0
+    sql = """
+    INSERT INTO boe_n_entries (external_id, fecha, organismo, texto, enlace)
+    VALUES (%(external_id)s, %(fecha)s, %(organismo)s, %(texto)s, %(enlace)s)
+    ON CONFLICT (external_id) DO NOTHING
+    """
+    inserted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for e in entries:
+                cur.execute(sql, e)
+                inserted += cur.rowcount
+        conn.commit()
+    return inserted
+
+
+def promote_boe_n(all_ids: List[str], ree_ids: List[str]) -> int:
+    """Clasifica anuncios BOE-N procesados:
+    - ree_ids  → boe_entries (tabla principal, tramitación confirmada REE)
+    - resto    → boe_n_descarte (tabla auxiliar, se puede vaciar sin riesgo)
+    - Borra todos de boe_n_entries (staging)
+    Devuelve el número de entradas promovidas a boe_entries.
+    """
+    if not all_ids:
+        return 0
+    ree_set = set(ree_ids)
+    promoted = 0
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT external_id, fecha, organismo, texto, enlace "
+                "FROM boe_n_entries WHERE external_id = ANY(%s)", (all_ids,)
+            )
+            rows = cur.fetchall()
+            for row in rows:
+                ext_id   = row['external_id']
+                fecha    = row['fecha']
+                organismo= row['organismo']
+                texto    = row['texto']
+                enlace   = row['enlace']
+                if ext_id in ree_set:
+                    cur.execute("""
+                        INSERT INTO boe_entries
+                          (external_id, fecha, fuente, seccion, tipo, organismo, subseccion,
+                           texto, enlace, palabras_clave, importante, acceso_conexion,
+                           tramitaciones, publicable)
+                        VALUES (%s,%s,'BOE-N','Suplemento Notificaciones',
+                                'Anuncio Registro Propiedad',%s,'',%s,%s,
+                                'registro de la propiedad, Red Eléctrica, tramitación',
+                                'No','Sí','Sí','NO')
+                        ON CONFLICT (external_id) DO NOTHING
+                    """, (ext_id, fecha, organismo, texto, enlace))
+                    promoted += cur.rowcount
+                else:
+                    cur.execute("""
+                        INSERT INTO boe_n_descarte
+                          (external_id, fecha, organismo, texto, enlace)
+                        VALUES (%s,%s,%s,%s,%s)
+                        ON CONFLICT (external_id) DO NOTHING
+                    """, (ext_id, fecha, organismo, texto, enlace))
+            cur.execute("DELETE FROM boe_n_entries WHERE external_id = ANY(%s)", (all_ids,))
+        conn.commit()
+    return promoted
 
 
 def purge_excluded() -> int:

@@ -86,6 +86,22 @@ def main():
     cnmc_n_new     = upsert_entries(cnmc_n_entries)
     logger.info("CNMC_N: %d entradas, %d nuevas en BD", len(cnmc_n_entries), cnmc_n_new)
 
+    # ── BOE-N Suplemento: Registros de la Propiedad con REE ─────────────
+    logger.info("=== Scraping BOE-N Suplemento (Registros de la Propiedad) ===")
+    from scraper.boe_n import scrape as scrape_boe_n, filter_ree
+    from db.database import upsert_boe_n_staging, promote_boe_n
+    boe_n_raw = scrape_boe_n(days_back=_boe_days)
+    staged = upsert_boe_n_staging(boe_n_raw)
+    logger.info("BOE-N: %d anuncios nuevos en staging", staged)
+    if boe_n_raw:
+        logger.info("BOE-N: leyendo PDFs en paralelo (busca Red Eléctrica/REE/Redeia)…")
+        ree_result = filter_ree(boe_n_raw, max_workers=8)
+        ree_ids  = [eid for eid, found in ree_result.items() if found]
+        all_ids  = list(ree_result.keys())
+        promoted = promote_boe_n(all_ids, ree_ids)
+        logger.info("BOE-N: %d con REE → boe_entries | %d sin REE → boe_n_descarte",
+                    promoted, len(all_ids) - promoted)
+
     # ── ACER (dos ejecuciones diarias, cubre hoy y ayer) ────────────────
     logger.info("=== Scraping ACER ===")
     from scraper import acer as acer_scraper
