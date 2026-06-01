@@ -151,7 +151,8 @@ _TRAMITACIONES_RE = re.compile(
     r"autorizaci[oó]n administrativa\s+(previa|de construcci[oó]n)"
     r"|\bAAP\b"
     r"|\bAAC\b"
-    r"|utilidad p[uú]blica",
+    r"|utilidad p[uú]blica"
+    r"|ocupaci[oó]n de bienes",
     re.IGNORECASE,
 )
 
