@@ -44,7 +44,8 @@ _ENERGY_SPECIFIC_RE = re.compile(
     r"almacenamiento.*energ|hidroel[eé]ctric|hidr[oó]geno|biomasa|biog[aá]s|"
     r"aerogenerador|molino.*viento|energ[ií]a.*renovable|"
     r"red el[eé]ctrica|REE\b|Redesa|gasoducto|biometano|"
-    r"registro de la propiedad.*energ|notificaci[oó]n.*el[eé]ctric",
+    r"nota de afecci[oó]n|nota marginal.*energ|nota marginal.*l[ií]nea|"
+    r"notificaci[oó]n.*el[eé]ctric|levantamiento de actas|actas previas",
     re.IGNORECASE,
 )
 
@@ -133,16 +134,20 @@ def scrape(date_obj=None, days_back: int = 1) -> List[Dict]:
             if _EXCLUDED_RE.search(item_text):
                 continue
 
-            # Requiere keyword específicamente energética (no solo "electr" genérico)
-            if not _ENERGY_SPECIFIC_RE.search(item_text):
-                continue
-
-            # Obtener título completo si es un anuncio BOE-B (abreviados en el índice)
+            # Registros de la Propiedad: obtener el título completo antes de filtrar
+            # (sus títulos en el índice suelen ser solo el nombre del registro)
+            _REG_PROP_RE = re.compile(r"registro de la propiedad", re.IGNORECASE)
             titulo = item_text
             if boe_id.startswith("BOE-B"):
                 full = _fetch_full_title(boe_id)
                 if full and len(full) > len(titulo):
                     titulo = full
+
+            # Requiere keyword específicamente energética (no solo "electr" genérico)
+            # Los Registros de la Propiedad pasan si el título completo tiene energía
+            text_to_check = titulo if _REG_PROP_RE.search(item_text) else item_text
+            if not _ENERGY_SPECIFIC_RE.search(text_to_check):
+                continue
 
             results.append({
                 "external_id":  boe_id,
