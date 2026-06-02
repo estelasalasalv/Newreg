@@ -84,6 +84,13 @@ def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> L
             href  = a.get("href", "")
             if not title or not href:
                 continue
+            # Filtrar títulos que son cabeceras/navegación, no consultas reales
+            _SKIP_TITLES = re.compile(
+                r'^(anuncios anteriores|información legal|acceso al listado|ver todos|ver más|anterior|siguiente)$',
+                re.IGNORECASE,
+            )
+            if _SKIP_TITLES.match(title) or len(title) < 15:
+                continue
             if href.startswith("/"):
                 href = MITERD_BASE + href
             if not href.startswith("http"):
@@ -92,6 +99,17 @@ def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> L
             base = url.split("#")[0].rstrip("/")
             if href.rstrip("/").split("#")[0].rstrip("/") == base:
                 continue
+
+            # Para Costas: el estado real está en el título como [DD/MM-DD/MM/YYYY]
+            estado_entry = current_estado
+            date_range = re.search(r'\[[\d/]+-(\d{2}/\d{2}/\d{4})\]', title)
+            if date_range:
+                from datetime import date, datetime
+                try:
+                    cierre = datetime.strptime(date_range.group(1), "%d/%m/%Y").date()
+                    estado_entry = "Abierta" if cierre >= date.today() else "Cerrada"
+                except Exception:
+                    pass
 
             slug        = re.sub(r"[^a-z0-9]", "-", href.rstrip("/").split("/")[-1].replace(".html", "").lower())
             prefix      = section_label.lower().replace(" ", "-").replace("/", "")[:8]
@@ -111,7 +129,7 @@ def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> L
                 "department":     "MITERD",
                 "summary":        None,
                 "plazo":          None,
-                "estado":         current_estado,
+                "estado":         estado_entry,
                 "sector":         sector,
             })
 
