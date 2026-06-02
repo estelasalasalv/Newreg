@@ -45,7 +45,10 @@ _ENERGY_SPECIFIC_RE = re.compile(
     r"aerogenerador|molino.*viento|energ[ií]a.*renovable|"
     r"red el[eé]ctrica|REE\b|Redesa|gasoducto|biometano|"
     r"nota de afecci[oó]n|nota marginal.*energ|nota marginal.*l[ií]nea|"
-    r"notificaci[oó]n.*el[eé]ctric|levantamiento de actas|actas previas",
+    r"notificaci[oó]n.*el[eé]ctric|levantamiento de actas|actas previas|"
+    r"peajes? de acceso.*energ|suplementos? territoriales.*energ|"
+    r"energ[ií]a el[eé]ctrica|sistema el[eé]ctrico|"
+    r"subdirecci[oó]n general de energ[ií]a|secretar[ií]a de estado de energ[ií]a",
     re.IGNORECASE,
 )
 
