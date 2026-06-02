@@ -19,7 +19,8 @@ from scraper.boe import _find_keywords, _norm, _detect_tramitaciones
 logger = logging.getLogger(__name__)
 
 CNMC_RSS_URL = "https://www.cnmc.es/rss.xml"
-EXCLUDED     = ["audiovisual", "telecomunicacion", "postal", "ferroviario", "ferrocarril"]
+EXCLUDED     = ["audiovisual", "telecomunicacion", "postal", "ferroviario", "ferrocarril",
+                "aeroportuari", "dora iii", "tarifa.*aeropuerto", "ley 18/2014"]
 _HEADERS     = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 
 # Títulos genéricos que requieren navegar a la página individual
