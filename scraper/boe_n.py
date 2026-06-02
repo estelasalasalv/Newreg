@@ -26,7 +26,7 @@ _HEADERS    = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 
 # Términos que marcan afección a Red Eléctrica / REE / Redeia
 _REE_RE = re.compile(
-    r"red el[eé]ctrica|redeia|\bREE\b",
+    r"red el[eé]ctrica|\bredeia\b|\bREE\b",  # \b evita falsos positivos como 'Heredeia'
     re.IGNORECASE,
 )
 
