@@ -1012,8 +1012,8 @@
         <div class="consulta-badges">
           <span class="badge ${cerrada ? 'badge-closed' : 'badge-open'}">${cerrada ? 'Finalizada' : 'Abierta'}</span>
           <span class="badge ${orgCls}">${org}</span>
-          ${e.section && e.section !== 'Consultas CNMC' && e.section !== 'Consultas MITERD'
-            ? `<span class="badge badge-closed">${esc(e.section)}</span>` : ''}
+          ${e.section && !['Consultas CNMC','Consultas MITERD','CNMC RSS','ACER Noticias','ACER Decisión'].includes(e.section)
+            ? `<span class="badge" style="background:rgba(46,125,50,.12);color:#2e7d32;font-size:.68rem">${esc(e.section)}</span>` : ''}
           ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.68rem">NUEVO</span>' : ''}
         </div>
         <div class="consulta-title">
