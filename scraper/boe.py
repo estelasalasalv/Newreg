@@ -378,6 +378,23 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
         if not _EXCLUDED_ORGANISMS.search(dept) and not _EP_NO_ENERGIA.search(epigrafe):
             return True
 
+    # Regla 4: Órdenes ministeriales del MITERD/MITECO (código TED o TEC en el título)
+    # incluyen reorganizaciones, delegaciones de competencias y normativa interna
+    # del ministerio de energía, siempre relevantes para el sector.
+    _ORDEN_MITERD_RE = re.compile(
+        r"^(orden\s+ted/|orden\s+tec/|orden\s+ite/)",
+        re.IGNORECASE
+    )
+    _MITERD_DEPT_RE = re.compile(
+        r"transici[oó]n\s+ecol[oó]g|miterd|miteco|secretar[ií]a\s+de\s+estado\s+de\s+energ",
+        re.IGNORECASE
+    )
+    if _ORDEN_MITERD_RE.search(titulo) or (
+        re.search(r"delegaci[oó]n\s+de\s+competencias", titulo, re.IGNORECASE)
+        and _MITERD_DEPT_RE.search(dept)
+    ):
+        return True
+
     return False
 
 
