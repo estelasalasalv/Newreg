@@ -156,14 +156,67 @@ _TRADUCCIONES = [
     (re.compile(r"\boptimis\w+\b", re.I),              "optimizar"),
     (re.compile(r"\bramp.?up\b", re.I),                "aceleración"),
     (re.compile(r"\bupdated\b", re.I),                 "actualizado"),
+    # Verbos y acciones frecuentes
+    (re.compile(r"\breleases?\b", re.I),               "publica"),
+    (re.compile(r"\bassessment\b", re.I),              "evaluación"),
+    (re.compile(r"\bderivatives?\b", re.I),            "derivados"),
+    (re.compile(r"\bmarket[s]?\b", re.I),              "mercados"),
+    (re.compile(r"\btask force\b", re.I),              "grupo de trabajo"),
+    (re.compile(r"\bgas market task force\b", re.I),   "Grupo de Trabajo del Mercado de Gas"),
+    (re.compile(r"\bproposal[s]?\b", re.I),            "propuesta"),
+    (re.compile(r"\breport[s]?\b", re.I),              "informe"),
+    (re.compile(r"\bguidelines?\b", re.I),             "directrices"),
+    (re.compile(r"\bconsultation\b", re.I),            "consulta"),
+    (re.compile(r"\bdecision[s]?\b", re.I),            "decisión"),
+    (re.compile(r"\bopinion[s]?\b", re.I),             "dictamen"),
+    (re.compile(r"\bimplementation\b", re.I),          "implementación"),
+    (re.compile(r"\bregulation\b", re.I),              "reglamento"),
+    (re.compile(r"\bdirective\b", re.I),               "directiva"),
+    (re.compile(r"\bcooperation\b", re.I),             "cooperación"),
+    (re.compile(r"\bcoordination\b", re.I),            "coordinación"),
+    (re.compile(r"\bharmonis\w+\b", re.I),             "armonización"),
+    (re.compile(r"\bintegration\b", re.I),             "integración"),
+    (re.compile(r"\brenewable[s]?\b", re.I),           "renovables"),
+    (re.compile(r"\bhydrogen\b", re.I),                "hidrógeno"),
+    (re.compile(r"\bstorage\b", re.I),                 "almacenamiento"),
+    (re.compile(r"\bdemand\b", re.I),                  "demanda"),
+    (re.compile(r"\bsupply\b", re.I),                  "suministro"),
+    (re.compile(r"\bwholesale\b", re.I),               "mercado mayorista"),
+    (re.compile(r"\bretail\b", re.I),                  "mercado minorista"),
+    (re.compile(r"\bconsumer[s]?\b", re.I),            "consumidores"),
+    (re.compile(r"\bcross.?border\b", re.I),           "transfronterizo"),
+    (re.compile(r"\bbalancing\b", re.I),               "balance del sistema"),
+    (re.compile(r"\bresilience\b", re.I),              "resiliencia"),
+    (re.compile(r"\bdecarbonisation\b", re.I),         "descarbonización"),
+    (re.compile(r"\bemissions?\b", re.I),              "emisiones"),
+    (re.compile(r"\b[Tt]he\s+\b", re.I),               ""),  # eliminar artículo inglés
 ]
 
 
+def _traducir_google(titulo: str) -> str:
+    """Traduce el título al español via Google Translate (API gratuita).
+    Si falla, usa el diccionario de términos frecuentes como fallback."""
+    try:
+        url = "https://translate.googleapis.com/translate_a/single"
+        params = {"client": "gtx", "sl": "en", "tl": "es", "dt": "t", "q": titulo}
+        r = requests.get(url, params=params,
+                         headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+        if r.status_code == 200:
+            data = r.json()
+            traducido = "".join(seg[0] for seg in data[0] if seg[0]).strip()
+            if traducido and len(traducido) > 5:
+                return traducido[0].upper() + traducido[1:]
+    except Exception:
+        pass
+    return _traducir(titulo)
+
+
 def _traducir(titulo: str) -> str:
-    """Aplica traducciones parciales de términos frecuentes de ACER al español."""
+    """Aplica traducciones parciales de términos frecuentes de ACER al español (fallback)."""
     for pat, reemplazo in _TRADUCCIONES:
         titulo = pat.sub(reemplazo, titulo)
-    # Capitalizar primera letra
+    # Eliminar artículos ingleses sobrantes al inicio
+    titulo = re.sub(r"^(The|An?)\s+", "", titulo, flags=re.IGNORECASE)
     return titulo[0].upper() + titulo[1:] if titulo else titulo
 
 
@@ -233,7 +286,7 @@ def scrape_rss(days_back: int = 2) -> List[Dict]:
         results.append({
             "source":         "ACER",
             "external_id":    _make_ext_id("acer-rss", slug or title),
-            "title":          _traducir(title),
+            "title":          _traducir_google(title),
             "published_date": fecha,
             "url":            full_url,
             "section":        "ACER Noticias",
@@ -299,7 +352,7 @@ def scrape_decisions(days_back: int = 2, max_pages: int = 3) -> List[Dict]:
                 results.append({
                     "source":         "ACER",
                     "external_id":    _make_ext_id("acer-dec", href),
-                    "title":          _traducir(title),
+                    "title":          _traducir_google(title),
                     "published_date": fecha,
                     "url":            full_url,
                     "section":        "ACER Decisión",
