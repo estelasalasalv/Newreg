@@ -147,19 +147,35 @@ def scrape(date_obj=None, days_back: int = 1) -> List[Dict]:
             if _EXCLUDED_CONTRATOS_RE.search(item_text):
                 continue
 
-            # Registros de la Propiedad: obtener el título completo antes de filtrar
-            # (sus títulos en el índice suelen ser solo el nombre del registro)
+            # Estrategia: filtrar primero con el texto corto del índice (evita peticiones innecesarias).
+            # Solo se descarga el título completo en dos casos:
+            #   1. Es un Registro de la Propiedad (título del índice = solo nombre del registro)
+            #   2. El texto corto ya pasó el filtro energético (para enriquecer el título)
             _REG_PROP_RE = re.compile(r"registro de la propiedad", re.IGNORECASE)
-            titulo = item_text
-            if boe_id.startswith("BOE-B"):
-                full = _fetch_full_title(boe_id)
-                if full and len(full) > len(titulo):
-                    titulo = full
+            es_reg_prop = _REG_PROP_RE.search(item_text)
 
-            # Requiere keyword específicamente energética (no solo "electr" genérico)
-            # Los Registros de la Propiedad pasan si el título completo tiene energía
-            text_to_check = titulo if _REG_PROP_RE.search(item_text) else item_text
-            if not _ENERGY_SPECIFIC_RE.search(text_to_check):
+            titulo = item_text
+            texto_filtro = item_text
+
+            if es_reg_prop:
+                # Para registros: necesitamos el título completo antes de filtrar
+                if boe_id.startswith("BOE-B"):
+                    full = _fetch_full_title(boe_id)
+                    if full and len(full) > len(titulo):
+                        titulo = full
+                texto_filtro = titulo
+            else:
+                # Para el resto: filtrar primero con texto corto
+                if not _ENERGY_SPECIFIC_RE.search(item_text):
+                    continue
+                # Si pasa, obtener título completo solo para BOE-B abreviados
+                if boe_id.startswith("BOE-B"):
+                    full = _fetch_full_title(boe_id)
+                    if full and len(full) > len(titulo):
+                        titulo = full
+                texto_filtro = titulo
+
+            if not _ENERGY_SPECIFIC_RE.search(texto_filtro):
                 continue
 
             results.append({
