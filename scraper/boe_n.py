@@ -52,8 +52,17 @@ def _scrape_day(target: date) -> List[Dict]:
             continue
         titulo = p.get_text(" ", strip=True)
 
-        # Solo Registros de la Propiedad (no Notarías ni Mercantiles)
-        if not titulo.upper().startswith("REGISTRO DE LA PROPIEDAD"):
+        # Capturar Registros de la Propiedad Y Delegaciones del Gobierno con expropiación
+        _DELEGACION_RE = re.compile(
+            r"delegaci[oó]n del gobierno.*expropiaci[oó]n|"
+            r"jurado.*expropiaci[oó]n|"
+            r"notificaci[oó]n.*expropiaci[oó]n|"
+            r"expropiaci[oó]n forzosa",
+            re.IGNORECASE,
+        )
+        es_reg_prop  = titulo.upper().startswith("REGISTRO DE LA PROPIEDAD")
+        es_delegacion = bool(_DELEGACION_RE.search(titulo))
+        if not es_reg_prop and not es_delegacion:
             continue
 
         # Extraer link al PDF
