@@ -46,7 +46,10 @@ _ENERGY_SPECIFIC_RE = re.compile(
     r"red el[eé]ctrica|REE\b|Redesa|gasoducto|biometano|"
     r"nota de afecci[oó]n|nota marginal.*energ|nota marginal.*l[ií]nea|"
     r"notificaci[oó]n.*el[eé]ctric|levantamiento de actas|actas previas|"
-    r"peajes? de acceso.*energ|suplementos? territoriales.*energ|"
+    r"peajes? de acceso|peajes? y cargos|peajes? de transporte|peajes? de distribuci[oó]n|"
+    r"cargos del sistema el[eé]ctrico|suplementos? territoriales|"
+    r"liquidaci[oó]n.*sector el[eé]ctrico|liquidaci[oó]n.*sistema el[eé]ctrico|"
+    r"liquidaci[oó]n.*costes.*el[eé]ctric|"
     r"energ[ií]a el[eé]ctrica|sistema el[eé]ctrico|"
     r"subdirecci[oó]n general de energ[ií]a|secretar[ií]a de estado de energ[ií]a",
     re.IGNORECASE,
