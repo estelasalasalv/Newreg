@@ -26,6 +26,11 @@ _ENERGY_RE = re.compile(
     re.IGNORECASE,
 )
 
+_EXCLUDED_CONTRATOS_RE = re.compile(
+    r"anuncio de formalizaci[oó]n de contratos",
+    re.IGNORECASE,
+)
+
 _EXCLUDED_RE = re.compile(
     r"suministro.*pan|correos|estadística|tarragona.*subasta|"
     r"carretera|ferrocarril|balasto|prisi[oó]n|penitenci|"
@@ -138,6 +143,8 @@ def scrape(date_obj=None, days_back: int = 1) -> List[Dict]:
             item_text = text
 
             if _EXCLUDED_RE.search(item_text):
+                continue
+            if _EXCLUDED_CONTRATOS_RE.search(item_text):
                 continue
 
             # Registros de la Propiedad: obtener el título completo antes de filtrar
