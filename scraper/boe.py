@@ -190,7 +190,8 @@ _TRAMITACIONES_RE = re.compile(
     r"|levantamiento de actas"
     r"|actas previas a la ocupaci[oó]n"
     r"|registro de la propiedad"
-    r"|nota de afecci[oó]n",
+    r"|nota de afecci[oó]n"
+    r"|\bsentencia\b",
     re.IGNORECASE,
 )
 
