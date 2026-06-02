@@ -1482,7 +1482,7 @@
   let ocultarGas            = false;
 
   // Detecta si una entrada es exclusivamente de gas (sin contenido eléctrico relevante)
-  const _GAS_RE   = /gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|red de gas|instalaci[oó]n de gas|enagas|redexis|nedgia|gas natural|mercado.*gas|gas.*mercado|gas.*derivados?|hidr[oó]geno|electrolizador|pila de combustible|amon[ií]aco|combustibles? renovables? de origen no biol[oó]gico|\bRFNBO\b|metanol renovable/i;
+  const _GAS_RE   = /gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|red de gas|instalaci[oó]n de gas|enagas|redexis|nedgia|gas natural|mercado.*gas|gas.*mercado|gas.*derivados?|sistema gasista|\bgasista\b|sector gasista|cuenta regulatoria.*gas|gestor t[eé]cnico.*gas|hidr[oó]geno|electrolizador|pila de combustible|amon[ií]aco|combustibles? renovables? de origen no biol[oó]gico|\bRFNBO\b|metanol renovable/i;
   const _ELEC_RE  = /el[eé]ctric|fotovolt|aerogen|parque (solar|e[oó]lico)|subestaci[oó]n|\bkv\b|l[ií]nea de transporte/i;
   function esGasOnly(e) {
     const t = (e.texto || e.title || '') + ' ' + (e.palabras_clave || e.summary || '');
