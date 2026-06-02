@@ -176,6 +176,7 @@ def scrape(date_obj=None, days_back: int = 1) -> List[Dict]:
                 "resumen":      None,
                 "importante":   "No",
                 "acceso_conexion": _detect_acceso(titulo),
+                "tramitaciones": _detect_tramitaciones_anuncio(titulo),
                 "publicable":   "NO",
             })
             logger.debug("Anuncio: %s", titulo[:60])
@@ -194,6 +195,15 @@ def _extract_organismo(titulo: str) -> str:
     if m:
         return m.group(1).strip()
     return "MITERD - Subdelegaciones"
+
+
+def _detect_tramitaciones_anuncio(titulo: str) -> str:
+    """Detecta si el anuncio de Sección V es una tramitación (AAP, AAC, etc.)."""
+    from scraper.boe import _detect_tramitaciones
+    tram = _detect_tramitaciones(titulo)
+    if tram == "Sí":
+        return "Sí"
+    return "No"
 
 
 def _detect_acceso(titulo: str) -> str:
