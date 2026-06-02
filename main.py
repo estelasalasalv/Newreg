@@ -59,32 +59,64 @@ def main():
     else:
         logger.info("(Sin entradas BOE hoy — puede ser fin de semana o festivo)")
 
-    # ── CNMC consultas ───────────────────────────────────────────────────
-    logger.info("=== Scraping CNMC consultas ===")
-    cnmc_entries = cnmc.scrape(max_pages=5)
-    cnmc_new     = upsert_entries(cnmc_entries)
-    logger.info("CNMC: %d entradas, %d nuevas en BD", len(cnmc_entries), cnmc_new)
+    # ── CNMC consultas (hasta 3 intentos, intercalados con otros scrapers) ─
+    from scraper import miterd, cnmc_rss, cnmc_n as cnmc_n_mod
+
+    def _scrape_cnmc() -> int:
+        """Intenta scraping CNMC. Devuelve nº nuevas o -1 si falla."""
+        try:
+            entries = cnmc.scrape(max_pages=5)
+            if not entries:
+                return 0
+            new = upsert_entries(entries)
+            logger.info("CNMC: %d entradas, %d nuevas en BD", len(entries), new)
+            return new
+        except Exception as exc:
+            logger.warning("CNMC fallo: %s", exc)
+            return -1
+
+    cnmc_new   = -1
+    cnmc_intentos = 0
+    MAX_INTENTOS  = 3
+
+    # Intento 1 — antes del resto
+    logger.info("=== Scraping CNMC consultas (intento 1/%d) ===", MAX_INTENTOS)
+    cnmc_new = _scrape_cnmc()
+    cnmc_intentos = 1
 
     # ── MITERD consultas ─────────────────────────────────────────────────
     logger.info("=== Scraping MITERD consultas ===")
-    from scraper import miterd
     mit_entries = miterd.scrape()
     mit_new     = upsert_entries(mit_entries)
     logger.info("MITERD: %d entradas, %d nuevas en BD", len(mit_entries), mit_new)
 
+    # Intento 2 — después de MITERD si falló antes
+    if cnmc_new < 0 and cnmc_intentos < MAX_INTENTOS:
+        cnmc_intentos += 1
+        logger.info("=== Scraping CNMC consultas (intento %d/%d) ===", cnmc_intentos, MAX_INTENTOS)
+        cnmc_new = _scrape_cnmc()
+
     # ── CNMC RSS ─────────────────────────────────────────────────────────
     logger.info("=== Scraping CNMC RSS ===")
-    from scraper import cnmc_rss
     rss_entries = cnmc_rss.scrape()
     rss_new     = upsert_entries(rss_entries)
     logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
 
     # ── CNMC_N Actuaciones energía ────────────────────────────────────────
     logger.info("=== Scraping CNMC_N Actuaciones ===")
-    from scraper import cnmc_n
-    cnmc_n_entries = cnmc_n.scrape(days_back=2)
+    cnmc_n_entries = cnmc_n_mod.scrape(days_back=2)
     cnmc_n_new     = upsert_entries(cnmc_n_entries)
     logger.info("CNMC_N: %d entradas, %d nuevas en BD", len(cnmc_n_entries), cnmc_n_new)
+
+    # Intento 3 — después de CNMC_N si aún falló
+    if cnmc_new < 0 and cnmc_intentos < MAX_INTENTOS:
+        cnmc_intentos += 1
+        logger.info("=== Scraping CNMC consultas (intento %d/%d) ===", cnmc_intentos, MAX_INTENTOS)
+        cnmc_new = _scrape_cnmc()
+
+    if cnmc_new < 0:
+        logger.error("CNMC: falló en los %d intentos — continuando sin datos CNMC", MAX_INTENTOS)
+        cnmc_new = 0
 
     # ── BOE-N Suplemento: Registros de la Propiedad con REE ─────────────
     logger.info("=== Scraping BOE-N Suplemento (Registros de la Propiedad) ===")
