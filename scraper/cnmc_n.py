@@ -13,6 +13,15 @@ import re
 import logging
 import requests
 from datetime import date, timedelta
+
+# Patrón para detectar actuaciones de gas en CNMC_S
+_CNMC_GAS_RE = re.compile(
+    r'gas natural|gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|'
+    r'red de gas|enagas|redexis|nedgia|\bGTS\b|cuotas gts|mercado mayorista de gas|'
+    r'mercado minorista de gas|sistema gasista|\bgasista\b|acceso.*instalaciones de gas|'
+    r'hidr[oó]geno|electrolizador|pila de combustible|\bRFNBO\b|biog[aá]s|biometano',
+    re.IGNORECASE,
+)
 from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
 
@@ -345,7 +354,7 @@ def scrape_cnmc_s(max_pages: int = 10) -> List[Dict]:
                 "tipo":           "regulacion",
                 "plazo":          None,
                 "estado":         "Abierta",
-                "sector":         "electricidad",
+                "sector":         "gas" if _CNMC_GAS_RE.search(f"{expediente} {title} {tipo_acto} {procedimiento} {ambito}") else "electricidad",
                 "tramitaciones":  "No",
                 "importante":     "No",
                 "expediente":     expediente,
@@ -422,7 +431,8 @@ def scrape_cnmc_s_hoy(days_back: int = 2) -> List[Dict]:
                 "section": tipo_acto or "Actuación CNMC", "department": "CNMC",
                 "summary": f"Procedimiento: {procedimiento} | Ámbito: {ambito}" if procedimiento or ambito else None,
                 "tipo": "regulacion", "plazo": None, "estado": "Abierta",
-                "sector": "electricidad", "tramitaciones": "No", "importante": "No",
+                "sector": "gas" if _CNMC_GAS_RE.search(f"{expediente} {title} {tipo_acto} {procedimiento}") else "electricidad",
+                "tramitaciones": "No", "importante": "No",
                 "expediente": expediente,
             })
 
