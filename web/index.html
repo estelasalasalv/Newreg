@@ -1606,8 +1606,13 @@
       // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
-      if (!q) return true;
-      return ((e.title||'')+' '+(e.plazo||'')+' '+(e.source||'')).toLowerCase().includes(q);
+      const etiq = [
+        e.source || '', e.section || '',
+        e.estado === 'Abierta' ? 'abierta' : 'cerrada finalizada',
+        e.tramitaciones === 'Sí' ? 'tramitacion' : '',
+        esGasOnly(e) ? 'gas hidrogeno' : '',
+      ].join(' ');
+      return matchQuery((e.title||'')+' '+(e.plazo||'')+' '+(e.source||'')+' '+(e.summary||'')+' '+etiq, q);
     });
 
     // Ordenar: abiertas con menos días primero; sin plazo al final; finalizadas al final
