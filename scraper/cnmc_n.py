@@ -358,6 +358,78 @@ def scrape_cnmc_s(max_pages: int = 10) -> List[Dict]:
     return results
 
 
+def scrape_cnmc_s_hoy(days_back: int = 2) -> List[Dict]:
+    """Descarga las actuaciones energéticas CNMC_S publicadas hoy (o días recientes).
+    Usa idambito=9 con filtro de fecha — solo las novedades del día."""
+    today   = date.today()
+    cutoff  = today - timedelta(days=days_back - 1)
+    results: List[Dict] = []
+    seen: set = set()
+
+    for delta in range(days_back):
+        target = today - timedelta(days=delta)
+        if target.weekday() == 6:
+            continue
+        date_str = target.strftime("%d/%m/%Y")
+        url = ACTU_URL.format(datefrom=date_str, dateto=date_str)
+        try:
+            r = requests.get(url, headers=_HEADERS, timeout=30)
+            r.raise_for_status()
+        except requests.RequestException as exc:
+            logger.error("CNMC_S hoy error %s: %s", date_str, exc)
+            continue
+
+        soup  = BeautifulSoup(r.text, "lxml")
+        items = soup.select(".views-row")
+        for item in items:
+            col4 = item.find("div", class_="col-sm-4")
+            col8 = item.find("div", class_="col-sm-8")
+            if not col8: continue
+            a_tag = col8.find("a")
+            if not a_tag: continue
+
+            title_full = a_tag.get_text(strip=True)
+            href       = a_tag.get("href", "")
+            full_url   = BASE_URL + href if href.startswith("/") else href
+            exp_match  = re.match(r"^([A-Z0-9/]+)\s*[-–]\s*(.+)$", title_full)
+            if exp_match:
+                expediente = exp_match.group(1).strip()
+                title      = exp_match.group(2).strip()
+            else:
+                expediente, title = "", title_full
+
+            ps        = col8.find_all("p")
+            last_p    = ps[-1].get_text(strip=True) if ps else ""
+            parts     = [p.strip() for p in last_p.split("|")]
+            tipo_acto = parts[0] if parts else ""
+            fecha_iso = _parse_cnmc_date(parts[1] if len(parts) > 1 else last_p) or target.isoformat()
+
+            procedimiento, ambito = "", ""
+            if col4:
+                p_gey = col4.find("p", class_=lambda c: c and "gey" in " ".join(c))
+                p_red = col4.find("p", class_=lambda c: c and "red" in " ".join(c))
+                procedimiento = p_gey.get_text(strip=True) if p_gey else ""
+                ambito        = p_red.get_text(strip=True) if p_red else ""
+
+            ext_id = f"cnmc-s-{href.strip('/').replace('/', '-')}" if href else f"cnmc-s-{re.sub(r'[^a-z0-9]','',title[:40].lower())}"
+            if ext_id in seen: continue
+            seen.add(ext_id)
+
+            results.append({
+                "source": "CNMC_S", "external_id": ext_id,
+                "title": f"{expediente} — {title}" if expediente else title,
+                "published_date": fecha_iso, "url": full_url,
+                "section": tipo_acto or "Actuación CNMC", "department": "CNMC",
+                "summary": f"Procedimiento: {procedimiento} | Ámbito: {ambito}" if procedimiento or ambito else None,
+                "tipo": "regulacion", "plazo": None, "estado": "Abierta",
+                "sector": "electricidad", "tramitaciones": "No", "importante": "No",
+                "expediente": expediente,
+            })
+
+    logger.info("CNMC_S hoy: %d actuaciones (días_back=%d)", len(results), days_back)
+    return results
+
+
 def scrape(days_back: int = 2) -> List[Dict]:
     """Combina actuaciones y noticias energéticas CNMC recientes."""
     actuaciones = _scrape_actuaciones(days_back)
