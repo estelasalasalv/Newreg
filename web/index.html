@@ -1426,10 +1426,14 @@
   function matchQuery(text, q) {
     if (!q) return true;
     const t = text.toLowerCase();
-    if (!q.includes('*')) return t.includes(q);
-    // Convierte * en regex .*
-    const pattern = q.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+');
-    try { return new RegExp(pattern).test(t); } catch { return t.includes(q.replace(/\*/g,'')); }
+    // Si contiene *, usar como comodín entre términos
+    if (q.includes('*')) {
+      const pattern = q.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+');
+      try { return new RegExp(pattern).test(t); } catch { return t.includes(q.replace(/\*/g,'')); }
+    }
+    // Búsqueda por palabras: TODAS las palabras deben estar en el texto (AND)
+    const words = q.split(/\s+/).filter(Boolean);
+    return words.every(w => t.includes(w));
   }
 
   function renderEsp() {
@@ -1457,7 +1461,15 @@
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
-      return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||''), q);
+      // Texto de búsqueda: título + organismo + sección + etiquetas (importante, tramitación, gas, tipo)
+      const etiquetas = [
+        e.importante === 'Sí' ? 'importante' : '',
+        e.tramitaciones === 'Sí' ? 'tramitacion tramitaciones' : '',
+        e.acceso_conexion === 'Sí' ? 'acceso conexion' : '',
+        esGasOnly(e) ? 'gas hidrogeno' : '',
+        e.tipo || '', e.filtro || e.source || '',
+      ].join(' ');
+      return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||'')+' '+(e.palabras_clave||'')+' '+etiquetas, q);
     });
 
     filtered.sort((a,b) => (b.fecha_real||'').localeCompare(a.fecha_real||''));
