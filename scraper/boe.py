@@ -385,11 +385,24 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
     )
     _EP_NO_ENERGIA = re.compile(
         r"educaci[oó]n|sanidad|cultura|deporte|igualdad|servicios\s+sociales|dependencia|"
-        r"vivienda\s+social|turismo|agricultura(?!\s+energ)|ganadería|pesca",
+        r"vivienda\s+social|turismo|agricultura(?!\s+energ)|ganadería|pesca|"
+        r"econom[ií]a social|c[oó]digo penal|penal|LGBTI|derechos humanos|"
+        r"electoral|justicia|interior|defensa",
+        re.IGNORECASE
+    )
+    _CCAA_DEPT_AMPLIO = re.compile(
+        r"comunidad aut[oó]noma|junta de\b|generalitat|xunta de\b|govern|"
+        r"diputaci[oó]n general|principado|regi[oó]n de\b|consell\b",
         re.IGNORECASE
     )
     if _ALTO_RANGO_RE.search(titulo):
-        if not _EXCLUDED_ORGANISMS.search(dept) and not _EP_NO_ENERGIA.search(epigrafe):
+        if _EXCLUDED_ORGANISMS.search(dept) or _EP_NO_ENERGIA.search(epigrafe):
+            pass  # excluir
+        # Leyes del Estado central (Jefatura del Estado): solo si tienen keywords energéticas
+        elif not _CCAA_DEPT_AMPLIO.search(dept):
+            pass  # sin keywords ya fue descartado en Regla 2 — no pasar
+        else:
+            # CCAA: incluir aunque no tengan keywords (pueden tener artículos energéticos)
             return True
 
     # Regla 4: Órdenes ministeriales del MITERD/MITECO (código TED o TEC en el título)
