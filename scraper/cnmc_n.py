@@ -386,7 +386,16 @@ def _fetch_expediente_detail(url: str) -> Optional[str]:
         )
         if m:
             detalle = m.group(1).strip()
-            detalle = _re.sub(r"^\d{1,2}\s+\w+\s+\d{4}\s+\w[^\s]+\s+", "", detalle).strip()
+            # Eliminar prefijo "del Consejo TIPO del Consejo [Periodo: X]"
+            detalle = _re.sub(
+                r"^(?:del\s+Consejo\s+|de\s+la\s+Direcci[oó]n\s+|del\s+Secretario\s+)?"
+                r"(?:Resoluci[oó]n|Informe|Acuerdo|Sentencia|Auto|Providencia|Circular)"
+                r"(?:\s+del\s+Consejo|\s+de\s+la\s+Direcci[oó]n|\s+del\s+Secretario(?:\s+del\s+Consejo)?)?"
+                r"(?:\s+Periodo:\s+\S+(?:\s+\S+){0,3})?\s+",
+                "", detalle, flags=_re.IGNORECASE
+            ).strip()
+            if detalle:
+                detalle = detalle[0].upper() + detalle[1:]
             return detalle[:500] if len(detalle) > 20 else None
         return None
     except Exception:
