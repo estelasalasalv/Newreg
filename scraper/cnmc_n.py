@@ -367,6 +367,32 @@ def scrape_cnmc_s(max_pages: int = 10) -> List[Dict]:
     return results
 
 
+def _fetch_expediente_detail(url: str) -> Optional[str]:
+    """Obtiene el texto descriptivo del detalle de un expediente CNMC."""
+    import re as _re
+    try:
+        r = requests.get(url, headers=_HEADERS, timeout=15)
+        if r.status_code != 200:
+            return None
+        from bs4 import BeautifulSoup as _BS
+        soup = _BS(r.text, "lxml")
+        main = soup.find("main")
+        if not main:
+            return None
+        text = main.get_text(" ", strip=True)
+        m = _re.search(
+            r"Cronolog[ií]a.*?(?:Mostrar detalle\s*)?((?:\d{1,2}\s+\w+\s+\d{4}\s+)?[A-ZÁÉÍÓÚ][^\n]{30,}?)(?:Documentos asociados|$)",
+            text, _re.DOTALL
+        )
+        if m:
+            detalle = m.group(1).strip()
+            detalle = _re.sub(r"^\d{1,2}\s+\w+\s+\d{4}\s+\w[^\s]+\s+", "", detalle).strip()
+            return detalle[:500] if len(detalle) > 20 else None
+        return None
+    except Exception:
+        return None
+
+
 def scrape_cnmc_s_hoy(days_back: int = 2) -> List[Dict]:
     """Descarga las actuaciones energéticas CNMC_S publicadas hoy (o días recientes).
     Usa idambito=9 con filtro de fecha — solo las novedades del día."""
@@ -434,6 +460,7 @@ def scrape_cnmc_s_hoy(days_back: int = 2) -> List[Dict]:
                 "sector": "gas" if _CNMC_GAS_RE.search(f"{expediente} {title} {tipo_acto} {procedimiento}") else "electricidad",
                 "tramitaciones": "No", "importante": "No",
                 "expediente": expediente,
+                "summary": _fetch_expediente_detail(full_url),
             })
 
     logger.info("CNMC_S hoy: %d actuaciones (días_back=%d)", len(results), days_back)
