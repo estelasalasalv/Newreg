@@ -27,7 +27,8 @@ _ENERGY_RE = re.compile(
 )
 
 _EXCLUDED_CONTRATOS_RE = re.compile(
-    r"anuncio de formaliz\w*\s+de contratos|anuncio de adjudicaci[oó]n",
+    r"anuncio de formaliz\w*\s+de contratos|anuncio de adjudicaci[oó]n|"
+    r"anuncio de licitaci[oó]n",
     re.IGNORECASE,
 )
 
