@@ -496,6 +496,7 @@
     <div class="mobile-tab"         data-panel="acer"   >🏛️ ACER</div>
     <div class="mobile-tab"         data-panel="cnmcn"  >⚖️ CNMC Act.</div>
     <div class="mobile-tab"         data-panel="cnmcs"  >📋 CNMC_S</div>
+    <div class="mobile-tab"         data-panel="cnmcrss">📡 CNMC RSS</div>
     <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
 </nav>
@@ -530,6 +531,9 @@
       </div>
       <div class="sidebar-item" data-panel="cnmcs">
         <span class="icon">📋</span> CNMC_S
+      </div>
+      <div class="sidebar-item" data-panel="cnmcrss">
+        <span class="icon">📡</span> CNMC RSS
       </div>
       <div class="sidebar-item" data-panel="todas">
         <span class="icon">📋</span> Todas las fuentes
@@ -698,6 +702,21 @@
       <div id="cnmcs-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
+    <!-- ══ PANEL: CNMC RSS ══ -->
+    <div id="panel-cnmcrss" class="panel">
+      <div class="search-bar">
+        <input type="search" id="cnmcrss-search" placeholder="Buscar en CNMC RSS (resoluciones, acuerdos)…"
+               autocomplete="off" spellcheck="false"/>
+        <select id="cnmcrss-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todos los años</option>
+        </select>
+        <span class="result-count" id="cnmcrss-count"></span>
+      </div>
+      <div id="cnmcrss-loading" class="state-msg">Cargando…</div>
+      <div id="cnmcrss-entries"></div>
+      <div id="cnmcrss-empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
     <!-- ══ PANEL: ACCESO Y CONEXIÓN ══ -->
     <div id="panel-acceso" class="panel">
       <div class="search-bar">
@@ -813,7 +832,7 @@
   // CNMC unifica CNMC_C y CNMC_N
   function srcMatch(source) {
     if (activeSource === 'ALL') return true;
-    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N';
+    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N' || source === 'CNMC_S';
     return source === activeSource;
   }
   let activePanel   = 'resumen';
@@ -939,6 +958,7 @@
       acerData      = json.acer             || [];
       cnmcNData     = json.cnmc_n           || [];
       cnmcSData     = json.cnmc_s           || [];
+      cnmcRssData   = json.cnmc_rss         || [];
       poblarSelectAnios();
       renderAll();
     } catch(e) {
@@ -950,7 +970,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmcN(); renderCnmcS();
+    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmcN(); renderCnmcS(); renderCnmcRss();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -1109,6 +1129,36 @@
     if (sel) {
       const existing = [...sel.options].map(o => o.value);
       [...new Set(cnmcNData.map(e => e.fecha_real ? e.fecha_real.slice(0,4) : null).filter(Boolean))].sort((a,b)=>b-a)
+        .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
+    }
+  }
+
+  /* ── CNMC RSS render ───────────────────────────────────────────── */
+  function renderCnmcRss() {
+    const q   = (document.getElementById('cnmcrss-search') || {value:''}).value.toLowerCase().trim();
+    const yr  = (document.getElementById('cnmcrss-year')   || {value:''}).value;
+    const el  = document.getElementById('cnmcrss-entries');
+    if (!el) return;
+    document.getElementById('cnmcrss-loading').style.display = 'none';
+
+    const filtered = cnmcRssData.filter(e => {
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
+      if (activeSource !== 'ALL' && !srcMatch(e.source||'')) return false;
+      if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
+      return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
+    }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
+
+    document.getElementById('cnmcrss-count').textContent =
+      filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('cnmcrss-empty').style.display = filtered.length ? 'none' : 'block';
+    el.innerHTML = filtered.map(e => cnmcRegCard(e)).join('');
+
+    const sel = document.getElementById('cnmcrss-year');
+    if (sel) {
+      const existing = [...sel.options].map(o => o.value);
+      [...new Set(cnmcRssData.map(e => e.fecha_real ? e.fecha_real.slice(0,4) : null).filter(Boolean))].sort((a,b)=>b-a)
         .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
     }
   }
@@ -1587,8 +1637,9 @@
   }
   let mostrarOtrosSectores  = false;
   let acerData  = [];
-  let cnmcNData = [];
-  let cnmcSData = [];
+  let cnmcNData   = [];
+  let cnmcSData   = [];
+  let cnmcRssData = [];
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
@@ -1781,6 +1832,8 @@
   document.getElementById('cnmcn-year').addEventListener('change',  () => renderCnmcN());
   document.getElementById('cnmcs-search').addEventListener('input', () => renderCnmcS());
   document.getElementById('cnmcs-year').addEventListener('change',  () => renderCnmcS());
+  document.getElementById('cnmcrss-search').addEventListener('input', () => renderCnmcRss());
+  document.getElementById('cnmcrss-year').addEventListener('change',  () => renderCnmcRss());
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
