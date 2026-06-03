@@ -24,7 +24,7 @@ ENERGY_TERMS = [
 ]
 
 
-_GAS_RE = re.compile(r'gas natural|regasificaci|distribuc.*gas|transporte.*gas|biometano|gnl|gasif|peajes.*gas|pr.rroga.*gas|hidr[oó]geno|hidrógeno|hidrogeno|electrolizador|pila de combustible|amon[ií]aco|rfnbo|combustibles? renovables? de origen no biol[oó]gico', re.IGNORECASE)
+_GAS_RE = re.compile(r'gas natural|regasificaci|distribuc.*gas|transporte.*gas|biometano|gnl|gasif|peajes.*gas|pr.rroga.*gas|sistema gasista|\bgasista\b|sector gasista|cuenta regulatoria.*gas|gestor t[eé]cnico.*gas|hidr[oó]geno|hidrógeno|hidrogeno|electrolizador|pila de combustible|amon[ií]aco|rfnbo|combustibles? renovables? de origen no biol[oó]gico', re.IGNORECASE)
 _TELCO_RE = re.compile(r'telecomunicaci|audiovisual|postal|ferroviario', re.IGNORECASE)
 
 def _detect_sector(title: str) -> str:
