@@ -376,34 +376,17 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
         if pat.search(norm_titulo):
             return True
 
-    # Regla 3: Leyes y Decretos-Leyes de rango alto (Sección I) siempre incluidos.
-    # Pueden contener disposiciones energéticas, fiscales sobre instalaciones
-    # eléctricas, tasas municipales por tramitación de líneas/subestaciones, etc.
+    # Regla 3: Leyes y Decretos-Leyes de rango alto — verificar contenido antes de incluir.
+    # Se descarga el texto completo del BOE y se buscan keywords energéticas.
+    # Así ninguna ley omnibus (CCAA o estatal) entra si no tiene contenido energético real.
     _ALTO_RANGO_RE = re.compile(
         r"^(ley\s+de\s+|ley\s+\d|ley\s+org[aá]nica\s+\d|decreto.?ley\s+\d|real\s+decreto.?ley\s+\d)",
         re.IGNORECASE
     )
-    _EP_NO_ENERGIA = re.compile(
-        r"educaci[oó]n|sanidad|cultura|deporte|igualdad|servicios\s+sociales|dependencia|"
-        r"vivienda\s+social|turismo|agricultura(?!\s+energ)|ganadería|pesca|"
-        r"econom[ií]a social|c[oó]digo penal|penal|LGBTI|derechos humanos|"
-        r"electoral|justicia|interior|defensa",
-        re.IGNORECASE
-    )
-    _CCAA_DEPT_AMPLIO = re.compile(
-        r"comunidad aut[oó]noma|junta de\b|generalitat|xunta de\b|govern|"
-        r"diputaci[oó]n general|principado|regi[oó]n de\b|consell\b",
-        re.IGNORECASE
-    )
-    if _ALTO_RANGO_RE.search(titulo):
-        if _EXCLUDED_ORGANISMS.search(dept) or _EP_NO_ENERGIA.search(epigrafe):
-            pass  # excluir
-        # Leyes del Estado central (Jefatura del Estado): solo si tienen keywords energéticas
-        elif not _CCAA_DEPT_AMPLIO.search(dept):
-            pass  # sin keywords ya fue descartado en Regla 2 — no pasar
-        else:
-            # CCAA: incluir aunque no tengan keywords (pueden tener artículos energéticos)
-            return True
+    if _ALTO_RANGO_RE.search(titulo) and not _EXCLUDED_ORGANISMS.search(dept):
+        # La señal de que hay contenido energético vendrá al comprobar el texto completo
+        # en _parse_sumario() mediante _check_full_text(). Aquí marcamos como candidato.
+        return "CHECK_FULL_TEXT"
 
     # Regla 4: Órdenes ministeriales del MITERD/MITECO (código TED o TEC en el título)
     # incluyen reorganizaciones, delegaciones de competencias y normativa interna
@@ -425,6 +408,38 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
     return False
 
 
+# ── Verificación de contenido energético en texto completo ──────────────────
+_BOE_TXT_URL = "https://www.boe.es/diario_boe/txt.php?id={doc_id}"
+
+def _has_energy_keywords_in_text(url: str) -> bool:
+    """Descarga el texto del BOE (solo el cuerpo del documento) y busca keywords energéticas.
+    Se usa para Leyes y RDL que no tienen keywords en el título (Regla 3)."""
+    if not url:
+        return False
+    try:
+        import requests as _req
+        from bs4 import BeautifulSoup as _BS
+        r = _req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
+        if r.status_code != 200:
+            return False
+        soup = _BS(r.text, "lxml")
+        # Extraer solo el cuerpo del documento, no navegación ni footer
+        body = (soup.find(id="textoxslt") or
+                soup.find("div", class_="diariosoficiales") or
+                soup.find("div", class_="documento") or
+                soup.body)
+        if not body:
+            return False
+        text = body.get_text(" ", strip=True)
+        norm_text = _norm(text[:80000])
+        for _, pat in _KW_PATTERNS:
+            if pat.search(norm_text):
+                return True
+        return False
+    except Exception:
+        return False
+
+
 # ── Parser del sumario ────────────────────────────────────────────────────────
 def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
     items = []
@@ -441,8 +456,14 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             doc_id  = item.get("identificador", "")
                             titulo  = item.get("titulo", "").strip()
 
-                            if not _should_include(titulo, ep_nombre, dept_nombre):
+                            include = _should_include(titulo, ep_nombre, dept_nombre)
+                            if not include:
                                 continue
+                            # Regla 3: verificar texto completo antes de incluir
+                            if include == "CHECK_FULL_TEXT":
+                                url_txt = _get_url(item)
+                                if not _has_energy_keywords_in_text(url_txt):
+                                    continue
 
                             kw       = _find_keywords(titulo, ep_nombre)
                             tipo     = _detect_tipo(titulo, ep_nombre)
