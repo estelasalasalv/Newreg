@@ -555,8 +555,7 @@
       <div class="sidebar-label">Filtrar fuente</div>
       <div class="src-filters">
         <button class="src-btn active" data-source="ALL">Todos</button>
-        <button class="src-btn" data-source="CNMC_C">CNMC</button>
-        <button class="src-btn" data-source="CNMC_N">CNMC Act.</button>
+        <button class="src-btn" data-source="CNMC">CNMC</button>
         <button class="src-btn" data-source="MITERD">MITERD</button>
         <button class="src-btn" data-source="ACER">ACER</button>
       </div>
@@ -786,6 +785,12 @@
   let espPage   = 1;
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
+  // CNMC unifica CNMC_C y CNMC_N
+  function srcMatch(source) {
+    if (activeSource === 'ALL') return true;
+    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N';
+    return source === activeSource;
+  }
   let activePanel   = 'resumen';
 
   /* ── Utilidades ─────────────────────────────────────────────── */
@@ -1062,7 +1067,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'CNMC_N') return false;
+      if (!srcMatch('CNMC_N')) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       if (!q) return true;
       return ((e.title||'') + ' ' + (e.summary||'')).toLowerCase().includes(q);
@@ -1193,7 +1198,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'CNMC_N') return false;
+      if (!srcMatch('CNMC_N')) return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     });
     const nacional = [
@@ -1202,7 +1207,7 @@
         if (soloImportante && e.importante !== 'Sí') return false;
         if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-        if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource && activeSource !== 'ACER') return false;
+        if (activeSource !== 'ALL' && !srcMatch(e.filtro||e.source||'') && activeSource !== 'ACER') return false;
         return isInResumenRange(e.fecha_real || e.published_date);
       }),
       ...cnmcNNacional,
@@ -1270,7 +1275,7 @@
     const { desde: conDesde, hasta: conHasta } = getResumenRange();
 
     const conFilt = cnmcConsultas.filter(e => {
-      if (activeSource !== 'ALL' && activeSource !== 'BOE' && e.source !== activeSource && activeSource !== 'CNMC_C' && activeSource !== 'CNMC_N' && activeSource !== 'MITERD') return false;
+      if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
       if (activeSource === 'BOE' || activeSource === 'ACER') return false;
 
       const cerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
