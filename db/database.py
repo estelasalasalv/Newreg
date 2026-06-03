@@ -415,6 +415,29 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
     return [dict(r) for r in rows]
 
 
+def fetch_cnmc_rss_entries(limit: int = 300) -> List[Dict]:
+    """Devuelve entradas del RSS de CNMC (resoluciones, acuerdos, sentencias)."""
+    sql = """
+    SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
+           COALESCE(importante, 'No')                                        AS importante,
+           TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
+           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
+           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
+           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+    FROM   regulatory_entries
+    WHERE  source = 'CNMC_C'
+      AND  section = 'CNMC RSS'
+    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
+    LIMIT  %(limit)s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, {"limit": limit})
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
 def fetch_cnmc_s(limit: int = 500) -> List[Dict]:
     """Devuelve actuaciones energéticas CNMC (CNMC_S — transparencia/actuaciones idambito=9)."""
     sql = """
@@ -675,6 +698,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     acer           = fetch_acer()
     cnmc_n         = fetch_cnmc_n()
     cnmc_s         = fetch_cnmc_s()
+    cnmc_rss_data  = fetch_cnmc_rss_entries()
 
     # Aplicar filtro de año (solo visualización — datos históricos intactos en BD)
     entries_f   = _filter_year(entries,    YEAR_FILTER)
@@ -695,6 +719,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "acer":            acer_f,       # pestaña ACER (solo 2026)
         "cnmc_n":          _filter_year(cnmc_n, YEAR_FILTER),  # pestaña CNMC_N actuaciones
         "cnmc_s":          cnmc_s,                              # pestaña CNMC_S (sin filtro año)
+        "cnmc_rss":        _filter_year(cnmc_rss_data, YEAR_FILTER),  # pestaña CNMC RSS
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
