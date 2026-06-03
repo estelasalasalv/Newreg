@@ -66,6 +66,8 @@
       display: grid;
       grid-template-columns: var(--sidebar-w) 1fr;
       min-height: calc(100vh - 54px);
+      /* Mantiene el fondo navy en toda la altura de la columna del sidebar */
+      background: linear-gradient(to right, var(--navy) var(--sidebar-w), transparent var(--sidebar-w));
     }
 
     /* ── SIDEBAR ───────────────────────────────────────────────── */
@@ -555,8 +557,7 @@
       <div class="sidebar-label">Filtrar fuente</div>
       <div class="src-filters">
         <button class="src-btn active" data-source="ALL">Todos</button>
-        <button class="src-btn" data-source="CNMC_C">CNMC</button>
-        <button class="src-btn" data-source="CNMC_N">CNMC Act.</button>
+        <button class="src-btn" data-source="CNMC">CNMC</button>
         <button class="src-btn" data-source="MITERD">MITERD</button>
         <button class="src-btn" data-source="ACER">ACER</button>
       </div>
@@ -786,6 +787,12 @@
   let espPage   = 1;
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
+  // CNMC unifica CNMC_C y CNMC_N
+  function srcMatch(source) {
+    if (activeSource === 'ALL') return true;
+    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N';
+    return source === activeSource;
+  }
   let activePanel   = 'resumen';
 
   /* ── Utilidades ─────────────────────────────────────────────── */
@@ -1062,7 +1069,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'CNMC_N') return false;
+      if (!srcMatch('CNMC_N')) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       if (!q) return true;
       return ((e.title||'') + ' ' + (e.summary||'')).toLowerCase().includes(q);
@@ -1193,7 +1200,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'CNMC_N') return false;
+      if (!srcMatch('CNMC_N')) return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     });
     const nacional = [
@@ -1202,7 +1209,7 @@
         if (soloImportante && e.importante !== 'Sí') return false;
         if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-        if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource && activeSource !== 'ACER') return false;
+        if (activeSource !== 'ALL' && !srcMatch(e.filtro||e.source||'') && activeSource !== 'ACER') return false;
         return isInResumenRange(e.fecha_real || e.published_date);
       }),
       ...cnmcNNacional,
@@ -1270,7 +1277,7 @@
     const { desde: conDesde, hasta: conHasta } = getResumenRange();
 
     const conFilt = cnmcConsultas.filter(e => {
-      if (activeSource !== 'ALL' && activeSource !== 'BOE' && e.source !== activeSource && activeSource !== 'CNMC_C' && activeSource !== 'CNMC_N' && activeSource !== 'MITERD') return false;
+      if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
       if (activeSource === 'BOE' || activeSource === 'ACER') return false;
 
       const cerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
@@ -1426,10 +1433,14 @@
   function matchQuery(text, q) {
     if (!q) return true;
     const t = text.toLowerCase();
-    if (!q.includes('*')) return t.includes(q);
-    // Convierte * en regex .*
-    const pattern = q.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+');
-    try { return new RegExp(pattern).test(t); } catch { return t.includes(q.replace(/\*/g,'')); }
+    // Si contiene *, usar como comodín entre términos
+    if (q.includes('*')) {
+      const pattern = q.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+');
+      try { return new RegExp(pattern).test(t); } catch { return t.includes(q.replace(/\*/g,'')); }
+    }
+    // Búsqueda por palabras: TODAS las palabras deben estar en el texto (AND)
+    const words = q.split(/\s+/).filter(Boolean);
+    return words.every(w => t.includes(w));
   }
 
   function renderEsp() {
@@ -1457,7 +1468,15 @@
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO) return false;
-      return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||''), q);
+      // Texto de búsqueda: título + organismo + sección + etiquetas (importante, tramitación, gas, tipo)
+      const etiquetas = [
+        e.importante === 'Sí' ? 'importante' : '',
+        e.tramitaciones === 'Sí' ? 'tramitacion tramitaciones' : '',
+        e.acceso_conexion === 'Sí' ? 'acceso conexion' : '',
+        esGasOnly(e) ? 'gas hidrogeno' : '',
+        e.tipo || '', e.filtro || e.source || '',
+      ].join(' ');
+      return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||'')+' '+(e.palabras_clave||'')+' '+etiquetas, q);
     });
 
     filtered.sort((a,b) => (b.fecha_real||'').localeCompare(a.fecha_real||''));
@@ -1594,8 +1613,13 @@
       // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
-      if (!q) return true;
-      return ((e.title||'')+' '+(e.plazo||'')+' '+(e.source||'')).toLowerCase().includes(q);
+      const etiq = [
+        e.source || '', e.section || '',
+        e.estado === 'Abierta' ? 'abierta' : 'cerrada finalizada',
+        e.tramitaciones === 'Sí' ? 'tramitacion' : '',
+        esGasOnly(e) ? 'gas hidrogeno' : '',
+      ].join(' ');
+      return matchQuery((e.title||'')+' '+(e.plazo||'')+' '+(e.source||'')+' '+(e.summary||'')+' '+etiq, q);
     });
 
     // Ordenar: abiertas con menos días primero; sin plazo al final; finalizadas al final
