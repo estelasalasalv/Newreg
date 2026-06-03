@@ -1759,6 +1759,7 @@
   const LS_KEY = sec => `resumen-collapsed-${sec}`;
 
   function applyCollapseState(sec) {
+    // Por defecto extendido: solo colapsar si el usuario lo eligió explícitamente
     const collapsed = localStorage.getItem(LS_KEY(sec)) === 'true';
     const body   = document.getElementById(`body-${sec}`);
     const toggle = document.getElementById(`toggle-${sec}`);
