@@ -19,7 +19,7 @@ from typing import List, Dict, Optional
 logger = logging.getLogger(__name__)
 
 BASE_URL  = "https://www.cnmc.es"
-# idambito=9 → Energía (más fiable que field_exp_sectores=energía)
+# idambito=9 → Energía. Formato fecha: YYYY-MM-DD (no DD/MM/YYYY)
 ACTU_URL  = (
     "https://www.cnmc.es/somos-cnmc/transparencia/actuaciones"
     "?t=&idambito=9&idprocedim=All&idtipoexp=All&field_exp_numero="
@@ -133,7 +133,7 @@ def _scrape_actuaciones(days_back: int = 2) -> List[Dict]:
 
     for delta in range(days_back):
         target = today - timedelta(days=delta)
-        date_str = target.strftime("%d/%m/%Y")
+        date_str = target.strftime("%Y-%m-%d")
         url = ACTU_URL.format(datefrom=date_str, dateto=date_str)
         logger.info("CNMC_N: scraping %s", date_str)
         entries = _scrape_page(url)
@@ -370,7 +370,7 @@ def scrape_cnmc_s_hoy(days_back: int = 2) -> List[Dict]:
         target = today - timedelta(days=delta)
         if target.weekday() == 6:
             continue
-        date_str = target.strftime("%d/%m/%Y")
+        date_str = target.strftime("%Y-%m-%d")
         url = ACTU_URL.format(datefrom=date_str, dateto=date_str)
         try:
             r = requests.get(url, headers=_HEADERS, timeout=30)
