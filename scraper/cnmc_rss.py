@@ -219,7 +219,7 @@ def scrape() -> List[Dict]:
         es_importante_art64 = bool(riesgo)
 
         results.append({
-            "source":         "CNMC_C",
+            "source":         "CNMC_RSS",
             "external_id":    external_id,
             "title":          enriched,
             "published_date": published_date,

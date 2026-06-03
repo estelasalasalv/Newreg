@@ -191,10 +191,15 @@ def main():
     logger.info("BOE pendientes: %d", len(rows))
     total += process_batch(client, rows, save_boe, "BOE")
 
-    # ── CNMC_C (consultas + RSS) ────────────────────────────────────────────
+    # ── CNMC_C (consultas) ──────────────────────────────────────────────────
     rows = fetch_pending_regulatory(args.limit, "CNMC_C")
     logger.info("CNMC_C pendientes: %d", len(rows))
     total += process_batch(client, rows, save_regulatory, "CNMC_C")
+
+    # ── CNMC_RSS ────────────────────────────────────────────────────────────
+    rows = fetch_pending_regulatory(args.limit, "CNMC_RSS")
+    logger.info("CNMC_RSS pendientes: %d", len(rows))
+    total += process_batch(client, rows, save_regulatory, "CNMC_RSS")
 
     # ── CNMC_N (actuaciones + noticias) ────────────────────────────────────
     rows = fetch_pending_regulatory(args.limit, "CNMC_N")

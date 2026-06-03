@@ -426,8 +426,7 @@ def fetch_cnmc_rss_entries(limit: int = 300) -> List[Dict]:
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
            (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
     FROM   regulatory_entries
-    WHERE  source = 'CNMC_C'
-      AND  section = 'CNMC RSS'
+    WHERE  source = 'CNMC_RSS'
     ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
     LIMIT  %(limit)s
     """
