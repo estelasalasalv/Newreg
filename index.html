@@ -479,7 +479,7 @@
     <div class="topbar-logo">R</div>
     <div>
       <div class="topbar-title">Monitor Regulatorio Energético</div>
-      <div class="topbar-sub">Sector Eléctrico Español · BOE + CNMC</div>
+      <div class="topbar-sub">Sector Eléctrico Español · BOE + CNMC + DOUE + ACER</div>
     </div>
   </div>
   <div class="topbar-meta" id="last-updated">Cargando…</div>
@@ -492,7 +492,7 @@
     <div class="mobile-tab"         data-panel="esp"    >📑 Normativa</div>
     <div class="mobile-tab"         data-panel="con"    >📬 Consultas</div>
     <div class="mobile-tab"         data-panel="eu"     >🇪🇺 Europea</div>
-    <div class="mobile-tab"         data-panel="acceso" >🔌 Acceso/Conexión</div>
+    <div class="mobile-tab"         data-panel="acceso" style="display:none">🔌 Acceso/Conexión</div>
     <div class="mobile-tab"         data-panel="acer"   >🏛️ ACER</div>
     <div class="mobile-tab"         data-panel="cnmcn"  >⚖️ CNMC Act.</div>
     <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
@@ -518,7 +518,7 @@
       <div class="sidebar-item" data-panel="eu">
         <span class="icon">🇪🇺</span> Normativa Europea
       </div>
-      <div class="sidebar-item" data-panel="acceso">
+      <div class="sidebar-item" data-panel="acceso" style="display:none">
         <span class="icon">🔌</span> Acceso y Conexión
       </div>
       <div class="sidebar-item" data-panel="acer">
@@ -718,14 +718,18 @@
     <!-- ══ PANEL: NORMATIVA RECIENTE ══ -->
     <div id="panel-esp" class="panel">
       <div class="search-bar">
-        <input type="search" id="esp-search" placeholder="Buscar en normativa reciente…"
+        <input type="search" id="esp-search" placeholder="Buscar en normativa…"
                autocomplete="off" spellcheck="false"/>
         <select id="esp-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="1">Hoy</option>
           <option value="7">Últimos 7 días</option>
           <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <input type="date" id="esp-fecha-dia" style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);display:none" title="Buscar por día concreto"/>
+        <button id="btn-esp-dia" onclick="toggleEspFechaDia()" style="padding:5px 10px;font-size:11px;border:1px solid var(--gray2);border-radius:6px;background:var(--white);color:var(--gray4);cursor:pointer" title="Seleccionar día concreto">📅</button>
         <span class="result-count" id="esp-count"></span>
       </div>
       <div id="esp-loading" class="state-msg">Cargando…</div>
@@ -1443,23 +1447,46 @@
     return words.every(w => t.includes(w));
   }
 
+  let espUsarFechaDia = false;
+
+  function toggleEspFechaDia() {
+    espUsarFechaDia = !espUsarFechaDia;
+    const fdEl = document.getElementById('esp-fecha-dia');
+    const btn  = document.getElementById('btn-esp-dia');
+    const dias = document.getElementById('esp-dias');
+    fdEl.style.display = espUsarFechaDia ? '' : 'none';
+    dias.style.display  = espUsarFechaDia ? 'none' : '';
+    btn.style.background = espUsarFechaDia ? 'var(--teal)' : '';
+    btn.style.color      = espUsarFechaDia ? 'var(--navy)' : '';
+    if (espUsarFechaDia && !fdEl.value) {
+      fdEl.value = new Date().toISOString().slice(0,10); // hoy por defecto
+    }
+    espPage = 1; renderEsp();
+  }
+
   function renderEsp() {
     const q    = document.getElementById('esp-search').value.toLowerCase().trim();
     const dias = parseInt(document.getElementById('esp-dias').value || '14');
     const el   = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    // fecha_real viene en formato YYYY-MM-DD de la BD → comparación directa
-    const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
-    const [ry, rm, rd] = refISO.split('-').map(Number);
-    const refDate = new Date(ry, rm-1, rd);
-    // Si la fecha de referencia es lunes (día 1) y el selector es 7 días,
-    // ampliar automáticamente a 14 para incluir también la semana anterior
-    const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
-    refDate.setDate(refDate.getDate() - diasEfectivos);
-    const cutoffISO = refDate.getFullYear() + '-'
-      + String(refDate.getMonth()+1).padStart(2,'0') + '-'
-      + String(refDate.getDate()).padStart(2,'0');
+    // Modo día concreto
+    let cutoffISO = '2000-01-01';
+    let maxISO    = '9999-12-31';
+    if (espUsarFechaDia) {
+      const fd = document.getElementById('esp-fecha-dia').value;
+      if (fd) { cutoffISO = fd; maxISO = fd; }
+    } else if (dias < 9999) {
+      // fecha_real viene en formato YYYY-MM-DD de la BD → comparación directa
+      const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
+      const [ry, rm, rd] = refISO.split('-').map(Number);
+      const refDate = new Date(ry, rm-1, rd);
+      const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
+      refDate.setDate(refDate.getDate() - diasEfectivos);
+      cutoffISO = refDate.getFullYear() + '-'
+        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
+        + String(refDate.getDate()).padStart(2,'0');
+    }
 
     const filtered = allEntries.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
@@ -1467,7 +1494,7 @@
       if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
-      if (!iso || iso < cutoffISO) return false;
+      if (!iso || iso < cutoffISO || iso > maxISO) return false;
       // Texto de búsqueda: título + organismo + sección + etiquetas (importante, tramitación, gas, tipo)
       const etiquetas = [
         e.importante === 'Sí' ? 'importante' : '',
@@ -1705,6 +1732,7 @@
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
   document.getElementById('esp-search').addEventListener('input', () => { espPage=1; renderEsp(); });
   document.getElementById('esp-dias').addEventListener('change', () => { espPage=1; renderEsp(); });
+  document.getElementById('esp-fecha-dia').addEventListener('change', () => { espPage=1; renderEsp(); });
   const espMasBtn = document.getElementById('esp-mas');
   if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
@@ -1731,6 +1759,7 @@
   const LS_KEY = sec => `resumen-collapsed-${sec}`;
 
   function applyCollapseState(sec) {
+    // Por defecto extendido: solo colapsar si el usuario lo eligió explícitamente
     const collapsed = localStorage.getItem(LS_KEY(sec)) === 'true';
     const body   = document.getElementById(`body-${sec}`);
     const toggle = document.getElementById(`toggle-${sec}`);
