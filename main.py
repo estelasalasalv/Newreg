@@ -108,6 +108,12 @@ def main():
     cnmc_n_new     = upsert_entries(cnmc_n_entries)
     logger.info("CNMC_N: %d entradas, %d nuevas en BD", len(cnmc_n_entries), cnmc_n_new)
 
+    # ── CNMC_S Actuaciones energía (todas, idambito=9) ──────────────────
+    logger.info("=== Scraping CNMC_S Actuaciones (todas) ===")
+    cnmc_s_entries = cnmc_n_mod.scrape_cnmc_s(max_pages=5)
+    cnmc_s_new     = upsert_entries(cnmc_s_entries)
+    logger.info("CNMC_S: %d entradas, %d nuevas en BD", len(cnmc_s_entries), cnmc_s_new)
+
     # Intento 3 — después de CNMC_N si aún falló
     if cnmc_new < 0 and cnmc_intentos < MAX_INTENTOS:
         cnmc_intentos += 1

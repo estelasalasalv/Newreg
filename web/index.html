@@ -495,6 +495,7 @@
     <div class="mobile-tab"         data-panel="acceso" style="display:none">🔌 Acceso/Conexión</div>
     <div class="mobile-tab"         data-panel="acer"   >🏛️ ACER</div>
     <div class="mobile-tab"         data-panel="cnmcn"  >⚖️ CNMC Act.</div>
+    <div class="mobile-tab"         data-panel="cnmcs"  >📋 CNMC_S</div>
     <div class="mobile-tab"         data-panel="todas"  >📋 Todas</div>
   </div>
 </nav>
@@ -526,6 +527,9 @@
       </div>
       <div class="sidebar-item" data-panel="cnmcn">
         <span class="icon">⚖️</span> CNMC Actuaciones
+      </div>
+      <div class="sidebar-item" data-panel="cnmcs">
+        <span class="icon">📋</span> CNMC_S
       </div>
       <div class="sidebar-item" data-panel="todas">
         <span class="icon">📋</span> Todas las fuentes
@@ -677,6 +681,21 @@
       <div id="cnmcn-loading" class="state-msg">Cargando…</div>
       <div id="cnmcn-entries"></div>
       <div id="cnmcn-empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
+    <!-- ══ PANEL: CNMC_S ══ -->
+    <div id="panel-cnmcs" class="panel">
+      <div class="search-bar">
+        <input type="search" id="cnmcs-search" placeholder="Buscar en CNMC_S actuaciones energía…"
+               autocomplete="off" spellcheck="false"/>
+        <select id="cnmcs-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todos los años</option>
+        </select>
+        <span class="result-count" id="cnmcs-count"></span>
+      </div>
+      <div id="cnmcs-loading" class="state-msg">Cargando…</div>
+      <div id="cnmcs-entries"></div>
+      <div id="cnmcs-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
     <!-- ══ PANEL: ACCESO Y CONEXIÓN ══ -->
@@ -919,6 +938,7 @@
       eurlex        = json.eurlex           || [];
       acerData      = json.acer             || [];
       cnmcNData     = json.cnmc_n           || [];
+      cnmcSData     = json.cnmc_s           || [];
       poblarSelectAnios();
       renderAll();
     } catch(e) {
@@ -930,7 +950,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmcN();
+    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmcN(); renderCnmcS();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -1089,6 +1109,37 @@
     if (sel) {
       const existing = [...sel.options].map(o => o.value);
       [...new Set(cnmcNData.map(e => e.fecha_real ? e.fecha_real.slice(0,4) : null).filter(Boolean))].sort((a,b)=>b-a)
+        .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
+    }
+  }
+
+  /* ── CNMC_S render ─────────────────────────────────────────────── */
+  function renderCnmcS() {
+    const q   = (document.getElementById('cnmcs-search') || {value:''}).value.toLowerCase().trim();
+    const yr  = (document.getElementById('cnmcs-year')   || {value:''}).value;
+    const el  = document.getElementById('cnmcs-entries');
+    if (!el) return;
+    document.getElementById('cnmcs-loading').style.display = 'none';
+
+    const filtered = cnmcSData.filter(e => {
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
+      if (activeSource !== 'ALL' && !srcMatch(e.source||'')) return false;
+      if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
+      return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
+    }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
+
+    document.getElementById('cnmcs-count').textContent =
+      filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('cnmcs-empty').style.display = filtered.length ? 'none' : 'block';
+    el.innerHTML = filtered.map(e => cnmcNCard(e)).join('');
+
+    // Poblar select de años
+    const sel = document.getElementById('cnmcs-year');
+    if (sel) {
+      const existing = [...sel.options].map(o => o.value);
+      [...new Set(cnmcSData.map(e => e.fecha_real ? e.fecha_real.slice(0,4) : null).filter(Boolean))].sort((a,b)=>b-a)
         .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
     }
   }
@@ -1537,6 +1588,7 @@
   let mostrarOtrosSectores  = false;
   let acerData  = [];
   let cnmcNData = [];
+  let cnmcSData = [];
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
@@ -1727,6 +1779,8 @@
   document.getElementById('acer-year').addEventListener('change',  () => renderAcer());
   document.getElementById('cnmcn-search').addEventListener('input', () => renderCnmcN());
   document.getElementById('cnmcn-year').addEventListener('change',  () => renderCnmcN());
+  document.getElementById('cnmcs-search').addEventListener('input', () => renderCnmcS());
+  document.getElementById('cnmcs-year').addEventListener('change',  () => renderCnmcS());
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
