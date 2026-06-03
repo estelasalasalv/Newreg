@@ -279,16 +279,29 @@ def _clasificar_art64(titulo: str) -> str:
 
 _NOM_IMP_DEPTS = [
     "presidencia del gobierno",
-    "ministerio para la transicion ecologica y el reto demografico",
+    "ministerio para la transicion ecologica",
+    "transicion ecologica",
+    "miterd", "miteco",
+    "mercados y la competencia", "cnmc",
 ]
 _NOM_TITLE_RE = re.compile(r"\b(nombra|nombramiento|cese|dispone el cese)\b", re.IGNORECASE)
+
+# Comunidades Autónomas y entes territoriales — sus nombramientos nunca son importantes
+_CCAA_DEPT_RE = re.compile(
+    r"comunidad aut[oó]noma|junta de\b|generalitat|xunta de\b|govern(o| de| balear)|"
+    r"gobierno de\b.*canar|gobierno de\b.*rioja|gobierno de\b.*navarr|gobierno de\b.*aragon|"
+    r"govern de les illes|govern de la generalitat",
+    re.IGNORECASE,
+)
 
 def _is_importante(tipo: str, organismo: str = "", titulo: str = "") -> str:
     if tipo not in _IMPORTANTES:
         return "No"
-    # Si el documento es un nombramiento/cese, solo importante
-    # si viene de Presidencia del Gobierno o Transición Ecológica
+    # Nombramientos y ceses: solo son importantes si vienen de organismos aprobados
+    # Los de Comunidades Autónomas nunca son importantes para el sector energético
     if _NOM_TITLE_RE.search(titulo):
+        if _CCAA_DEPT_RE.search(organismo):
+            return "No"
         org_norm = _norm(organismo)
         return "Sí" if any(d in org_norm for d in _NOM_IMP_DEPTS) else "No"
     return "Sí"
