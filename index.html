@@ -1364,47 +1364,31 @@
     document.getElementById('resumen-acer-entries').innerHTML = acerFilt.map(e => acerCard(e)).join('');
 
     // ── Consultas públicas ────────────────────────────────────────
-    // Parsea el plazo como Date (null si no se puede)
-    function plazoDate(plazoStr) {
-      const days = daysRemaining(plazoStr);
-      if (days === null) return null;
-      const d = new Date();
-      d.setDate(d.getDate() + days);
-      d.setHours(23, 59, 59, 999);
-      return d;
+    // Convierte scraped_at "DD/MM/YYYY HH:MM" → "YYYY-MM-DD" para comparación
+    function scrapedAtISO(e) {
+      const s = e.scraped_at || '';
+      const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
     }
-
-    // Fecha de corte: hace 2 meses (para excluir consultas muy antiguas)
-    const dosM = new Date();
-    dosM.setMonth(dosM.getMonth() - 2);
-    dosM.setHours(0, 0, 0, 0);
-
-    const { desde: conDesde, hasta: conHasta } = getResumenRange();
 
     const conFilt = cnmcConsultas.filter(e => {
       if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
       if (activeSource === 'BOE' || activeSource === 'ACER') return false;
-
-      const cerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
-      const pDate   = plazoDate(e.plazo);
-
-      if (resumenPeriodo === 'mes-anterior') {
-        // Mostrar las que cerraron DENTRO del mes anterior
-        if (!pDate) return false;
-        return pDate >= conDesde && pDate <= conHasta;
-      } else {
-        // Mes en curso / semana / hoy: mostrar las que están ABIERTAS en ese período
-        // Excluir las cerradas hace más de 2 meses
-        if (cerrada && pDate && pDate < dosM) return false;
-        if (cerrada) return false;  // cerradas fuera del mes anterior no se muestran aquí
-        return true;
-      }
+      // Filtrar por fecha de carga en BD (igual que las demás secciones usan fecha_real)
+      const iso = scrapedAtISO(e) || e.published_date || null;
+      return isInResumenRange(iso);
     });
     conFilt.sort((a,b) => {
+      // Primero abiertas, luego por fecha de carga descendente
+      const ca = (a.estado||'Abierta') === 'Cerrada', cb = (b.estado||'Abierta') === 'Cerrada';
+      if (ca !== cb) return ca ? 1 : -1;
       const da = daysRemaining(a.plazo), db = daysRemaining(b.plazo);
-      if (da===null && db===null) return 0;
-      if (da===null) return 1; if (db===null) return -1;
-      return da - db;
+      if (!ca && !cb) {
+        if (da===null && db===null) return 0;
+        if (da===null) return 1; if (db===null) return -1;
+        return da - db;
+      }
+      return (b.scraped_at||'').localeCompare(a.scraped_at||'');
     });
     document.getElementById('resumen-con-empty').style.display = conFilt.length ? 'none' : 'block';
     document.getElementById('resumen-con-entries').innerHTML = conFilt.map(consultaCard).join('');
@@ -1735,8 +1719,9 @@
     }
 
     const filtered = cnmcConsultas.filter(e => {
-      // Ocultar otros sectores salvo que el botón esté activo
-      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad') return false;
+      // Ocultar otros sectores salvo que el botón esté activo O la consulta esté abierta con plazo
+      const esAbiertaConPlazo = (e.estado||'Abierta') === 'Abierta' && e.plazo && daysRemaining(e.plazo) >= 0;
+      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad' && !esAbiertaConPlazo) return false;
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
