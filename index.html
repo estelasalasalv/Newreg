@@ -832,7 +832,7 @@
   // CNMC unifica CNMC_C y CNMC_N
   function srcMatch(source) {
     if (activeSource === 'ALL') return true;
-    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N' || source === 'CNMC_S';
+    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N' || source === 'CNMC_S' || source === 'CNMC_RSS';
     return source === activeSource;
   }
   let activePanel   = 'resumen';
@@ -879,7 +879,6 @@
     [/subestaci[oó]n|l[ií]nea.*transporte|LAT\b/i, "Afecta a instalaciones de la red de transporte de REE."],
     [/peaje.*acceso|tarifa.*el[eé]ctrica/i, "Relacionado con los peajes de transporte en los ingresos de REE."],
     [/mercado.*el[eé]ctrico|mercado.*diario|mercado.*intradiario/i, "Afecta al mercado eléctrico donde REE actúa como operador."],
-    [/renovable|fotovoltaic/i,   "Impacta en la integración de renovables en la red de REE."],
     [/veh[ií]culo.*el[eé]ctrico/i, "Puede incrementar la demanda en la red de REE."],
     [/sistema.*el[eé]ctrico/i,   "Regula aspectos del sistema eléctrico gestionado por REE."],
   ];
@@ -1178,7 +1177,12 @@
       if (activeSource !== 'ALL' && !srcMatch(e.source||'')) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
-    }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
+    }).sort((a,b) => {
+      // Primero por scraped_at (los recién cargados primero), luego por fecha del acto
+      const sa = (b.scraped_at||'').localeCompare(a.scraped_at||'');
+      if (sa !== 0) return sa;
+      return (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||'');
+    });
 
     document.getElementById('cnmcs-count').textContent =
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
