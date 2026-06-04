@@ -256,6 +256,96 @@ def upsert_boe(entries: List[Dict]) -> int:
     return inserted
 
 
+def backfill_pub_dates_from_rss() -> int:
+    """Cruza el RSS de la CNMC con CNMC_S y CNMC_N para rellenar published_date con
+    la fecha de publicación web real (pubDate del RSS).
+
+    El RSS tiene max 10 items. Para cada uno navega a la página individual del node
+    para extraer el nº de expediente, y actualiza published_date en regulatory_entries
+    donde el title empieza por ese expediente.
+
+    Para los registros CNMC_S/CNMC_N sin published_date, usa scraped_at como fallback.
+    Devuelve el número de filas actualizadas.
+    """
+    import requests
+    import xml.etree.ElementTree as ET
+    import re as _re
+    from email.utils import parsedate_to_datetime
+    from bs4 import BeautifulSoup
+
+    HEADERS = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
+    updated = 0
+
+    # 1. Descargar RSS y obtener {node_id: pub_date_iso}
+    rss_dates: dict = {}
+    try:
+        r = requests.get("https://www.cnmc.es/rss.xml", headers=HEADERS, timeout=20)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        for item in root.findall(".//item"):
+            link    = (item.findtext("link") or "").strip()
+            pub_raw = (item.findtext("pubDate") or "").strip()
+            m = _re.search(r"/node/(\d+)", link)
+            if not m or not pub_raw:
+                continue
+            try:
+                pub_iso = parsedate_to_datetime(pub_raw).strftime("%Y-%m-%d")
+                rss_dates[m.group(1)] = (pub_iso, link)
+            except Exception:
+                pass
+    except Exception as exc:
+        logger.warning("backfill_pub_dates_from_rss: error RSS: %s", exc)
+        rss_dates = {}
+
+    # 2. Para cada node del RSS, obtener el nº expediente de su página
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            for node_id, (pub_iso, node_url) in rss_dates.items():
+                try:
+                    rp = requests.get(node_url, headers=HEADERS, timeout=15)
+                    rp.raise_for_status()
+                    soup = BeautifulSoup(rp.text, "lxml")
+                    text = soup.get_text(" ", strip=True)
+                    # Buscar nº expediente: "Nº Expediente XXX/YY/ZZZ/NN"
+                    m = _re.search(r"N[ºo°]\s*Expediente\s+(\S+)", text, _re.IGNORECASE)
+                    if not m:
+                        continue
+                    num_exp = m.group(1).strip().upper()
+                    # Actualizar published_date en CNMC_S y CNMC_N donde el title empieza por ese expediente
+                    cur.execute(
+                        """UPDATE regulatory_entries
+                           SET published_date = %(pub)s
+                           WHERE source IN ('CNMC_S', 'CNMC_N')
+                             AND title ILIKE %(pat)s
+                             AND (published_date IS NULL OR published_date != %(pub)s)
+                        """,
+                        {"pub": pub_iso, "pat": f"{num_exp}%"},
+                    )
+                    if cur.rowcount:
+                        logger.info("backfill_pub_dates: %s → %s (%d filas)", num_exp, pub_iso, cur.rowcount)
+                        updated += cur.rowcount
+                except Exception as exc:
+                    logger.debug("backfill_pub_dates node %s error: %s", node_id, exc)
+
+            # 3. Fallback: CNMC_S/CNMC_N sin published_date → usar scraped_at
+            cur.execute(
+                """UPDATE regulatory_entries
+                   SET published_date = scraped_at::date
+                   WHERE source IN ('CNMC_S', 'CNMC_N')
+                     AND published_date IS NULL
+                     AND scraped_at IS NOT NULL
+                """
+            )
+            if cur.rowcount:
+                logger.info("backfill_pub_dates fallback scraped_at: %d filas", cur.rowcount)
+                updated += cur.rowcount
+
+        conn.commit()
+
+    logger.info("backfill_pub_dates_from_rss: %d registros actualizados", updated)
+    return updated
+
+
 def upsert_entries(entries: List[Dict]) -> int:
     """Inserta entradas CNMC/genéricas; actualiza plazo si cambia."""
     if not entries:

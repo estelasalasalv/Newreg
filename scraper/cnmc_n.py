@@ -12,7 +12,9 @@ Estructura HTML por item (.views-row):
 import re
 import logging
 import requests
+import xml.etree.ElementTree as ET
 from datetime import date, timedelta
+from email.utils import parsedate_to_datetime
 
 # Patrón para detectar actuaciones de gas en CNMC_S
 _CNMC_GAS_RE = re.compile(
@@ -28,6 +30,36 @@ from typing import List, Dict, Optional
 logger = logging.getLogger(__name__)
 
 BASE_URL  = "https://www.cnmc.es"
+CNMC_RSS_URL = "https://www.cnmc.es/rss.xml"
+
+
+def _fetch_rss_pub_dates() -> dict:
+    """Descarga el RSS de CNMC y devuelve {node_id: pubDate_ISO} para los 10 items más recientes.
+    El guid del RSS tiene la forma '420665 at https://www.cnmc.es', el link es /node/420665.
+    """
+    pub_dates: dict = {}
+    try:
+        r = requests.get(CNMC_RSS_URL, headers=_HEADERS, timeout=20)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        for item in root.findall(".//item"):
+            link    = (item.findtext("link") or "").strip()
+            pub_raw = (item.findtext("pubDate") or "").strip()
+            if not link or not pub_raw:
+                continue
+            # Extraer node_id del link: https://www.cnmc.es/node/420665
+            m = re.search(r"/node/(\d+)", link)
+            if not m:
+                continue
+            node_id = m.group(1)
+            try:
+                pub_iso = parsedate_to_datetime(pub_raw).strftime("%Y-%m-%d")
+                pub_dates[node_id] = pub_iso
+            except Exception:
+                pass
+    except Exception as exc:
+        logger.debug("CNMC RSS pub_dates error: %s", exc)
+    return pub_dates
 # idambito=9 → Energía. Formato fecha: YYYY-MM-DD (no DD/MM/YYYY)
 ACTU_URL  = (
     "https://www.cnmc.es/somos-cnmc/transparencia/actuaciones"

@@ -15,7 +15,7 @@ logger = logging.getLogger("main")
 
 
 def main():
-    from db.database import init_db, purge_excluded, backfill_sentencias, upsert_boe, upsert_entries, export_to_json
+    from db.database import init_db, purge_excluded, backfill_sentencias, upsert_boe, upsert_entries, export_to_json, backfill_pub_dates_from_rss
     from scraper import boe, cnmc
 
     if not os.environ.get("DATABASE_URL"):
@@ -117,6 +117,11 @@ def main():
     cnmc_s_entries = cnmc_n_mod.scrape_cnmc_s(max_pages=2)
     cnmc_s_new     = upsert_entries(cnmc_s_entries)
     logger.info("CNMC_S: %d entradas, %d nuevas en BD", len(cnmc_s_entries), cnmc_s_new)
+
+    # ── Cruzar RSS CNMC con CNMC_S/CNMC_N para fecha de publicación web ──
+    logger.info("=== Actualizando fechas de publicación CNMC desde RSS ===")
+    rss_updated = backfill_pub_dates_from_rss()
+    logger.info("Fechas actualizadas desde RSS: %d", rss_updated)
 
     # Intento 3 — después de CNMC_N si aún falló
     if cnmc_new < 0 and cnmc_intentos < MAX_INTENTOS:
