@@ -832,7 +832,7 @@
   // CNMC unifica CNMC_C y CNMC_N
   function srcMatch(source) {
     if (activeSource === 'ALL') return true;
-    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N' || source === 'CNMC_S';
+    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N' || source === 'CNMC_S' || source === 'CNMC_RSS';
     return source === activeSource;
   }
   let activePanel   = 'resumen';
