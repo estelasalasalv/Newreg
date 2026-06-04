@@ -792,8 +792,14 @@
         <button id="btn-otros-sectores" style="
           padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
           border:1px solid var(--gray2); background:var(--white); cursor:pointer;
-          color:var(--gray4); transition:all .15s; margin-left:auto;">
+          color:var(--gray4); transition:all .15s;">
           + Ver otros sectores
+        </button>
+        <button id="btn-ver-cerradas" style="
+          padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
+          border:1px solid var(--gray2); background:var(--white); cursor:pointer;
+          color:var(--gray4); transition:all .15s; margin-left:auto;">
+          Ver consultas cerradas
         </button>
         <button id="btn-vista-cal" style="
           padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
@@ -1630,6 +1636,7 @@
     return true;
   }
   let mostrarOtrosSectores  = false;
+  let mostrarCerradas       = false;
   let acerData  = [];
   let cnmcNData   = [];
   let cnmcSData   = [];
@@ -1719,6 +1726,7 @@
     document.getElementById('con-loading').style.display = 'none';
 
     const otrosCount = cnmcConsultas.filter(e => e.sector && e.sector !== 'electricidad').length;
+    const cerradasCount = cnmcConsultas.filter(e => (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0).length;
     const btn = document.getElementById('btn-otros-sectores');
     if (btn) {
       btn.textContent = mostrarOtrosSectores
@@ -1727,10 +1735,19 @@
       btn.style.background = mostrarOtrosSectores ? 'var(--teal)' : '';
       btn.style.color      = mostrarOtrosSectores ? 'var(--navy)' : '';
     }
+    const btnCer = document.getElementById('btn-ver-cerradas');
+    if (btnCer) {
+      btnCer.textContent   = mostrarCerradas ? '− Ocultar consultas cerradas' : `Ver consultas cerradas (${cerradasCount})`;
+      btnCer.style.background = mostrarCerradas ? 'var(--teal)' : '';
+      btnCer.style.color      = mostrarCerradas ? 'var(--navy)' : '';
+    }
 
     const filtered = cnmcConsultas.filter(e => {
+      // Ocultar cerradas salvo que el botón esté activo
+      const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
+      if (!mostrarCerradas && esCerrada) return false;
       // Ocultar otros sectores salvo que el botón esté activo O la consulta esté abierta con plazo
-      const esAbiertaConPlazo = (e.estado||'Abierta') === 'Abierta' && e.plazo && daysRemaining(e.plazo) >= 0;
+      const esAbiertaConPlazo = !esCerrada && e.plazo && daysRemaining(e.plazo) >= 0;
       if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad' && !esAbiertaConPlazo) return false;
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;
@@ -1891,6 +1908,10 @@
   });
   document.getElementById('btn-otros-sectores').addEventListener('click', () => {
     mostrarOtrosSectores = !mostrarOtrosSectores;
+    renderConsultas();
+  });
+  document.getElementById('btn-ver-cerradas').addEventListener('click', () => {
+    mostrarCerradas = !mostrarCerradas;
     renderConsultas();
   });
 
