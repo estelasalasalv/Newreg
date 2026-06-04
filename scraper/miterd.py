@@ -105,10 +105,12 @@ def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> L
                 continue
             # Filtrar títulos que son cabeceras/navegación, no consultas reales
             _SKIP_TITLES = re.compile(
-                r'^(anuncios anteriores|información legal|acceso al listado|ver todos|ver más|anterior|siguiente)$',
+                r'^(anuncios anteriores|ver todos|ver más|anterior|siguiente)$'
+                r'|informaci[oó]n legal.*proceso de consulta'
+                r'|acceso al listado completo de procedimientos',
                 re.IGNORECASE,
             )
-            if _SKIP_TITLES.match(title) or len(title) < 15:
+            if _SKIP_TITLES.search(title) or len(title) < 15:
                 continue
             if href.startswith("/"):
                 href = MITERD_BASE + href
