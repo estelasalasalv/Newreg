@@ -115,6 +115,10 @@ def _scrape_page(url: str) -> List[Dict]:
 
         title_full = a_tag.get_text(strip=True)   # "UM/023/26 - SERVICIOS..."
         href       = a_tag.get("href", "")
+        # Normalizar href: extraer solo el path de expediente (evita variantes con index.php)
+        _exp_m = re.search(r'(expedientes/[a-z0-9]+)', href)
+        if _exp_m:
+            href = '/' + _exp_m.group(1)
         full_url   = BASE_URL + href if href.startswith("/") else href
 
         # Separar nº expediente del título
@@ -314,6 +318,9 @@ def scrape_cnmc_s(max_pages: int = 10) -> List[Dict]:
 
             title_full = a_tag.get_text(strip=True)
             href       = a_tag.get("href", "")
+            _exp_m = re.search(r'(expedientes/[a-z0-9]+)', href)
+            if _exp_m:
+                href = '/' + _exp_m.group(1)
             full_url   = BASE_URL + href if href.startswith("/") else href
 
             exp_match = re.match(r"^([A-Z0-9/]+)\s*[-–]\s*(.+)$", title_full)
@@ -435,6 +442,9 @@ def scrape_cnmc_s_hoy(days_back: int = 2) -> List[Dict]:
 
             title_full = a_tag.get_text(strip=True)
             href       = a_tag.get("href", "")
+            _exp_m = re.search(r'(expedientes/[a-z0-9]+)', href)
+            if _exp_m:
+                href = '/' + _exp_m.group(1)
             full_url   = BASE_URL + href if href.startswith("/") else href
             exp_match  = re.match(r"^([A-Z0-9/]+)\s*[-–]\s*(.+)$", title_full)
             if exp_match:

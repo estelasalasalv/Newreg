@@ -367,14 +367,16 @@ def upsert_entries(entries: List[Dict]) -> int:
     """
     # Pre-cargar URLs ya existentes de la misma fuente para evitar duplicados por URL
     sources_in_batch = list({e.get("source") for e in entries if e.get("source")})
+    # Si el batch incluye CNMC_N, también cargar URLs de CNMC_S para evitar duplicados cruzados
+    sources_check = list(set(sources_in_batch) | ({'CNMC_S'} if 'CNMC_N' in sources_in_batch else set()))
     existing_urls: set = set()
-    if sources_in_batch:
+    if sources_check:
         import psycopg2 as _pg2
         with _pg2.connect(os.environ["DATABASE_URL"]) as _conn:
             with _conn.cursor() as _cur:
                 _cur.execute(
                     "SELECT url FROM regulatory_entries WHERE source = ANY(%s) AND url IS NOT NULL",
-                    (sources_in_batch,),
+                    (sources_check,),
                 )
                 existing_urls = {r[0] for r in _cur.fetchall()}
 
