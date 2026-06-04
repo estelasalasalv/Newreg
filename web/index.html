@@ -1279,7 +1279,8 @@
       const diffLunes = dow === 0 ? -6 : 1 - dow;
       desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + diffLunes);
     } else {
-      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      // "Hoy" = últimas 48 h para capturar lo cargado ayer tarde/noche y hoy
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1);
     }
     return { desde, hasta };
   }
