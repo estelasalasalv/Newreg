@@ -26,7 +26,7 @@ _HEADERS     = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 # Títulos genéricos que requieren navegar a la página individual
 _GENERIC_TITLES = re.compile(
     r"^(acuerdo de la direcci[oó]n|resoluci[oó]n|auto|providencia|notificaci[oó]n|"
-    r"informe del consejo|acuerdo del consejo)",
+    r"informe del consejo|acuerdo del consejo|informe sobre)",
     re.IGNORECASE,
 )
 
