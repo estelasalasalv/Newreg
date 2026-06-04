@@ -1331,6 +1331,8 @@
       if (!srcMatch('CNMC_S')) return false;
       return isInResumenRange(scrapedAtISO(e) || e.fecha_real || e.published_date);
     });
+    // URLs ya cubiertas por CNMC_S (para deduplicar contra allEntries)
+    const cnmcSUrls = new Set(cnmcSNacional.map(e => e.url).filter(Boolean));
     const nacional = [
       ...allEntries.filter(e => {
         if (e.source === 'ACER') return false;
@@ -1338,6 +1340,9 @@
         if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
         if (ocultarGas && esGasOnly(e)) return false;
         if (activeSource !== 'ALL' && !srcMatch(e.filtro||e.source||'') && activeSource !== 'ACER') return false;
+        // Excluir entradas de CNMC_S/N que ya vienen en cnmcSNacional
+        if ((e.source === 'CNMC_S' || e.source === 'CNMC_N') && cnmcSUrls.has(e.url)) return false;
+        if (e.source === 'CNMC_S' || e.source === 'CNMC_N') return false; // CNMC_S va por cnmcSNacional
         return isInResumenRange(e.fecha_real || e.published_date);
       }),
       ...cnmcSNacional,
