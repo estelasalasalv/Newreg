@@ -244,7 +244,6 @@ def scrape() -> List[Dict]:
     energia  = _scrape_energia()
     cc       = _scrape_links_list(MITERD_CC_URL, "Cambio Climatico - MITECO", "otros")
     ca       = _scrape_links_list(MITERD_CA_URL, "Calidad y Evaluacion Ambiental - MITECO", "otros")
-    costas   = _scrape_links_list(MITERD_CO_URL, "Costas - MITECO", "otros")
-    total    = energia + cc + ca + costas
+    total    = energia + cc + ca
     logger.info("MITERD total: %d consultas", len(total))
     return total
