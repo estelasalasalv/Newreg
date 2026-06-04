@@ -380,6 +380,9 @@ def upsert_entries(entries: List[Dict]) -> int:
                 )
                 existing_urls = {r[0] for r in _cur.fetchall()}
 
+    import re as _re
+    _EXP_RE = _re.compile(r'([A-Z]{2,4}/[A-Z]{2}/[0-9]{3}/[0-9]{2})')
+
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -387,6 +390,25 @@ def upsert_entries(entries: List[Dict]) -> int:
                 # Omitir si la URL ya existe (previene duplicados con external_id distinto)
                 if e.get("url") and e["url"] in existing_urls:
                     continue
+
+                # Si es CNMC_RSS y el título contiene un nº de expediente,
+                # actualizar published_date en CNMC_S en vez de insertar duplicado
+                if e.get("source") == "CNMC_RSS" and e.get("published_date"):
+                    m = _EXP_RE.search(e.get("title", ""))
+                    if m:
+                        cur.execute(
+                            """UPDATE regulatory_entries
+                               SET published_date = %(pub)s
+                               WHERE source = 'CNMC_S'
+                                 AND title ILIKE %(pat)s
+                                 AND (published_date IS NULL OR %(pub)s > published_date)
+                            """,
+                            {"pub": e["published_date"], "pat": f"%{m.group(1)}%"},
+                        )
+                        if cur.rowcount:
+                            logger.debug("CNMC_RSS→CNMC_S fecha actualizada: %s → %s", m.group(1), e["published_date"])
+                            continue  # no insertar en CNMC_RSS
+
                 row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
                        "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
                        "tramitaciones": e.get("tramitaciones", "No")}
