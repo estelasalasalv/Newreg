@@ -449,7 +449,7 @@ def fetch_cnmc_s(limit: int = 500) -> List[Dict]:
            (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'CNMC_S'
-    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
+    ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
     LIMIT  %(limit)s
     """
     with get_connection() as conn:
@@ -471,7 +471,7 @@ def fetch_cnmc_n(limit: int = 200) -> List[Dict]:
            (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'CNMC_N'
-    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
+    ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
     LIMIT  %(limit)s
     """
     with get_connection() as conn:
