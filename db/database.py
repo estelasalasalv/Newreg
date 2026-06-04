@@ -398,21 +398,29 @@ def upsert_entries(entries: List[Dict]) -> int:
 
                 # Si es CNMC_RSS y el título contiene un nº de expediente,
                 # actualizar published_date en CNMC_S en vez de insertar duplicado
-                if e.get("source") == "CNMC_RSS" and e.get("published_date"):
+                if e.get("source") == "CNMC_RSS":
                     m = _EXP_RE.search(e.get("title", ""))
                     if m:
+                        # Primero comprobar si el expediente ya existe en CNMC_S
                         cur.execute(
-                            """UPDATE regulatory_entries
-                               SET published_date = %(pub)s
-                               WHERE source = 'CNMC_S'
-                                 AND title ILIKE %(pat)s
-                                 AND (published_date IS NULL OR %(pub)s > published_date)
-                            """,
-                            {"pub": e["published_date"], "pat": f"%{m.group(1)}%"},
+                            "SELECT id FROM regulatory_entries WHERE source='CNMC_S' AND title ILIKE %(pat)s LIMIT 1",
+                            {"pat": f"%{m.group(1)}%"},
                         )
-                        if cur.rowcount:
-                            logger.debug("CNMC_RSS→CNMC_S fecha actualizada: %s → %s", m.group(1), e["published_date"])
-                            continue  # no insertar en CNMC_RSS
+                        if cur.fetchone():
+                            # Existe en CNMC_S: actualizar fecha si procede y no insertar en RSS
+                            if e.get("published_date"):
+                                cur.execute(
+                                    """UPDATE regulatory_entries
+                                       SET published_date = %(pub)s
+                                       WHERE source = 'CNMC_S'
+                                         AND title ILIKE %(pat)s
+                                         AND (published_date IS NULL OR %(pub)s > published_date)
+                                    """,
+                                    {"pub": e["published_date"], "pat": f"%{m.group(1)}%"},
+                                )
+                                if cur.rowcount:
+                                    logger.debug("CNMC_RSS→CNMC_S fecha: %s → %s", m.group(1), e["published_date"])
+                            continue  # no insertar en CNMC_RSS en ningún caso
 
                 row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
                        "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
