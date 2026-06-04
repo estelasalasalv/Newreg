@@ -1748,6 +1748,8 @@
     }
 
     const filtered = cnmcConsultas.filter(e => {
+      // Ocultar gas/hidrógeno/combustibles si el filtro está activo
+      if (ocultarGas && esGasOnly(e)) return false;
       // Ocultar cerradas salvo que el botón esté activo
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
       if (!mostrarCerradas && esCerrada) return false;
