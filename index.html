@@ -553,8 +553,8 @@
           Ocultar tramitaciones
         </label>
         <label class="imp-label">
-          <input type="checkbox" id="chk-ocultar-gas"/>
-          Ocultar gas, hidrógeno…
+          <input type="checkbox" id="chk-ocultar-gas" checked/>
+          Ocultar gas, hidrógeno y combustibles
         </label>
       </div>
     </div>
@@ -1614,14 +1614,20 @@
   let vistaCalendario = false;
   let soloImportante        = false;
   let ocultarTramitaciones  = false;
-  let ocultarGas            = false;
+  let ocultarGas            = true;
 
-  // Detecta si una entrada es exclusivamente de gas (sin contenido eléctrico relevante)
-  const _GAS_RE   = /gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|red de gas|instalaci[oó]n de gas|enagas|redexis|nedgia|gas natural|mercado.*gas|gas.*mercado|gas.*derivados?|sistema gasista|\bgasista\b|sector gasista|cuenta regulatoria.*gas|gestor t[eé]cnico.*gas|hidr[oó]geno|electrolizador|pila de combustible|amon[ií]aco|combustibles? renovables? de origen no biol[oó]gico|\bRFNBO\b|metanol renovable/i;
+  // Detecta si una entrada es de gas / hidrógeno / combustibles no eléctricos
+  const _GAS_RE   = /gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|red de gas|instalaci[oó]n de gas|enagas|redexis|nedgia|gas natural|mercado.*gas|gas.*mercado|gas.*derivados?|sistema gasista|\bgasista\b|sector gasista|cuenta regulatoria.*gas|gestor t[eé]cnico.*gas|hidr[oó]geno|electrolizador|pila de combustible|amon[ií]aco|combustibles? renovables? de origen no biol[oó]gico|\bRFNBO\b|metanol renovable|fuel.?oil|gasoil|fuelóleo|fuel[oó]leo|carb[oó]n t[eé]rmico|\bcarb[oó]n\b.*generar|generar.*\bcarb[oó]n\b|energ[ií]a t[eé]rmica.*combustible|combustible.*energ[ií]a t[eé]rmica|fuel.*centr|centr.*fuel|grupo diesel|\bdiesel\b.*generar|turbin.*gas|gasif.*carb[oó]n/i;
   const _ELEC_RE  = /el[eé]ctric|fotovolt|aerogen|parque (solar|e[oó]lico)|subestaci[oó]n|\bkv\b|l[ií]nea de transporte/i;
+  // Excepción: liquidaciones del sistema eléctrico de territorios no peninsulares (incluyen combustibles)
+  const _ISLAS_RE = /islas?|canarias|baleares|ceuta|melilla|territorio.*no.*peninsular|sistema.*insular|extrapeninsular|no.*peninsular/i;
   function esGasOnly(e) {
     const t = (e.texto || e.title || '') + ' ' + (e.palabras_clave || e.summary || '');
-    return _GAS_RE.test(t) && !_ELEC_RE.test(t);
+    if (!_GAS_RE.test(t)) return false;
+    if (_ELEC_RE.test(t)) return false;
+    // Excepción: liquidaciones de sistemas insulares/extrapeninsulares usan combustible pero son eléctricas
+    if (_ISLAS_RE.test(t)) return false;
+    return true;
   }
   let mostrarOtrosSectores  = false;
   let acerData  = [];
