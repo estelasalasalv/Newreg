@@ -1735,8 +1735,9 @@
     }
 
     const filtered = cnmcConsultas.filter(e => {
-      // Ocultar otros sectores salvo que el botón esté activo
-      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad') return false;
+      // Ocultar otros sectores salvo que el botón esté activo O la consulta esté abierta con plazo
+      const esAbiertaConPlazo = (e.estado||'Abierta') === 'Abierta' && e.plazo && daysRemaining(e.plazo) >= 0;
+      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad' && !esAbiertaConPlazo) return false;
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;

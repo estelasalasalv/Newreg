@@ -52,6 +52,25 @@ def _parse_date(text: str) -> Optional[str]:
     return None
 
 
+def _fetch_plazo(url: str) -> Optional[str]:
+    """Navega a la página individual de una consulta MITECO y extrae el plazo de remisión."""
+    try:
+        resp = requests.get(url, headers=_HEADERS, timeout=20)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "lxml")
+        text = soup.get_text(" ", strip=True)
+        m = re.search(
+            r"[Pp]lazo\s+(?:de\s+remisi[oó]n\s+)?(?:para\s+presentar\s+documentaci[oó]n\s+)?"
+            r"[Dd]esde\s+.+?\s+[Hh]asta\s+.+?(?=\s{2,}|\Z|Presentaci[oó]n)",
+            text,
+        )
+        if m:
+            return re.sub(r"\s+", " ", m.group()).strip()[:200]
+    except Exception:
+        pass
+    return None
+
+
 def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> List[Dict]:
     """Scrape generico para paginas MITECO con estructura h2 + div.links-list."""
     try:
@@ -118,6 +137,24 @@ def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> L
                 continue
             seen.add(external_id)
 
+            # Para entradas abiertas, intentar obtener plazo navegando a la página individual
+            plazo_str = None
+            if estado_entry == "Abierta":
+                plazo_str = _fetch_plazo(href)
+                if plazo_str:
+                    # Extraer fecha de cierre para confirmar estado
+                    m_cierre = re.search(r'[Hh]asta\s+el?\s+\w+,?\s+(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})', plazo_str)
+                    if m_cierre:
+                        from datetime import date
+                        mon = _MONTHS.get(m_cierre.group(2).lower())
+                        if mon:
+                            try:
+                                cierre = date(int(m_cierre.group(3)), mon, int(m_cierre.group(1)))
+                                if cierre < date.today():
+                                    estado_entry = "Cerrada"
+                            except Exception:
+                                pass
+
             results.append({
                 "source":         "MITERD",
                 "tipo":           "consulta",
@@ -128,7 +165,7 @@ def _scrape_links_list(url: str, section_label: str, sector: str = "otros") -> L
                 "section":        section_label,
                 "department":     "MITERD",
                 "summary":        None,
-                "plazo":          None,
+                "plazo":          plazo_str,
                 "estado":         estado_entry,
                 "sector":         sector,
             })
