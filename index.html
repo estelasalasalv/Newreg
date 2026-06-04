@@ -589,7 +589,7 @@
       <!-- Regulación Nacional -->
       <div style="margin-bottom:22px">
         <div class="resumen-section-title" data-section="nacional">
-          <span>🇪🇸 Regulación nacional</span>
+          <span>🇪🇸 Regulación nacional <span id="count-nacional" style="font-size:11px;font-weight:400;color:var(--gray4)"></span></span>
           <span class="resumen-section-toggle" id="toggle-nacional">▼ Ocultar</span>
         </div>
         <div class="resumen-section-body" id="body-nacional">
@@ -601,7 +601,7 @@
       <!-- Normativa Internacional -->
       <div style="margin-bottom:22px">
         <div class="resumen-section-title" data-section="eu">
-          <span>🇪🇺 Normativa internacional (DOUE)</span>
+          <span>🇪🇺 Normativa internacional (DOUE) <span id="count-eu" style="font-size:11px;font-weight:400;color:var(--gray4)"></span></span>
           <span class="resumen-section-toggle" id="toggle-eu">▼ Ocultar</span>
         </div>
         <div class="resumen-section-body" id="body-eu">
@@ -613,7 +613,7 @@
       <!-- ACER -->
       <div style="margin-bottom:22px">
         <div class="resumen-section-title" data-section="acer">
-          <span>🏛️ ACER</span>
+          <span>🏛️ ACER <span id="count-acer" style="font-size:11px;font-weight:400;color:var(--gray4)"></span></span>
           <span class="resumen-section-toggle" id="toggle-acer">▼ Ocultar</span>
         </div>
         <div class="resumen-section-body" id="body-acer">
@@ -625,7 +625,7 @@
       <!-- Consultas Públicas -->
       <div>
         <div class="resumen-section-title" data-section="con">
-          <span>📬 Consultas públicas</span>
+          <span>📬 Consultas públicas <span id="count-con" style="font-size:11px;font-weight:400;color:var(--gray4)"></span></span>
           <span class="resumen-section-toggle" id="toggle-con">▼ Ocultar</span>
         </div>
         <div class="resumen-section-body" id="body-con">
@@ -787,7 +787,6 @@
           <button class="org-filter active" data-org="ALL">Todas</button>
           <button class="org-filter" data-org="CNMC_C">CNMC</button>
           <button class="org-filter" data-org="MITERD">MITERD</button>
-          <button class="org-filter" data-org="Abierta">Solo abiertas</button>
         </div>
         <button id="btn-otros-sectores" style="
           padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
@@ -1087,12 +1086,18 @@
   /* ── CNMC_N card + render ───────────────────────────────────────── */
   function cnmcNCard(e) {
     const ree = e.impacto_ree || '';
+    // Separar nº expediente del título descriptivo si tiene formato "XXX/YY/NNN/NN — Descripción"
+    const titleFull = e.title || '';
+    const expMatch  = titleFull.match(/^([A-Z0-9]{2,8}\/[A-Z]{2}\/[0-9]{3}\/[0-9]{2})\s*[—\-]\s*(.+)$/);
+    const expNum    = expMatch ? expMatch[1] : '';
+    const expDesc   = expMatch ? expMatch[2] : titleFull;
+    const titleHtml = e.url
+      ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}</a>`
+      : `${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}`;
     return `
     <div class="norm-card" style="border-left-color:#c0392b">
       <div class="norm-header">
-        <div class="norm-title">
-          ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
-        </div>
+        <div class="norm-title">${titleHtml}</div>
         ${recencyLabel(e.published_date)}
         ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
       </div>
@@ -1311,12 +1316,19 @@
     if (lbl) lbl.textContent = resumenPeriodoLabel();
 
     // ── Regulación nacional (BOE + CNMC_S, excluye ACER/DOUE) ──────
+    // CNMC_S: usar scraped_at como fecha de referencia (fecha_real es la del acto,
+    // que puede ser meses anterior a cuando la CNMC lo publicó en su web)
+    function scrapedAtISO(e) {
+      const s = e.scraped_at || '';
+      const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+    }
     const cnmcSNacional = cnmcSData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       if (!srcMatch('CNMC_S')) return false;
-      return isInResumenRange(e.fecha_real || e.published_date);
+      return isInResumenRange(scrapedAtISO(e) || e.fecha_real || e.published_date);
     });
     const nacional = [
       ...allEntries.filter(e => {
@@ -1335,6 +1347,7 @@
         ? cnmcNCard(e)
         : normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
     ).join('');
+    setResumenCount('nacional', nacional.length);
 
     // ── Normativa internacional DOUE ──────────────────────────────
     const euFilt = eurlex.filter(e => {
@@ -1344,6 +1357,7 @@
       if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
       return isInResumenRange(e.fecha_real || e.fecha);
     }).sort((a,b) => (b.fecha_real||b.fecha||'').localeCompare(a.fecha_real||a.fecha||''));
+    setResumenCount('eu', euFilt.length);
     document.getElementById('resumen-eu-empty').style.display = euFilt.length ? 'none' : 'block';
     document.getElementById('resumen-eu-entries').innerHTML = euFilt.map(e =>
       '<div class="norm-card" style="border-left-color:#003399">' +
@@ -1370,23 +1384,23 @@
       if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
+    setResumenCount('acer', acerFilt.length);
     document.getElementById('resumen-acer-empty').style.display = acerFilt.length ? 'none' : 'block';
     document.getElementById('resumen-acer-entries').innerHTML = acerFilt.map(e => acerCard(e)).join('');
 
     // ── Consultas públicas ────────────────────────────────────────
-    // Convierte scraped_at "DD/MM/YYYY HH:MM" → "YYYY-MM-DD" para comparación
-    function scrapedAtISO(e) {
-      const s = e.scraped_at || '';
-      const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-      return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
-    }
-
     const conFilt = cnmcConsultas.filter(e => {
       if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
       if (activeSource === 'BOE' || activeSource === 'ACER') return false;
-      // Filtrar por fecha de carga en BD (igual que las demás secciones usan fecha_real)
-      const iso = scrapedAtISO(e) || e.published_date || null;
-      return isInResumenRange(iso);
+      const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
+      if (resumenPeriodo === 'mes-anterior') {
+        // Mes anterior: mostrar las cargadas o cerradas en ese período
+        const iso = scrapedAtISO(e) || e.published_date || null;
+        return isInResumenRange(iso);
+      } else {
+        // Hoy / semana / mes en curso: mostrar todas las abiertas
+        return !esCerrada;
+      }
     });
     conFilt.sort((a,b) => {
       // Primero abiertas, luego por fecha de carga descendente
@@ -1400,6 +1414,7 @@
       }
       return (b.scraped_at||'').localeCompare(a.scraped_at||'');
     });
+    setResumenCount('con', conFilt.length);
     document.getElementById('resumen-con-empty').style.display = conFilt.length ? 'none' : 'block';
     document.getElementById('resumen-con-entries').innerHTML = conFilt.map(consultaCard).join('');
 
@@ -1743,6 +1758,8 @@
     }
 
     const filtered = cnmcConsultas.filter(e => {
+      // Ocultar gas/hidrógeno/combustibles si el filtro está activo
+      if (ocultarGas && esGasOnly(e)) return false;
       // Ocultar cerradas salvo que el botón esté activo
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
       if (!mostrarCerradas && esCerrada) return false;
@@ -1877,14 +1894,38 @@
   const RESUMEN_SECTIONS = ['nacional', 'eu', 'acer', 'con'];
   const LS_KEY = sec => `resumen-collapsed-${sec}`;
 
+  // Limpia preferencias antiguas de colapso para que todas arranquen extendidas
+  RESUMEN_SECTIONS.forEach(sec => {
+    if (localStorage.getItem(LS_KEY(sec)) === null)
+      localStorage.setItem(LS_KEY(sec), 'false');
+  });
+
   function applyCollapseState(sec) {
-    // Por defecto extendido: solo colapsar si el usuario lo eligió explícitamente
     const collapsed = localStorage.getItem(LS_KEY(sec)) === 'true';
     const body   = document.getElementById(`body-${sec}`);
     const toggle = document.getElementById(`toggle-${sec}`);
+    const count  = document.getElementById(`count-${sec}`);
     if (!body || !toggle) return;
-    body.style.display   = collapsed ? 'none' : '';
-    toggle.textContent   = collapsed ? '▶ Extender' : '▼ Ocultar';
+    body.style.display = collapsed ? 'none' : '';
+    if (collapsed) {
+      const n = count ? count.dataset.n || '0' : '0';
+      toggle.textContent = `▶ Extender (${n})`;
+    } else {
+      toggle.textContent = '▼ Ocultar';
+      if (count) count.textContent = '';
+    }
+  }
+
+  function setResumenCount(sec, n) {
+    const count = document.getElementById(`count-${sec}`);
+    if (!count) return;
+    count.dataset.n = n;
+    // Si la sección está colapsada, actualizar el texto del toggle con el nº
+    const collapsed = localStorage.getItem(LS_KEY(sec)) === 'true';
+    if (collapsed) {
+      const toggle = document.getElementById(`toggle-${sec}`);
+      if (toggle) toggle.textContent = `▶ Extender (${n})`;
+    }
   }
 
   function initCollapseStates() {
