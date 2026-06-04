@@ -358,12 +358,17 @@ def upsert_entries(entries: List[Dict]) -> int:
          %(url)s, %(section)s, %(department)s, %(summary)s,
          %(tipo)s, %(plazo)s, %(estado)s, %(sector)s, %(tramitaciones)s)
     ON CONFLICT (external_id) DO UPDATE SET
-        plazo  = EXCLUDED.plazo,
-        estado = EXCLUDED.estado,
-        title  = CASE
-                   WHEN EXCLUDED.title LIKE '<%%' THEN regulatory_entries.title
-                   ELSE EXCLUDED.title
-                 END
+        plazo   = EXCLUDED.plazo,
+        estado  = EXCLUDED.estado,
+        title   = CASE
+                    WHEN EXCLUDED.title LIKE '<%%' THEN regulatory_entries.title
+                    ELSE EXCLUDED.title
+                  END,
+        summary = CASE
+                    WHEN EXCLUDED.summary IS NOT NULL AND EXCLUDED.summary != ''
+                    THEN EXCLUDED.summary
+                    ELSE regulatory_entries.summary
+                  END
     """
     # Pre-cargar URLs ya existentes de la misma fuente para evitar duplicados por URL
     sources_in_batch = list({e.get("source") for e in entries if e.get("source")})
