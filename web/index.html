@@ -580,9 +580,9 @@
       <!-- Selector de período -->
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
         <button class="resumen-periodo-btn" data-periodo="mes-anterior">Mes anterior</button>
-        <button class="resumen-periodo-btn active" data-periodo="mes-curso">Mes en curso</button>
+        <button class="resumen-periodo-btn" data-periodo="mes-curso">Mes en curso</button>
         <button class="resumen-periodo-btn" data-periodo="semana-curso">Semana en curso</button>
-        <button class="resumen-periodo-btn" data-periodo="dia-curso">Hoy</button>
+        <button class="resumen-periodo-btn active" data-periodo="dia-curso">Hoy</button>
         <span class="resumen-periodo-label" id="resumen-periodo-label"></span>
       </div>
 
@@ -1251,7 +1251,7 @@
   }
 
   // ── Período activo en el Resumen mensual ────────────────────────
-  let resumenPeriodo = 'mes-curso';
+  let resumenPeriodo = 'dia-curso';
 
   function getResumenRange() {
     const hoy = new Date();
