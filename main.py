@@ -103,14 +103,18 @@ def main():
     logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
 
     # ── CNMC_N Actuaciones energía ────────────────────────────────────────
-    logger.info("=== Scraping CNMC_N Actuaciones ===")
-    cnmc_n_entries = cnmc_n_mod.scrape(days_back=2)
+    # La CNMC publica actuaciones con la fecha del acto, no la de publicación web.
+    # El filtro por fecha devuelve 0 resultados porque los actos recientes tardan
+    # semanas en aparecer. Se usan los 50 más recientes (sin filtro fecha) y el
+    # upsert por external_id evita duplicados.
+    logger.info("=== Scraping CNMC_N Actuaciones (sin filtro fecha) ===")
+    cnmc_n_entries = cnmc_n_mod.scrape(days_back=7)
     cnmc_n_new     = upsert_entries(cnmc_n_entries)
     logger.info("CNMC_N: %d entradas, %d nuevas en BD", len(cnmc_n_entries), cnmc_n_new)
 
-    # ── CNMC_S Actuaciones energía (hoy, idambito=9) ───────────────────
-    logger.info("=== Scraping CNMC_S Actuaciones (hoy) ===")
-    cnmc_s_entries = cnmc_n_mod.scrape_cnmc_s_hoy(days_back=_boe_days)
+    # ── CNMC_S Actuaciones energía (50 más recientes, idambito=9) ────────
+    logger.info("=== Scraping CNMC_S Actuaciones (recientes) ===")
+    cnmc_s_entries = cnmc_n_mod.scrape_cnmc_s(max_pages=2)
     cnmc_s_new     = upsert_entries(cnmc_s_entries)
     logger.info("CNMC_S: %d entradas, %d nuevas en BD", len(cnmc_s_entries), cnmc_s_new)
 

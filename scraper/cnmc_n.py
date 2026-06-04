@@ -133,55 +133,24 @@ def _scrape_page(url: str) -> List[Dict]:
     return results
 
 
-def _scrape_actuaciones(days_back: int = 2) -> List[Dict]:
-    """Descarga actuaciones CNMC energéticas de los últimos days_back días."""
-    today    = date.today()
-    cutoff   = today - timedelta(days=days_back - 1)
+def _scrape_actuaciones(days_back: int = 7) -> List[Dict]:
+    """Descarga actuaciones CNMC energéticas recientes.
+
+    La CNMC indexa los actos con la fecha del acuerdo/resolución, no la fecha
+    de publicación web. Los actos más recientes pueden tardar semanas en aparecer.
+    Se descarga siempre sin filtro de fecha para capturar lo nuevo.
+    """
     all_entries: List[Dict] = []
     seen: set = set()
 
-    for delta in range(days_back):
-        target = today - timedelta(days=delta)
-        date_str = target.strftime("%Y-%m-%d")
-        url = ACTU_URL.format(datefrom=date_str, dateto=date_str)
-        logger.info("CNMC_N: scraping %s", date_str)
-        entries = _scrape_page(url)
-        for e in entries:
-            if e["external_id"] not in seen:
-                seen.add(e["external_id"])
-                all_entries.append(e)
+    logger.info("CNMC_N: descargando actuaciones recientes (sin filtro de fecha)...")
+    entries = _scrape_page(ACTU_URL_BASE)
+    for e in entries:
+        if e["external_id"] not in seen:
+            seen.add(e["external_id"])
+            all_entries.append(e)
 
-    # Si hoy no hay resultados, intentar también sin filtro de fecha (página 1)
-    if not all_entries:
-        logger.info("CNMC_N: sin resultados con filtro de fecha, intentando sin filtro...")
-        url_sin_fecha = (
-            "https://www.cnmc.es/somos-cnmc/transparencia/actuaciones"
-            "?field_exp_sectores=energ%C3%ADa&datefrom=&dateto="
-        )
-        entries = _scrape_page(url_sin_fecha)
-        for e in entries:
-            if e["published_date"] and e["published_date"] >= cutoff.isoformat():
-                if e["external_id"] not in seen:
-                    seen.add(e["external_id"])
-                    all_entries.append(e)
-
-    # Si no hay resultados con filtro de fecha, intentar sin filtro (página 1)
-    if not all_entries:
-        logger.info("CNMC_N: sin resultados con fechas, intentando sin filtro...")
-        try:
-            r = requests.get(ACTU_URL_BASE, headers=_HEADERS, timeout=30)
-            r.raise_for_status()
-            entries = _scrape_page(ACTU_URL_BASE)
-            # Filtrar solo las recientes
-            for e in entries:
-                if e["published_date"] and e["published_date"] >= cutoff.isoformat():
-                    if e["external_id"] not in seen:
-                        seen.add(e["external_id"])
-                        all_entries.append(e)
-        except Exception as exc:
-            logger.error("CNMC_N fallback error: %s", exc)
-
-    logger.info("CNMC_N: %d actuaciones energéticas (desde %s)", len(all_entries), cutoff)
+    logger.info("CNMC_N: %d actuaciones energéticas", len(all_entries))
     return all_entries
 
 
