@@ -96,12 +96,6 @@ def main():
         logger.info("=== Scraping CNMC consultas (intento %d/%d) ===", cnmc_intentos, MAX_INTENTOS)
         cnmc_new = _scrape_cnmc()
 
-    # ── CNMC RSS ─────────────────────────────────────────────────────────
-    logger.info("=== Scraping CNMC RSS ===")
-    rss_entries = cnmc_rss.scrape()
-    rss_new     = upsert_entries(rss_entries)
-    logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
-
     # ── CNMC_N Actuaciones energía ────────────────────────────────────────
     # La CNMC publica actuaciones con la fecha del acto, no la de publicación web.
     # El filtro por fecha devuelve 0 resultados porque los actos recientes tardan
@@ -117,6 +111,12 @@ def main():
     cnmc_s_entries = cnmc_n_mod.scrape_cnmc_s(max_pages=2)
     cnmc_s_new     = upsert_entries(cnmc_s_entries)
     logger.info("CNMC_S: %d entradas, %d nuevas en BD", len(cnmc_s_entries), cnmc_s_new)
+
+    # ── CNMC RSS — después de CNMC_S para que el cruce de expedientes funcione ──
+    logger.info("=== Scraping CNMC RSS ===")
+    rss_entries = cnmc_rss.scrape()
+    rss_new     = upsert_entries(rss_entries)
+    logger.info("CNMC RSS: %d entradas, %d nuevas en BD", len(rss_entries), rss_new)
 
     # ── Cruzar RSS CNMC con CNMC_S/CNMC_N para fecha de publicación web ──
     logger.info("=== Actualizando fechas de publicación CNMC desde RSS ===")

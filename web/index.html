@@ -1086,12 +1086,18 @@
   /* ── CNMC_N card + render ───────────────────────────────────────── */
   function cnmcNCard(e) {
     const ree = e.impacto_ree || '';
+    // Separar nº expediente del título descriptivo si tiene formato "XXX/YY/NNN/NN — Descripción"
+    const titleFull = e.title || '';
+    const expMatch  = titleFull.match(/^([A-Z0-9]{2,8}\/[A-Z]{2}\/[0-9]{3}\/[0-9]{2})\s*[—\-]\s*(.+)$/);
+    const expNum    = expMatch ? expMatch[1] : '';
+    const expDesc   = expMatch ? expMatch[2] : titleFull;
+    const titleHtml = e.url
+      ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}</a>`
+      : `${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}`;
     return `
     <div class="norm-card" style="border-left-color:#c0392b">
       <div class="norm-header">
-        <div class="norm-title">
-          ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
-        </div>
+        <div class="norm-title">${titleHtml}</div>
         ${recencyLabel(e.published_date)}
         ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
       </div>
