@@ -1095,14 +1095,14 @@
       ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}</a>`
       : `${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}`;
     return `
-    <div class="norm-card" style="border-left-color:#c0392b">
+    <div class="norm-card" style="border-left-color:#1565c0">
       <div class="norm-header">
         <div class="norm-title">${titleHtml}</div>
         ${recencyLabel(e.published_date)}
         ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
       </div>
       <div class="norm-meta">
-        <span class="org-chip" style="background:rgba(192,57,43,.1);color:#c0392b">CNMC Act.</span>
+        <span class="org-chip" style="background:rgba(21,101,192,.12);color:#1565c0">CNMC Act.</span>
         ${e.published_date ? `<span>${e.published_date}</span>` : ''}
         ${e.section && e.section !== 'Actuación CNMC' ? `<span class="type-chip">${esc(e.section)}</span>` : ''}
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
