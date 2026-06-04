@@ -1384,9 +1384,15 @@
     const conFilt = cnmcConsultas.filter(e => {
       if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
       if (activeSource === 'BOE' || activeSource === 'ACER') return false;
-      // Filtrar por fecha de carga en BD (igual que las demás secciones usan fecha_real)
-      const iso = scrapedAtISO(e) || e.published_date || null;
-      return isInResumenRange(iso);
+      const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
+      if (resumenPeriodo === 'mes-anterior') {
+        // Mes anterior: mostrar las cargadas o cerradas en ese período
+        const iso = scrapedAtISO(e) || e.published_date || null;
+        return isInResumenRange(iso);
+      } else {
+        // Hoy / semana / mes en curso: mostrar todas las abiertas
+        return !esCerrada;
+      }
     });
     conFilt.sort((a,b) => {
       // Primero abiertas, luego por fecha de carga descendente
