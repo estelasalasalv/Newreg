@@ -828,12 +828,6 @@
           <button class="org-filter" data-org="CNMC_C">CNMC</button>
           <button class="org-filter" data-org="MITERD">MITERD</button>
         </div>
-        <button id="btn-otros-sectores" style="
-          padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
-          border:1px solid var(--gray2); background:var(--white); cursor:pointer;
-          color:var(--gray4); transition:all .15s;">
-          + Ver otros sectores
-        </button>
         <button id="btn-ver-cerradas" style="
           padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
           border:1px solid var(--gray2); background:var(--white); cursor:pointer;
@@ -1915,7 +1909,6 @@
     if (_ISLAS_RE.test(t)) return false;
     return true;
   }
-  let mostrarOtrosSectores  = false;
   let mostrarCerradas       = false;
   let acerData  = [];
   let cnmcNData   = [];
@@ -2006,16 +1999,7 @@
     const el = document.getElementById('con-entries');
     document.getElementById('con-loading').style.display = 'none';
 
-    const otrosCount = cnmcConsultas.filter(e => e.sector && e.sector !== 'electricidad').length;
     const cerradasCount = cnmcConsultas.filter(e => (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0).length;
-    const btn = document.getElementById('btn-otros-sectores');
-    if (btn) {
-      btn.textContent = mostrarOtrosSectores
-        ? '− Ocultar otros sectores'
-        : `+ Ver otros sectores (${otrosCount})`;
-      btn.style.background = mostrarOtrosSectores ? 'var(--teal)' : '';
-      btn.style.color      = mostrarOtrosSectores ? 'var(--navy)' : '';
-    }
     const btnCer = document.getElementById('btn-ver-cerradas');
     if (btnCer) {
       btnCer.textContent   = mostrarCerradas ? '− Ocultar consultas cerradas' : `Ver consultas cerradas (${cerradasCount})`;
@@ -2029,9 +2013,6 @@
       // Ocultar cerradas salvo que el botón esté activo
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
       if (!mostrarCerradas && esCerrada) return false;
-      // Ocultar otros sectores salvo que el botón esté activo O la consulta esté abierta con plazo
-      const esAbiertaConPlazo = !esCerrada && e.plazo && daysRemaining(e.plazo) >= 0;
-      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad' && !esAbiertaConPlazo) return false;
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
@@ -2223,10 +2204,6 @@
   initCollapseStates();
   document.getElementById('btn-vista-cal').addEventListener('click', () => {
     vistaCalendario = !vistaCalendario;
-    renderConsultas();
-  });
-  document.getElementById('btn-otros-sectores').addEventListener('click', () => {
-    mostrarOtrosSectores = !mostrarOtrosSectores;
     renderConsultas();
   });
   document.getElementById('btn-ver-cerradas').addEventListener('click', () => {
