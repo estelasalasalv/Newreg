@@ -533,9 +533,6 @@
       <div class="sidebar-item" data-panel="todas">
         <span class="icon">📋</span> Todas las fuentes
       </div>
-      <div class="sidebar-item" data-panel="ree">
-        <span class="icon">⚡</span> Funciones REE
-      </div>
     </div>
 
     <div class="sidebar-divider"></div>
@@ -833,22 +830,6 @@
       <div id="con-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
-    <!-- ══ PANEL: FUNCIONES RED ELÉCTRICA ══ -->
-    <div id="panel-ree" class="panel">
-      <div class="search-bar">
-        <input type="search" id="ree-search" placeholder="Buscar función o palabra clave…"
-               autocomplete="off" spellcheck="false"/>
-        <select id="ree-cat" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
-          <option value="">Todas las funciones</option>
-          <option value="transportista">🔌 Transportista</option>
-          <option value="operador">⚙️ Operador del sistema</option>
-        </select>
-        <span class="result-count" id="ree-count"></span>
-      </div>
-      <div id="ree-entries"></div>
-      <div id="ree-empty" class="state-msg" style="display:none">Sin resultados.</div>
-    </div>
-
     <footer>
       Fuentes: <a href="https://www.boe.es/datosabiertos/" target="_blank" rel="noopener">API BOE</a> ·
       <a href="https://www.cnmc.es/consultas-publicas/energia" target="_blank" rel="noopener">CNMC Energía</a> ·
@@ -979,7 +960,6 @@
       cnmcSData     = json.cnmc_s           || [];
       cnmcRssData   = json.cnmc_rss         || [];
       cnmcAllData   = json.cnmc_all         || [];
-      reeFunciones  = json.ree_funciones    || [];
       poblarSelectAnios();
       renderAll();
     } catch(e) {
@@ -991,7 +971,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmc(); renderCnmcN(); renderCnmcS(); renderCnmcRss(); renderRee();
+    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmc(); renderCnmcN(); renderCnmcS(); renderCnmcRss();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -1910,7 +1890,6 @@
   let cnmcSData   = [];
   let cnmcRssData = [];
   let cnmcAllData   = [];
-  let reeFunciones  = [];
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
@@ -2121,8 +2100,6 @@
   document.getElementById('cnmcs-year').addEventListener('change',  () => renderCnmcS());
   document.getElementById('cnmcrss-search').addEventListener('input', () => renderCnmcRss());
   document.getElementById('cnmcrss-year').addEventListener('change',  () => renderCnmcRss());
-  document.getElementById('ree-search').addEventListener('input',  () => renderRee());
-  document.getElementById('ree-cat').addEventListener('change',    () => renderRee());
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
@@ -2230,57 +2207,6 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') loadData();
   });
-
-  /* ── Funciones REE ──────────────────────────────────────────────── */
-  function renderRee() {
-    const q   = (document.getElementById('ree-search') || {value:''}).value.toLowerCase().trim();
-    const cat = (document.getElementById('ree-cat')    || {value:''}).value;
-    const el  = document.getElementById('ree-entries');
-    if (!el) return;
-
-    const CAT_LABEL = { transportista: '🔌 Transportista', operador: '⚙️ Operador del sistema' };
-    const CAT_COLOR = { transportista: '#1565c0', operador: '#6a1b9a' };
-
-    const filtered = reeFunciones.filter(f => {
-      if (cat && f.categoria !== cat) return false;
-      const txt = (f.actividad||'') + ' ' + (f.descripcion||'') + ' ' + (f.base_legal||'') + ' ' + (f.keywords||'');
-      return !q || txt.toLowerCase().includes(q);
-    });
-
-    document.getElementById('ree-count').textContent =
-      filtered.length + ' función' + (filtered.length !== 1 ? 'es' : '');
-    document.getElementById('ree-empty').style.display = filtered.length ? 'none' : 'block';
-
-    // Agrupar por categoría para mostrar encabezados
-    let lastCat = '';
-    el.innerHTML = filtered.map(f => {
-      const color = CAT_COLOR[f.categoria] || '#1565c0';
-      const label = CAT_LABEL[f.categoria] || f.categoria;
-      const header = f.categoria !== lastCat
-        ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-                       color:${color};padding:14px 0 6px;border-bottom:1px solid ${color}33;margin-bottom:8px">
-             ${label}
-           </div>`
-        : '';
-      lastCat = f.categoria;
-      const kws = (f.keywords || '').split(',').map(k => k.trim()).filter(Boolean);
-      const kwChips = kws.map(k =>
-        `<span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;
-                      background:${color}14;color:${color};margin:1px">${esc(k)}</span>`
-      ).join('');
-      return `${header}
-      <div class="norm-card" style="border-left-color:${color};margin-bottom:10px">
-        <div class="norm-header">
-          <div class="norm-title" style="font-size:.92rem">${esc(f.actividad)}</div>
-        </div>
-        <div style="font-size:12px;color:var(--gray4);margin:4px 0 6px">${esc(f.descripcion||'')}</div>
-        <div style="font-size:11px;color:var(--gray3);margin-bottom:6px">
-          <strong style="color:var(--gray4)">Base legal:</strong> ${esc(f.base_legal||'')}
-        </div>
-        ${kwChips ? `<div style="margin-top:4px">${kwChips}</div>` : ''}
-      </div>`;
-    }).join('');
-  }
 
   loadData();
 
