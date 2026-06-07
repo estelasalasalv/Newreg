@@ -867,6 +867,28 @@
   </div><!-- /.main -->
 </div><!-- /.layout -->
 
+<!-- ── Modal de detalle ───────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-section">
+      <div class="modal-section-label">Resumen</div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+    <div class="modal-section" id="modal-impact-section">
+      <div class="modal-section-label">Impacto para transportista / operador del sistema</div>
+      <div class="modal-impact" id="modal-impact"></div>
+    </div>
+    <div class="modal-section" style="margin-top:18px">
+      <a id="modal-link" href="#" target="_blank" rel="noopener"
+         style="font-size:12px;color:var(--teal2);font-weight:600">
+        🔗 Ver documento oficial
+      </a>
+    </div>
+  </div>
+</div>
+
 <script>
   /* ── Estado ────────────────────────────────────────────────── */
   let allEntries    = [];
@@ -891,6 +913,14 @@
   function esc(s) {
     if (!s) return '';
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Formatea una fecha como YYYY-MM-DD usando el huso horario local
+  // (evita el desfase de toISOString(), que convierte a UTC)
+  function isoLocal(d) {
+    return d.getFullYear() + '-'
+      + String(d.getMonth()+1).padStart(2,'0') + '-'
+      + String(d.getDate()).padStart(2,'0');
   }
 
 
@@ -1171,15 +1201,11 @@
       if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
       const hoy = new Date();
-      const hoyISO = hoy.toISOString().slice(0,10);
+      const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
-      const refISO = (cnmcAllData[0] && cnmcAllData[0].fecha_real) || hoyISO;
-      const [ry, rm, rd] = refISO.split('-').map(Number);
-      const refDate = new Date(ry, rm-1, rd);
-      refDate.setDate(refDate.getDate() - dias);
-      cutoffISO = refDate.getFullYear() + '-'
-        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
-        + String(refDate.getDate()).padStart(2,'0');
+      const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      refDate.setDate(refDate.getDate() - (dias - 1));
+      cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
     } else {
@@ -1391,7 +1417,7 @@
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
       </div>
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,260))}${e.summary.length>260?'…':''}</div>` : ''}
-      ${(e.summary || ree) ? `<button class="btn-detalle" data-title="${esc(e.title)}" data-summary="${esc(e.summary||'')}" data-impact="${esc(ree)}" data-url="${esc(e.url||'')}" onclick="openModalFromBtn(this)">📄 Ver resumen completo</button>` : ''}
+      ${(e.summary || e.impacto_ree) ? `<button class="btn-detalle" data-title="${esc(e.title)}" data-summary="${esc(e.summary||'')}" data-impact="${esc(e.impacto_ree||'')}" data-url="${esc(e.url||'')}" onclick="openModalFromBtn(this)">📄 Ver resumen completo</button>` : ''}
     </div>`;
   }
 
@@ -1413,15 +1439,11 @@
       if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
       const hoy = new Date();
-      const hoyISO = hoy.toISOString().slice(0,10);
+      const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
-      const refISO = (acerData[0] && acerData[0].fecha_real) || hoyISO;
-      const [ry, rm, rd] = refISO.split('-').map(Number);
-      const refDate = new Date(ry, rm-1, rd);
-      refDate.setDate(refDate.getDate() - dias);
-      cutoffISO = refDate.getFullYear() + '-'
-        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
-        + String(refDate.getDate()).padStart(2,'0');
+      const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      refDate.setDate(refDate.getDate() - (dias - 1));
+      cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
     } else {
@@ -1703,15 +1725,11 @@
       if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
       const hoy = new Date();
-      const hoyISO = hoy.toISOString().slice(0,10);
+      const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
-      const refISO = (eurlex[0] && eurlex[0].fecha_real) || hoyISO;
-      const [ry, rm, rd] = refISO.split('-').map(Number);
-      const refDate = new Date(ry, rm-1, rd);
-      refDate.setDate(refDate.getDate() - dias);
-      cutoffISO = refDate.getFullYear() + '-'
-        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
-        + String(refDate.getDate()).padStart(2,'0');
+      const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      refDate.setDate(refDate.getDate() - (dias - 1));
+      cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
     } else {
@@ -1848,16 +1866,12 @@
       if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
       const hoy = new Date();
-      const hoyISO = hoy.toISOString().slice(0,10);
+      const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
-      const refISO = (allEntries[0] && allEntries[0].fecha_real) || hoyISO;
-      const [ry, rm, rd] = refISO.split('-').map(Number);
-      const refDate = new Date(ry, rm-1, rd);
+      const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
       const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
-      refDate.setDate(refDate.getDate() - diasEfectivos);
-      cutoffISO = refDate.getFullYear() + '-'
-        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
-        + String(refDate.getDate()).padStart(2,'0');
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
+      cutoffISO = isoLocal(refDate);
       // Mostrar el rango calculado en los campos Desde/Hasta
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
@@ -1997,7 +2011,7 @@
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
     // Agrupar por semana de cierre del plazo
-    const refISO = (allEntries[0] && allEntries[0].fecha_real) || new Date().toISOString().slice(0,10);
+    const refISO = (allEntries[0] && allEntries[0].fecha_real) || isoLocal(new Date());
     const [ry,rm,rd] = refISO.split('-').map(Number);
     const hoy = new Date(ry, rm-1, rd);
 
@@ -2396,28 +2410,6 @@
   modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') modalOverlay.classList.remove('open'); });
 </script>
-
-<!-- ── Modal de detalle ───────────────────────────────────────── -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-box">
-    <button class="modal-close" id="modal-close">✕</button>
-    <div class="modal-title" id="modal-title"></div>
-    <div class="modal-section">
-      <div class="modal-section-label">Resumen</div>
-      <div class="modal-body" id="modal-body"></div>
-    </div>
-    <div class="modal-section" id="modal-impact-section">
-      <div class="modal-section-label">Impacto para transportista / operador del sistema</div>
-      <div class="modal-impact" id="modal-impact"></div>
-    </div>
-    <div class="modal-section" style="margin-top:18px">
-      <a id="modal-link" href="#" target="_blank" rel="noopener"
-         style="font-size:12px;color:var(--teal2);font-weight:600">
-        🔗 Ver documento oficial
-      </a>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
