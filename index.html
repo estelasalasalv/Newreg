@@ -494,6 +494,7 @@
     <div class="mobile-tab"         data-panel="eu"     >🇪🇺 Europea</div>
     <div class="mobile-tab"         data-panel="acceso" style="display:none">🔌 Acceso/Conexión</div>
     <div class="mobile-tab"         data-panel="acer"   >🏛️ ACER</div>
+    <div class="mobile-tab"         data-panel="cnmc"   >🏢 CNMC</div>
     <div class="mobile-tab"         data-panel="cnmcn"  >⚖️ CNMC Act.</div>
     <div class="mobile-tab"         data-panel="cnmcs"  >📋 CNMC_S</div>
     <div class="mobile-tab"         data-panel="cnmcrss">📡 CNMC RSS</div>
@@ -525,6 +526,9 @@
       </div>
       <div class="sidebar-item" data-panel="acer">
         <span class="icon">🏛️</span> ACER
+      </div>
+      <div class="sidebar-item" data-panel="cnmc">
+        <span class="icon">🏢</span> CNMC
       </div>
       <div class="sidebar-item" data-panel="cnmcn">
         <span class="icon">⚖️</span> CNMC Actuaciones
@@ -670,6 +674,27 @@
       <div id="acer-loading" class="state-msg">Cargando…</div>
       <div id="acer-entries"></div>
       <div id="acer-empty" class="state-msg" style="display:none">Sin resultados.</div>
+    </div>
+
+    <!-- ══ PANEL: CNMC FUSIONADO ══ -->
+    <div id="panel-cnmc" class="panel">
+      <div class="search-bar">
+        <input type="search" id="cnmc-search" placeholder="Buscar en CNMC (RSS + Actuaciones + Transparencia)…"
+               autocomplete="off" spellcheck="false"/>
+        <select id="cnmc-source" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todas las fuentes</option>
+          <option value="CNMC_RSS">CNMC RSS</option>
+          <option value="CNMC_S">CNMC_S</option>
+          <option value="CNMC_N">CNMC Act.</option>
+        </select>
+        <select id="cnmc-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="">Todos los años</option>
+        </select>
+        <span class="result-count" id="cnmc-count"></span>
+      </div>
+      <div id="cnmc-loading" class="state-msg">Cargando…</div>
+      <div id="cnmc-entries"></div>
+      <div id="cnmc-empty" class="state-msg" style="display:none">Sin resultados.</div>
     </div>
 
     <!-- ══ PANEL: CNMC ACTUACIONES ══ -->
@@ -963,6 +988,7 @@
       cnmcNData     = json.cnmc_n           || [];
       cnmcSData     = json.cnmc_s           || [];
       cnmcRssData   = json.cnmc_rss         || [];
+      cnmcAllData   = json.cnmc_all         || [];
       poblarSelectAnios();
       renderAll();
     } catch(e) {
@@ -974,7 +1000,7 @@
   }
 
   function renderAll() {
-    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmcN(); renderCnmcS(); renderCnmcRss();
+    renderResumen(); renderTodas(); renderEu(); renderAcceso(); renderEsp(); renderConsultas(); renderAcer(); renderCnmc(); renderCnmcN(); renderCnmcS(); renderCnmcRss();
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
@@ -1110,6 +1136,72 @@
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
       ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
+  }
+
+  /* ── CNMC fusionado (RSS + S + N) ──────────────────────────────── */
+  function renderCnmc() {
+    const q   = (document.getElementById('cnmc-search')  || {value:''}).value.toLowerCase().trim();
+    const yr  = (document.getElementById('cnmc-year')    || {value:''}).value;
+    const src = (document.getElementById('cnmc-source')  || {value:''}).value;
+    const el  = document.getElementById('cnmc-entries');
+    if (!el) return;
+    document.getElementById('cnmc-loading').style.display = 'none';
+
+    const SOURCE_LABEL = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
+    const SOURCE_COLOR = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
+
+    const filtered = cnmcAllData.filter(e => {
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
+      if (ocultarGas && esGasOnly(e)) return false;
+      if (src && e.source !== src) return false;
+      if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
+      return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
+    }).sort((a,b) => {
+      const sa = (b.scraped_at||'').localeCompare(a.scraped_at||'');
+      if (sa !== 0) return sa;
+      return (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||'');
+    });
+
+    document.getElementById('cnmc-count').textContent =
+      filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+    document.getElementById('cnmc-empty').style.display = filtered.length ? 'none' : 'block';
+
+    // Poblar select de años
+    const sel = document.getElementById('cnmc-year');
+    if (sel) {
+      const existing = [...sel.options].map(o => o.value);
+      [...new Set(cnmcAllData.map(e => e.fecha_real ? e.fecha_real.slice(0,4) : null).filter(Boolean))].sort((a,b)=>b-a)
+        .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
+    }
+
+    el.innerHTML = filtered.map(e => {
+      const color = SOURCE_COLOR[e.source] || '#1565c0';
+      const label = SOURCE_LABEL[e.source] || e.source;
+      const titleFull = e.title || '';
+      const expMatch  = titleFull.match(/^([A-Z0-9]{2,8}\/[A-Z]{2}\/[0-9]{3}\/[0-9]{2})\s*[—\-]\s*(.+)$/);
+      const expNum    = expMatch ? expMatch[1] : '';
+      const expDesc   = expMatch ? expMatch[2] : titleFull;
+      const titleHtml = e.url
+        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}</a>`
+        : `${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}`;
+      return `
+      <div class="norm-card" style="border-left-color:${color}">
+        <div class="norm-header">
+          <div class="norm-title">${titleHtml}</div>
+          ${recencyLabel(e.published_date)}
+          ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
+        </div>
+        <div class="norm-meta">
+          <span class="org-chip" style="background:${color}1a;color:${color}">${label}</span>
+          ${e.published_date ? `<span>${e.published_date}</span>` : ''}
+          ${e.section && !['Actuación CNMC','CNMC RSS'].includes(e.section) ? `<span class="type-chip">${esc(e.section)}</span>` : ''}
+          ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
+        </div>
+        ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
+        ${e.impacto_ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(e.impacto_ree)}</div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   function renderCnmcN() {
@@ -1662,6 +1754,7 @@
   let cnmcNData   = [];
   let cnmcSData   = [];
   let cnmcRssData = [];
+  let cnmcAllData = [];
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
@@ -1863,6 +1956,9 @@
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
   document.getElementById('acer-search').addEventListener('input', () => renderAcer());
   document.getElementById('acer-year').addEventListener('change',  () => renderAcer());
+  document.getElementById('cnmc-search').addEventListener('input',  () => renderCnmc());
+  document.getElementById('cnmc-year').addEventListener('change',   () => renderCnmc());
+  document.getElementById('cnmc-source').addEventListener('change', () => renderCnmc());
   document.getElementById('cnmcn-search').addEventListener('input', () => renderCnmcN());
   document.getElementById('cnmcn-year').addEventListener('change',  () => renderCnmcN());
   document.getElementById('cnmcs-search').addEventListener('input', () => renderCnmcS());
