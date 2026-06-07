@@ -1138,6 +1138,13 @@
     </div>`;
   }
 
+  // Convierte scraped_at "DD/MM/YYYY HH:MM" → "YYYY-MM-DD" (ámbito global)
+  function scrapedAtISO(e) {
+    const s = e.scraped_at || '';
+    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+  }
+
   // Extrae {code, desc} del título según tres patrones CNMC (ámbito global)
   const _CNMC_CODE_RE     = /^([A-Z][A-Z0-9]{0,7}\/(?:[A-Z]{2}\/)?[0-9]{2,4}\/[0-9]{2})\s*[—\-]\s*(.+)$/;
   const _CNMC_CODE_END_RE = /^(.+?)\s*\(([A-Z][A-Z0-9]{0,7}\/(?:[A-Z]{2}\/)?[0-9]{2,4}\/[0-9]{2})\)\s*$/;
@@ -1458,11 +1465,6 @@
     if (lbl) lbl.textContent = resumenPeriodoLabel();
 
     // ── Regulación nacional (BOE + CNMC fusionado, excluye ACER/DOUE) ──────
-    function scrapedAtISO(e) {
-      const s = e.scraped_at || '';
-      const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-      return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
-    }
 
     // Entradas CNMC del período (todas las fuentes: RSS+S+N) con fusión por código
     const cnmcPeriodo = cnmcAllData.filter(e => {
@@ -1804,14 +1806,15 @@
         + String(refDate.getDate()).padStart(2,'0');
     }
 
-    const filtered = allEntries.filter(e => {
+    // ── BOE ──────────────────────────────────────────────────────────
+    const boeFilt = allEntries.filter(e => {
+      if (e.source !== 'BOE' && e.filtro !== 'BOE') return false;
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO || iso > maxISO) return false;
-      // Texto de búsqueda: título + organismo + sección + etiquetas (importante, tramitación, gas, tipo)
       const etiquetas = [
         e.importante === 'Sí' ? 'importante' : '',
         e.tramitaciones === 'Sí' ? 'tramitacion tramitaciones' : '',
@@ -1822,19 +1825,88 @@
       return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||'')+' '+(e.palabras_clave||'')+' '+etiquetas, q);
     });
 
-    filtered.sort((a,b) => (b.fecha_real||'').localeCompare(a.fecha_real||''));
+    // ── CNMC fusionado (mismo rango, usando scraped_at) ───────────────
+    const cnmcEspFilt = (activeSource === 'ALL' || srcMatch('CNMC_S') || srcMatch('CNMC_N') || srcMatch('CNMC_RSS'))
+      ? cnmcAllData.filter(e => {
+          if (ocultarGas && esGasOnly(e)) return false;
+          const iso = scrapedAtISO(e) || e.fecha_real || '';
+          if (!iso || iso < cutoffISO || iso > maxISO) return false;
+          return matchQuery((e.title||'')+' '+(e.summary||'')+' '+(e.section||''), q);
+        })
+      : [];
 
+    // Fusionar por código igual que en pestaña CNMC
+    const cnmcEspGroups = [];
+    const cnmcEspCodes  = new Map();
+    for (const e of cnmcEspFilt) {
+      const { code, desc } = extractCnmcCode(e.title || '');
+      if (code && cnmcEspCodes.has(code)) {
+        cnmcEspGroups[cnmcEspCodes.get(code)].entries.push(e);
+      } else {
+        const idx = cnmcEspGroups.length;
+        cnmcEspGroups.push({ code, desc: desc || e.title, entries: [e] });
+        if (code) cnmcEspCodes.set(code, idx);
+      }
+    }
+
+    const SOURCE_LABEL_E = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
+    const SOURCE_COLOR_E = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
+    const cnmcEspCards = cnmcEspGroups.map(g => {
+      const ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
+      const main = g.entries.slice().sort((a,b) => ORDER.indexOf(a.source) - ORDER.indexOf(b.source))[0];
+      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
+      const chips = g.entries.map(e => {
+        const c = SOURCE_COLOR_E[e.source] || '#1565c0';
+        const l = SOURCE_LABEL_E[e.source] || e.source;
+        return e.url
+          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
+          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
+      }).join('');
+      const titleHtml = main.url
+        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
+        : `${codeSpan}${esc(g.desc)}`;
+      const bestDate = g.entries.map(e => e.published_date || '').sort().reverse()[0];
+      const _SO = ['CNMC_S','CNMC_N','CNMC_RSS'];
+      const bestSum = g.entries.slice().sort((a,b)=>_SO.indexOf(a.source)-_SO.indexOf(b.source))
+        .map(e=>e.summary||'').find(s=>s.length>20)||'';
+      const bestImp = g.entries.map(e=>e.impacto_ree||'').sort((a,b)=>b.length-a.length)[0];
+      const esNuevo = g.entries.some(e=>e.es_nuevo);
+      return {
+        fecha: g.entries.map(e=>e.fecha_real||e.published_date||'').sort().reverse()[0],
+        html: `<div class="norm-card" style="border-left-color:#1565c0">
+          <div class="norm-header">
+            <div class="norm-title">${titleHtml}</div>
+            ${recencyLabel(bestDate)}
+            ${esNuevo?'<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>':''}
+          </div>
+          <div class="norm-meta">
+            ${chips}
+            ${bestDate?`<span>${bestDate}</span>`:''}
+            ${main.tramitaciones==='Sí'?'<span class="badge badge-auth">📋 Tramitación</span>':''}
+          </div>
+          ${bestSum?`<div class="norm-card-summary">${esc(bestSum)}</div>`:''}
+          ${bestImp?`<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(bestImp)}</div>`:''}
+        </div>`
+      };
+    });
+
+    // Combinar BOE + CNMC ordenados por fecha
+    const allEspItems = [
+      ...boeFilt.map(e => ({
+        fecha: e.fecha_real || '',
+        html: normCardBOE(e,'title','published_date','summary','section','department','tipo','url')
+      })),
+      ...cnmcEspCards,
+    ].sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+    const filtered = allEspItems; // para el contador y paginación
     const visible = filtered.slice(0, espPage * PAGE);
     document.getElementById('esp-count').textContent = filtered.length + ' entrada' + (filtered.length!==1?'s':'');
     document.getElementById('esp-empty').style.display = filtered.length ? 'none' : 'block';
     const masBtn = document.getElementById('esp-mas');
     if (masBtn) masBtn.style.display = visible.length < filtered.length ? 'block' : 'none';
 
-    el.innerHTML = visible.map(e =>
-      e.source === 'BOE'
-        ? normCardBOE(e,'title','published_date','summary','section','department','tipo','url')
-        : cnmcRegCard(e)
-    ).join('');
+    el.innerHTML = visible.map(x => x.html).join('');
   }
 
   let activeOrg = 'ALL';
