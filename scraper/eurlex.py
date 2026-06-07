@@ -45,10 +45,7 @@ def _detect_tipo(titulo: str) -> str:
 
 
 def _is_importante(tipo: str) -> str:
-    return "Sí" if tipo in (
-        "Reglamento (UE)", "Directiva (UE)",
-        "Reglamento de Ejecución (UE)", "Reglamento Delegado (UE)",
-    ) else "No"
+    return "No"  # importante solo lo marca el usuario manualmente
 
 
 _NON_LEGIS_RE = re.compile(

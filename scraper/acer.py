@@ -72,7 +72,7 @@ def _detect_tipo(title: str, section: str) -> str:
 
 
 def _is_importante(tipo: str) -> str:
-    return "Sí" if tipo in ("Decisión ACER", "Informe ACER") else "No"
+    return "No"  # importante solo lo marca el usuario manualmente
 
 
 def _make_ext_id(prefix: str, text: str) -> str:

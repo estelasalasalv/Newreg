@@ -468,7 +468,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             kw       = _find_keywords(titulo, ep_nombre)
                             tipo     = _detect_tipo(titulo, ep_nombre)
                             art64    = _clasificar_art64(titulo)
-                            imp      = "Sí" if art64 else _is_importante(tipo, dept_nombre, titulo)
+                            imp      = "No"  # importante solo lo marca el usuario manualmente
                             acceso   = _detect_acceso(titulo)
                             autorizacion = _detect_tramitaciones(titulo)
                             if autorizacion == "Sí":
