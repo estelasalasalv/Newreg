@@ -2138,9 +2138,21 @@
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
   document.getElementById('esp-search').addEventListener('input',      () => { espPage=1; renderEsp(); });
-  document.getElementById('esp-dias').addEventListener('change',       () => { espPage=1; renderEsp(); });
-  document.getElementById('esp-fecha-desde').addEventListener('change',() => { espPage=1; renderEsp(); });
-  document.getElementById('esp-fecha-hasta').addEventListener('change',() => { espPage=1; renderEsp(); });
+  document.getElementById('esp-dias').addEventListener('change', () => {
+    // Al cambiar el selector de días, limpiar fechas manuales para que no tengan prioridad
+    document.getElementById('esp-fecha-desde').value = '';
+    document.getElementById('esp-fecha-hasta').value = '';
+    espPage = 1; renderEsp();
+  });
+  document.getElementById('esp-fecha-desde').addEventListener('change', () => {
+    // Al poner fecha manual, deseleccionar el selector de días
+    document.getElementById('esp-dias').value = '9999';
+    espPage = 1; renderEsp();
+  });
+  document.getElementById('esp-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('esp-dias').value = '9999';
+    espPage = 1; renderEsp();
+  });
   const espMasBtn = document.getElementById('esp-mas');
   if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
