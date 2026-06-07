@@ -1,5 +1,5 @@
 """
-Analiza normativa nueva con Gemini API (Google AI Studio — tier gratuito) para:
+Analiza normativa nueva con OpenAI API (ChatGPT) para:
   1. Generar un resumen del documento.
   2. Determinar qué funciones de Red Eléctrica (tabla ree_funciones) se ven afectadas.
 
@@ -9,8 +9,8 @@ Guarda resultados en:
 
 Las entradas que fallan se guardan en ree_analisis_pendiente para reintento posterior.
 
-Clave API gratuita: https://aistudio.google.com/apikey
-Límites tier gratuito: 15 RPM, 1.500 req/día (suficiente para uso diario).
+Clave API: https://platform.openai.com/api-keys
+Modelo: gpt-4o-mini (rápido y económico).
 
 Uso:
   python generate_ree_analysis.py              # procesa pendientes + nuevas (máx 30 por ejecución)
@@ -26,6 +26,7 @@ import logging
 import argparse
 import requests
 import psycopg2
+from openai import OpenAI, RateLimitError
 from typing import Optional
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -34,11 +35,17 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL  = "gemini-2.0-flash"
+OPENAI_MODEL  = "gpt-4o-mini"
 HEADERS_WEB   = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
 MAX_DOC_CHARS = 12_000
 MAX_RETRIES   = 3
 RETRY_WAIT    = 10
+
+SYSTEM_PROMPT = (
+    "Eres un experto en regulación energética española y europea, especializado en "
+    "Red Eléctrica de España (REE) como transportista y operador del sistema eléctrico. "
+    "Respondes SIEMPRE con JSON válido, sin markdown ni texto adicional."
+)
 
 
 # ── Conexión BD ───────────────────────────────────────────────────────────────
@@ -125,34 +132,32 @@ Si no afecta a ninguna función de REE, devuelve "funciones_afectadas": [].
 Solo incluye funciones con afectación real y directa, no potencial o remota."""
 
 
-def call_gemini(api_key: str, prompt: str) -> Optional[dict]:
-    """Llama a Gemini API y devuelve el JSON parseado. Reintenta hasta MAX_RETRIES."""
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{GEMINI_MODEL}:generateContent?key={api_key}"
-    )
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1024},
-    }
+def call_openai(client: OpenAI, prompt: str) -> Optional[dict]:
+    """Llama a OpenAI API y devuelve el JSON parseado. Reintenta hasta MAX_RETRIES."""
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            r = requests.post(url, json=payload, timeout=60)
-            if r.status_code == 429:
-                wait = RETRY_WAIT * attempt
-                logger.warning("Rate limit Gemini, esperando %ds (intento %d/%d)", wait, attempt, MAX_RETRIES)
-                time.sleep(wait)
-                continue
-            r.raise_for_status()
-            text = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.MULTILINE).strip()
+            response = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": prompt},
+                ],
+                temperature=0.1,
+                max_tokens=1024,
+                response_format={"type": "json_object"},
+            )
+            text = response.choices[0].message.content.strip()
             return json.loads(text)
+        except RateLimitError:
+            wait = RETRY_WAIT * attempt
+            logger.warning("Rate limit OpenAI, esperando %ds (intento %d/%d)", wait, attempt, MAX_RETRIES)
+            time.sleep(wait)
         except (json.JSONDecodeError, KeyError) as exc:
-            logger.warning("Respuesta Gemini no parseable (intento %d): %s", attempt, exc)
+            logger.warning("Respuesta OpenAI no parseable (intento %d): %s", attempt, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
         except Exception as exc:
-            logger.warning("Error llamando Gemini (intento %d): %s", attempt, exc)
+            logger.warning("Error llamando OpenAI (intento %d): %s", attempt, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
     return None
@@ -330,7 +335,7 @@ def fetch_new_entries(conn, limit: int) -> list[dict]:
 
 # ── Proceso principal ─────────────────────────────────────────────────────────
 
-def process_entry(conn, api_key: str, entry: dict,
+def process_entry(conn, client: OpenAI, entry: dict,
                   funciones: list[dict], funcion_map: dict) -> bool:
     tipo   = entry["normativa_tipo"]
     nid    = entry["normativa_id"]
@@ -345,11 +350,11 @@ def process_entry(conn, api_key: str, entry: dict,
         save_pending(conn, tipo, nid, url, titulo, "No se pudo descargar el texto del documento")
         return False
 
-    # 2. Llamar a Gemini
+    # 2. Llamar a OpenAI
     prompt = build_prompt(titulo, texto, funciones)
-    result = call_gemini(api_key, prompt)
+    result = call_openai(client, prompt)
     if not result:
-        save_pending(conn, tipo, nid, url, titulo, "Gemini no devolvió respuesta válida")
+        save_pending(conn, tipo, nid, url, titulo, "OpenAI no devolvió respuesta válida")
         return False
 
     # 3. Guardar resultado
@@ -373,10 +378,12 @@ def main():
                         help="Solo procesar entradas en cola de pendientes")
     args = parser.parse_args()
 
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        logger.error("GEMINI_API_KEY no configurado. Obtén una clave gratuita en https://aistudio.google.com/apikey")
+        logger.error("OPENAI_API_KEY no configurado. Obtén una clave en https://platform.openai.com/api-keys")
         sys.exit(1)
+
+    client = OpenAI(api_key=api_key)
 
     funciones = load_ree_funciones()
     if not funciones:
@@ -405,12 +412,12 @@ def main():
     ok = 0
     fail = 0
     for entry in entries:
-        success = process_entry(conn, api_key, entry, funciones, funcion_map)
+        success = process_entry(conn, client, entry, funciones, funcion_map)
         if success:
             ok += 1
         else:
             fail += 1
-        time.sleep(4)  # respetar rate limit gratuito (15 RPM)
+        time.sleep(1)
 
     conn.close()
     logger.info("Análisis REE completado. OK=%d  FAIL=%d (guardados en pendientes)", ok, fail)
