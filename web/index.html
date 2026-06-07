@@ -2108,25 +2108,65 @@
 
   /* ── Búsquedas ──────────────────────────────────────────────── */
   document.getElementById('search').addEventListener('input', () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-year').addEventListener('change',        () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-fecha-desde').addEventListener('change', () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-fecha-hasta').addEventListener('change', () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-year').addEventListener('change', () => {
+    document.getElementById('todas-fecha-desde').value = '';
+    document.getElementById('todas-fecha-hasta').value = '';
+    todasPage = 1; renderTodas();
+  });
+  document.getElementById('todas-fecha-desde').addEventListener('change', () => {
+    document.getElementById('todas-year').value = '';
+    todasPage = 1; renderTodas();
+  });
+  document.getElementById('todas-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('todas-year').value = '';
+    todasPage = 1; renderTodas();
+  });
   document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
   document.getElementById('eu-search').addEventListener('input',  () => { euPage=1; renderEu(); });
-  document.getElementById('eu-year').addEventListener('change',   () => { euPage=1; renderEu(); });
-  document.getElementById('eu-fecha-desde').addEventListener('change', () => { euPage=1; renderEu(); });
-  document.getElementById('eu-fecha-hasta').addEventListener('change', () => { euPage=1; renderEu(); });
+  document.getElementById('eu-year').addEventListener('change', () => {
+    document.getElementById('eu-fecha-desde').value = '';
+    document.getElementById('eu-fecha-hasta').value = '';
+    euPage = 1; renderEu();
+  });
+  document.getElementById('eu-fecha-desde').addEventListener('change', () => {
+    document.getElementById('eu-year').value = '';
+    euPage = 1; renderEu();
+  });
+  document.getElementById('eu-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('eu-year').value = '';
+    euPage = 1; renderEu();
+  });
   document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
   const euMasBtn = document.getElementById('eu-mas');
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
   document.getElementById('acer-search').addEventListener('input',       () => renderAcer());
-  document.getElementById('acer-year').addEventListener('change',         () => renderAcer());
-  document.getElementById('acer-fecha-desde').addEventListener('change',  () => renderAcer());
-  document.getElementById('acer-fecha-hasta').addEventListener('change',  () => renderAcer());
+  document.getElementById('acer-year').addEventListener('change', () => {
+    document.getElementById('acer-fecha-desde').value = '';
+    document.getElementById('acer-fecha-hasta').value = '';
+    renderAcer();
+  });
+  document.getElementById('acer-fecha-desde').addEventListener('change', () => {
+    document.getElementById('acer-year').value = '';
+    renderAcer();
+  });
+  document.getElementById('acer-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('acer-year').value = '';
+    renderAcer();
+  });
   document.getElementById('cnmc-search').addEventListener('input',        () => renderCnmc());
-  document.getElementById('cnmc-year').addEventListener('change',         () => renderCnmc());
-  document.getElementById('cnmc-fecha-desde').addEventListener('change',  () => renderCnmc());
-  document.getElementById('cnmc-fecha-hasta').addEventListener('change',  () => renderCnmc());
+  document.getElementById('cnmc-year').addEventListener('change', () => {
+    document.getElementById('cnmc-fecha-desde').value = '';
+    document.getElementById('cnmc-fecha-hasta').value = '';
+    renderCnmc();
+  });
+  document.getElementById('cnmc-fecha-desde').addEventListener('change', () => {
+    document.getElementById('cnmc-year').value = '';
+    renderCnmc();
+  });
+  document.getElementById('cnmc-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('cnmc-year').value = '';
+    renderCnmc();
+  });
   document.getElementById('cnmc-source').addEventListener('change', () => renderCnmc());
   document.getElementById('cnmcn-search').addEventListener('input', () => renderCnmcN());
   document.getElementById('cnmcn-year').addEventListener('change',  () => renderCnmcN());
