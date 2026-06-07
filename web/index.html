@@ -1175,16 +1175,28 @@
         .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
     }
 
+    // Extrae {code, desc} del título según tres patrones CNMC:
+    // 1. "CÓDIGO — Descripción"  (CNMC_S, CNMC_N expedientes)
+    // 2. "Tipo de acto: Descripción (CÓDIGO)"  (CNMC_RSS)
+    // 3. "CÓDIGO — Descripción"  con código corto tipo C/NNN/NN  (CNMC_N concentraciones)
+    const _CNMC_CODE_RE = /^([A-Z][A-Z0-9]{0,7}\/(?:[A-Z]{2}\/)?[0-9]{2,4}\/[0-9]{2})\s*[—\-]\s*(.+)$/;
+    const _CNMC_CODE_END_RE = /^(.+?)\s*\(([A-Z][A-Z0-9]{0,7}\/(?:[A-Z]{2}\/)?[0-9]{2,4}\/[0-9]{2})\)\s*$/;
+    function extractCnmcCode(title) {
+      let m = title.match(_CNMC_CODE_RE);
+      if (m) return { code: m[1], desc: m[2] };
+      m = title.match(_CNMC_CODE_END_RE);
+      if (m) return { code: m[2], desc: m[1] };
+      return { code: '', desc: title };
+    }
+
     el.innerHTML = filtered.map(e => {
       const color = SOURCE_COLOR[e.source] || '#1565c0';
       const label = SOURCE_LABEL[e.source] || e.source;
-      const titleFull = e.title || '';
-      const expMatch  = titleFull.match(/^([A-Z0-9]{2,8}\/[A-Z]{2}\/[0-9]{3}\/[0-9]{2})\s*[—\-]\s*(.+)$/);
-      const expNum    = expMatch ? expMatch[1] : '';
-      const expDesc   = expMatch ? expMatch[2] : titleFull;
+      const { code: expNum, desc: expDesc } = extractCnmcCode(e.title || '');
+      const codeSpan = expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(expNum)}</span>` : '';
       const titleHtml = e.url
-        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}</a>`
-        : `${expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:4px">${esc(expNum)}</span>` : ''}${esc(expDesc)}`;
+        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${codeSpan}${esc(expDesc)}</a>`
+        : `${codeSpan}${esc(expDesc)}`;
       return `
       <div class="norm-card" style="border-left-color:${color}">
         <div class="norm-header">
