@@ -771,6 +771,10 @@
         <input type="search" id="search" placeholder="Buscar por título, organismo, palabras clave…"
                autocomplete="off" spellcheck="false"/>
         <select id="todas-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"><option value="">Todos los años</option></select>
+        <input type="date" id="todas-fecha-desde" title="Fecha inicio"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <input type="date" id="todas-fecha-hasta" title="Fecha fin (igual = día exacto)"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
         <span class="result-count" id="count"></span>
       </div>
       <div id="loading" class="state-msg">Cargando datos…</div>
@@ -1715,16 +1719,21 @@
 
     /* ── Renders ─────────────────────────────────────────────────── */
   function renderTodas() {
-    const q  = document.getElementById('search').value.toLowerCase().trim();
-    const el = document.getElementById('entries');
+    const q      = document.getElementById('search').value.toLowerCase().trim();
+    const el     = document.getElementById('entries');
     document.getElementById('loading').style.display = 'none';
     const todasYr = document.getElementById('todas-year').value;
+    const desde   = (document.getElementById('todas-fecha-desde') || {value:''}).value;
+    const hasta   = (document.getElementById('todas-fecha-hasta') || {value:''}).value;
     const filtered = allEntries.filter(e => {
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
       if (todasYr && e.published_date && !e.published_date.endsWith(todasYr)) return false;
+      const f = e.fecha_real || '';
+      if (desde && f && f < desde) return false;
+      if (hasta && f && f > hasta) return false;
       if (!q) return true;
       return (e.title+' '+(e.department||'')+' '+(e.section||'')+' '+(e.summary||'')).toLowerCase().includes(q);
     });
@@ -2099,7 +2108,9 @@
 
   /* ── Búsquedas ──────────────────────────────────────────────── */
   document.getElementById('search').addEventListener('input', () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-year').addEventListener('change', () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-year').addEventListener('change',        () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-fecha-desde').addEventListener('change', () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-fecha-hasta').addEventListener('change', () => { todasPage=1; renderTodas(); });
   document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
   document.getElementById('eu-search').addEventListener('input',  () => { euPage=1; renderEu(); });
   document.getElementById('eu-year').addEventListener('change',   () => { euPage=1; renderEu(); });
