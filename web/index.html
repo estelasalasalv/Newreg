@@ -1771,15 +1771,21 @@
     const el     = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    // Si hay fechas manuales usan esas; si no, el selector de días
+    // Calcular rango según selector de días o fechas manuales
     let cutoffISO = '2000-01-01';
     let maxISO    = '9999-12-31';
+    const desdeEl = document.getElementById('esp-fecha-desde');
+    const hastaEl = document.getElementById('esp-fecha-hasta');
+
     if (desde || hasta) {
+      // Fechas manuales tienen prioridad
       if (desde) cutoffISO = desde;
-      // Si fecha_hasta igual a fecha_desde → día exacto; si vacío → sin límite superior
       if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
-      const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
+      const hoy = new Date();
+      const hoyISO = hoy.toISOString().slice(0,10);
+      maxISO = hoyISO;
+      const refISO = (allEntries[0] && allEntries[0].fecha_real) || hoyISO;
       const [ry, rm, rd] = refISO.split('-').map(Number);
       const refDate = new Date(ry, rm-1, rd);
       const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
@@ -1787,6 +1793,13 @@
       cutoffISO = refDate.getFullYear() + '-'
         + String(refDate.getMonth()+1).padStart(2,'0') + '-'
         + String(refDate.getDate()).padStart(2,'0');
+      // Mostrar el rango calculado en los campos Desde/Hasta
+      if (desdeEl) desdeEl.value = cutoffISO;
+      if (hastaEl) hastaEl.value = hoyISO;
+    } else {
+      // Toda la normativa — limpiar campos de fecha
+      if (desdeEl) desdeEl.value = '';
+      if (hastaEl) hastaEl.value = '';
     }
 
     // ── BOE ──────────────────────────────────────────────────────────
