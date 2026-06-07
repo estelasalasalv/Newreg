@@ -243,15 +243,6 @@
       line-height: 1.5;
       margin-bottom: 8px;
     }
-    .norm-card-impact {
-      font-size: 12px;
-      color: var(--text);
-      background: rgba(0,184,176,.07);
-      border-radius: 6px;
-      padding: 7px 10px;
-      margin-bottom: 6px;
-    }
-    .norm-card-impact strong { color: var(--teal2); }
 
     /* Badges de recencia */
     .badge {
@@ -897,26 +888,6 @@
     return '';
   }
 
-  const _REE = [
-    [/red de transporte/i,       "Afecta a la red de transporte de electricidad gestionada por REE."],
-    [/operador del sistema/i,    "Impacta en las funciones de REE como Operador del Sistema Eléctrico."],
-    [/retribuci[oó]n.*transporte|retribuci[oó]n.*operador/i, "Puede modificar la retribución económica del transporte de REE."],
-    [/planificaci[oó]n.*red/i,   "Afecta a los planes de inversión y desarrollo de la red de REE."],
-    [/liquidaci[oó]n.*sistema/i, "Incide en la liquidación del sistema eléctrico donde REE opera."],
-    [/servicio.*ajuste/i,        "Relacionado con los servicios de ajuste del sistema que coordina REE."],
-    [/interconex[ií][oó]n.*internacional/i, "Afecta a las interconexiones internacionales de REE."],
-    [/ciberseguridad/i,          "Impacta en la ciberseguridad de infraestructuras críticas de REE."],
-    [/subestaci[oó]n|l[ií]nea.*transporte|LAT\b/i, "Afecta a instalaciones de la red de transporte de REE."],
-    [/peaje.*acceso|tarifa.*el[eé]ctrica/i, "Relacionado con los peajes de transporte en los ingresos de REE."],
-    [/mercado.*el[eé]ctrico|mercado.*diario|mercado.*intradiario/i, "Afecta al mercado eléctrico donde REE actúa como operador."],
-    [/veh[ií]culo.*el[eé]ctrico/i, "Puede incrementar la demanda en la red de REE."],
-    [/sistema.*el[eé]ctrico/i,   "Regula aspectos del sistema eléctrico gestionado por REE."],
-  ];
-  function reeImpact(kw, title) {
-    const t = (kw||'') + ' ' + (title||'');
-    for (const [p,m] of _REE) if (p.test(t)) return m;
-    return '';
-  }
 
   function recencyLabel(dateStr) {
     if (!dateStr) return '';
@@ -1015,7 +986,6 @@
     const tipo   = e.tipo || '';
     const imp    = e.importante === 'Sí';
     const summ   = e.resumen     || '';
-    const ree    = e.impacto_ree || reeImpact(kw, title);
     return `
     <div class="norm-card">
       <div class="norm-header">
@@ -1036,12 +1006,10 @@
       ${sec||sub ? `<div class="norm-section">${esc(sec)}${sub?' › '+esc(sub):''}</div>` : ''}
       ${kw  ? `<div style="font-size:10.5px;color:var(--gray3);margin:4px 0 6px">🔑 ${esc(kw)}</div>` : ''}
       ${summ? `<div class="norm-card-summary">${esc(summ)}</div>` : ''}
-      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
 
   function cnmcRegCard(e) {
-    const ree     = reeImpact('', e.title||'');
     const srcLabel= e.source || e.department || 'CNMC';
     const isAcer  = srcLabel === 'ACER';
     const chipStyle = isAcer ? 'background:rgba(0,63,138,.12);color:#003f8a' : '';
@@ -1061,14 +1029,12 @@
         ${e.es_circular ? '<span class="badge badge-trimestre">📋 Circular</span>' : ''}
       </div>
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
-      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
 
   function consultaCard(e) {
     const days    = daysRemaining(e.plazo);
     const cerrada = (e.estado||'Abierta') === 'Cerrada' || (days !== null && days < 0);
-    const ree     = e.impacto_ree || reeImpact('', e.title||'');
     const org     = e.source || 'CNMC';
     const orgCls  = ['CNMC_C','CNMC_N'].includes(org) ? 'badge-cnmc' : 'badge-miterd';
     const resumen = e.summary || '';
@@ -1103,7 +1069,6 @@
         ${e.plazo ? `<div class="consulta-fechas">📅 ${esc(e.plazo)}</div>` : ''}
         ${e.scraped_at ? `<div style="font-size:10px;color:var(--gray3);margin-top:3px">🗄️ Cargado: ${esc(e.scraped_at)}</div>` : ''}
         ${resumen ? `<div class="norm-card-summary">${esc(resumen.slice(0,240))}</div>` : ''}
-        ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
       </div>
       ${plazoHtml}
     </div>`;
@@ -1111,7 +1076,6 @@
 
   /* ── CNMC_N card + render ───────────────────────────────────────── */
   function cnmcNCard(e) {
-    const ree = e.impacto_ree || '';
     // Separar nº expediente del título descriptivo si tiene formato "XXX/YY/NNN/NN — Descripción"
     const titleFull = e.title || '';
     const expMatch  = titleFull.match(/^([A-Z0-9]{2,8}\/[A-Z]{2}\/[0-9]{3}\/[0-9]{2})\s*[—\-]\s*(.+)$/);
@@ -1134,7 +1098,6 @@
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
       </div>
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
-      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree)}</div>` : ''}
     </div>`;
   }
 
@@ -1239,7 +1202,6 @@
       const bestSummary = g.entries.slice()
         .sort((a,b) => SUM_ORDER.indexOf(a.source) - SUM_ORDER.indexOf(b.source))
         .map(e => e.summary || '').find(s => s.length > 20) || '';
-      const bestImpacto = g.entries.map(e => e.impacto_ree || '').sort((a,b) => b.length - a.length)[0];
       const esNuevo = g.entries.some(e => e.es_nuevo);
 
       return `
@@ -1255,7 +1217,6 @@
           ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
         </div>
         ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
-        ${bestImpacto ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(bestImpacto)}</div>` : ''}
       </div>`;
     }).join('');
   }
@@ -1361,7 +1322,6 @@
   function acerCard(e) {
     const isDecision = (e.section||'').includes('Decisi');
     const imp  = e.importante === 'Sí';
-    const ree  = e.impacto_ree || '';
     return `
     <div class="norm-card" style="border-left-color:#003f8a">
       <div class="norm-header">
@@ -1381,7 +1341,6 @@
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
       </div>
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary.slice(0,260))}${e.summary.length>260?'…':''}</div>` : ''}
-      ${ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(ree.slice(0,200))}${ree.length>200?'…':''}</div>` : ''}
       ${(e.summary || ree) ? `<button class="btn-detalle" data-title="${esc(e.title)}" data-summary="${esc(e.summary||'')}" data-impact="${esc(ree)}" data-url="${esc(e.url||'')}" onclick="openModalFromBtn(this)">📄 Ver resumen completo</button>` : ''}
     </div>`;
   }
@@ -1522,7 +1481,6 @@
       const bestSum   = g.entries.slice()
         .sort((a,b) => _SUM_ORD.indexOf(a.source) - _SUM_ORD.indexOf(b.source))
         .map(e => e.summary || '').find(s => s.length > 20) || '';
-      const bestImp   = g.entries.map(e => e.impacto_ree || '').sort((a,b) => b.length - a.length)[0];
       const esNuevo   = g.entries.some(e => e.es_nuevo);
       return `<div class="norm-card" style="border-left-color:#1565c0">
         <div class="norm-header">
@@ -1536,7 +1494,6 @@
           ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
         </div>
         ${bestSum ? `<div class="norm-card-summary">${esc(bestSum)}</div>` : ''}
-        ${bestImp ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(bestImp)}</div>` : ''}
       </div>`;
     });
 
@@ -1869,7 +1826,6 @@
       const _SO = ['CNMC_S','CNMC_N','CNMC_RSS'];
       const bestSum = g.entries.slice().sort((a,b)=>_SO.indexOf(a.source)-_SO.indexOf(b.source))
         .map(e=>e.summary||'').find(s=>s.length>20)||'';
-      const bestImp = g.entries.map(e=>e.impacto_ree||'').sort((a,b)=>b.length-a.length)[0];
       const esNuevo = g.entries.some(e=>e.es_nuevo);
       return {
         fecha: g.entries.map(e=>e.fecha_real||e.published_date||'').sort().reverse()[0],
@@ -1885,7 +1841,6 @@
             ${main.tramitaciones==='Sí'?'<span class="badge badge-auth">📋 Tramitación</span>':''}
           </div>
           ${bestSum?`<div class="norm-card-summary">${esc(bestSum)}</div>`:''}
-          ${bestImp?`<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(bestImp)}</div>`:''}
         </div>`
       };
     });
@@ -1934,7 +1889,7 @@
   let cnmcNData   = [];
   let cnmcSData   = [];
   let cnmcRssData = [];
-  let cnmcAllData = [];
+  let cnmcAllData   = [];
 
   // ── Vista calendario semanal ─────────────────────────────────────
   function renderCalendario(items) {
