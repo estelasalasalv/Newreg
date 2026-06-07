@@ -396,32 +396,6 @@ def upsert_entries(entries: List[Dict]) -> int:
                 if e.get("url") and e["url"] in existing_urls:
                     continue
 
-                # Si es CNMC_RSS y el título contiene un nº de expediente,
-                # actualizar published_date en CNMC_S en vez de insertar duplicado
-                if e.get("source") == "CNMC_RSS":
-                    m = _EXP_RE.search(e.get("title", ""))
-                    if m:
-                        # Primero comprobar si el expediente ya existe en CNMC_S
-                        cur.execute(
-                            "SELECT id FROM regulatory_entries WHERE source='CNMC_S' AND title ILIKE %(pat)s LIMIT 1",
-                            {"pat": f"%{m.group(1)}%"},
-                        )
-                        if cur.fetchone():
-                            # Existe en CNMC_S: actualizar fecha si procede y no insertar en RSS
-                            if e.get("published_date"):
-                                cur.execute(
-                                    """UPDATE regulatory_entries
-                                       SET published_date = %(pub)s
-                                       WHERE source = 'CNMC_S'
-                                         AND title ILIKE %(pat)s
-                                         AND (published_date IS NULL OR %(pub)s > published_date)
-                                    """,
-                                    {"pub": e["published_date"], "pat": f"%{m.group(1)}%"},
-                                )
-                                if cur.rowcount:
-                                    logger.debug("CNMC_RSS→CNMC_S fecha: %s → %s", m.group(1), e["published_date"])
-                            continue  # no insertar en CNMC_RSS en ningún caso
-
                 row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
                        "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
                        "tramitaciones": e.get("tramitaciones", "No")}
@@ -598,6 +572,28 @@ def fetch_cnmc_n(limit: int = 200) -> List[Dict]:
            (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'CNMC_N'
+    ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
+    LIMIT  %(limit)s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, {"limit": limit})
+            rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
+def fetch_cnmc_all(limit: int = 800) -> List[Dict]:
+    """Combina CNMC_RSS + CNMC_S + CNMC_N en una sola lista para la pestaña CNMC fusionada."""
+    sql = """
+    SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
+           COALESCE(importante, 'No')                                        AS importante,
+           TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
+           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
+           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
+           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+    FROM   regulatory_entries
+    WHERE  source IN ('CNMC_RSS', 'CNMC_S', 'CNMC_N')
     ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
     LIMIT  %(limit)s
     """
@@ -825,6 +821,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     cnmc_n         = fetch_cnmc_n()
     cnmc_s         = fetch_cnmc_s()
     cnmc_rss_data  = fetch_cnmc_rss_entries()
+    cnmc_all       = fetch_cnmc_all()
 
     # Aplicar filtro de año (solo visualización — datos históricos intactos en BD)
     entries_f   = _filter_year(entries,    YEAR_FILTER)
@@ -843,9 +840,10 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "acceso_conexion": acceso_f,     # pestaña Acceso/Conexión (solo 2026)
         "eurlex":          eurlex_f,     # pestaña Normativa Europea (solo 2026)
         "acer":            acer_f,       # pestaña ACER (solo 2026)
-        "cnmc_n":          _filter_year(cnmc_n, YEAR_FILTER),  # pestaña CNMC_N actuaciones
-        "cnmc_s":          cnmc_s,                              # pestaña CNMC_S (sin filtro año)
+        "cnmc_n":          _filter_year(cnmc_n, YEAR_FILTER),  # pestaña CNMC Actuaciones
+        "cnmc_s":          cnmc_s,                              # pestaña CNMC_S
         "cnmc_rss":        _filter_year(cnmc_rss_data, YEAR_FILTER),  # pestaña CNMC RSS
+        "cnmc_all":        cnmc_all,                            # pestaña CNMC fusionada
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
