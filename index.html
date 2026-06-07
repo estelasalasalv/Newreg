@@ -1546,7 +1546,7 @@
 
     document.getElementById('resumen-nacional-empty').style.display = allNacionalCards.length ? 'none' : 'block';
     document.getElementById('resumen-nacional-entries').innerHTML = allNacionalCards.map(x => x.html).join('');
-    setResumenCount('nacional', nacional.length);
+    setResumenCount('nacional', allNacionalCards.length);
 
     // ── Normativa internacional DOUE ──────────────────────────────
     const euFilt = eurlex.filter(e => {
