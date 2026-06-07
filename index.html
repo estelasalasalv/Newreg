@@ -549,7 +549,7 @@
         </label>
         <label class="imp-label">
           <input type="checkbox" id="chk-ocultar-gas" checked/>
-          Ocultar gas, hidrógeno y combustibles
+          Ocultar gas, hidrog, combust...
         </label>
       </div>
     </div>
@@ -638,6 +638,10 @@
         <select id="eu-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todos los años</option>
         </select>
+        <input type="date" id="eu-fecha-desde" title="Fecha inicio"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <input type="date" id="eu-fecha-hasta" title="Fecha fin (igual que inicio = día exacto)"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
           <input type="checkbox" id="chk-eu-importante" style="accent-color:var(--teal);width:14px;height:14px"/>
           Solo importantes
@@ -1607,10 +1611,12 @@
 
   let euPage = 1;
   function renderEu() {
-    const q    = document.getElementById('eu-search').value.toLowerCase().trim();
-    const yr   = document.getElementById('eu-year').value;
+    const q       = document.getElementById('eu-search').value.toLowerCase().trim();
+    const yr      = document.getElementById('eu-year').value;
     const soloImp = document.getElementById('chk-eu-importante').checked;
-    const el   = document.getElementById('eu-entries');
+    const desde   = document.getElementById('eu-fecha-desde').value; // YYYY-MM-DD o ''
+    const hasta   = document.getElementById('eu-fecha-hasta').value; // YYYY-MM-DD o ''
+    const el      = document.getElementById('eu-entries');
     document.getElementById('eu-loading').style.display = 'none';
 
     const filtered = eurlex.filter(e => {
@@ -1619,6 +1625,12 @@
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       if (yr && String(e.anio) !== yr) return false;
+      // Filtro por rango de fechas (fecha_real en YYYY-MM-DD)
+      const f = e.fecha_real || '';
+      if (desde && f && f < desde) return false;
+      // Si hasta === desde → buscar ese día exacto; si hasta vacío → sin límite superior
+      if (hasta && f && f > hasta) return false;
+      if (desde && hasta === desde && f && f !== desde) return false;
       if (!q) return true;
       return ((e.texto||'')+' '+(e.tipo||'')).toLowerCase().includes(q);
     });
@@ -2084,8 +2096,10 @@
   document.getElementById('search').addEventListener('input', () => { todasPage=1; renderTodas(); });
   document.getElementById('todas-year').addEventListener('change', () => { todasPage=1; renderTodas(); });
   document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
-  document.getElementById('eu-search').addEventListener('input', () => { euPage=1; renderEu(); });
-  document.getElementById('eu-year').addEventListener('change', () => { euPage=1; renderEu(); });
+  document.getElementById('eu-search').addEventListener('input',  () => { euPage=1; renderEu(); });
+  document.getElementById('eu-year').addEventListener('change',   () => { euPage=1; renderEu(); });
+  document.getElementById('eu-fecha-desde').addEventListener('change', () => { euPage=1; renderEu(); });
+  document.getElementById('eu-fecha-hasta').addEventListener('change', () => { euPage=1; renderEu(); });
   document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
   const euMasBtn = document.getElementById('eu-mas');
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
