@@ -31,11 +31,35 @@ _GENERIC_TITLES = re.compile(
 )
 
 
+_FEEDBACK_RE = re.compile(
+    r'^.*?(?:¿Te ha sido útil|jmiguel|mgine|Informar sobre un problema).*?'
+    r'(?=Tipo de estadística|Ámbito|Período|Documentos|Ref:|$)',
+    re.IGNORECASE | re.DOTALL,
+)
+_METADATA_NOISE_RE = re.compile(
+    r'(?:api etiquetas|Sucesos que|NW Menu|Mostrar detalle|Acuses de Recibo).*',
+    re.IGNORECASE | re.DOTALL,
+)
+# Para páginas de estadísticas: extraer solo la descripción final tras la metadata
+_STAT_DESC_RE = re.compile(
+    r'(?:Fecha de publicaci[oó]n:[^\n]+)\s*(.+)',
+    re.IGNORECASE | re.DOTALL,
+)
+
 def _strip_html(html: str) -> str:
     if not html:
         return ""
     soup = BeautifulSoup(html, "lxml")
-    return " ".join(soup.get_text(" ", strip=True).split())
+    text = " ".join(soup.get_text(" ", strip=True).split())
+    # Eliminar ruido de widget feedback ("¿Te ha sido útil?", nombres de usuario)
+    text = _FEEDBACK_RE.sub("", text).strip()
+    # Eliminar ruido de etiquetas internas CNMC
+    text = _METADATA_NOISE_RE.sub("", text).strip()
+    # Para estadísticas: extraer solo la descripción tras "Fecha de publicación: ..."
+    m = _STAT_DESC_RE.search(text)
+    if m:
+        text = m.group(1).strip()
+    return text
 
 
 def _parse_date(pub_date: str) -> Optional[str]:
