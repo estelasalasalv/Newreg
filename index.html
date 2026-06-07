@@ -174,6 +174,22 @@
       align-items: center;
       margin-bottom: 14px;
     }
+    .date-range-lbl {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--gray4);
+      white-space: nowrap;
+    }
+    .date-range-lbl input[type=date] {
+      padding: 5px 8px;
+      border: 1px solid var(--gray2);
+      border-radius: 8px;
+      font-size: 12px;
+      background: var(--white);
+      color: var(--text);
+    }
     .search-bar input {
       flex: 1 1 200px;
       padding: 7px 12px;
@@ -638,10 +654,8 @@
         <select id="eu-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todos los años</option>
         </select>
-        <input type="date" id="eu-fecha-desde" title="Fecha inicio"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
-        <input type="date" id="eu-fecha-hasta" title="Fecha fin (igual que inicio = día exacto)"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <label class="date-range-lbl">Desde<input type="date" id="eu-fecha-desde"/></label>
+        <label class="date-range-lbl">Hasta<input type="date" id="eu-fecha-hasta"/></label>
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
           <input type="checkbox" id="chk-eu-importante" style="accent-color:var(--teal);width:14px;height:14px"/>
           Solo importantes
@@ -664,10 +678,8 @@
         <select id="acer-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todos los años</option>
         </select>
-        <input type="date" id="acer-fecha-desde" title="Fecha inicio"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
-        <input type="date" id="acer-fecha-hasta" title="Fecha fin (igual = día exacto)"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <label class="date-range-lbl">Desde<input type="date" id="acer-fecha-desde"/></label>
+        <label class="date-range-lbl">Hasta<input type="date" id="acer-fecha-hasta"/></label>
         <span class="result-count" id="acer-count"></span>
       </div>
       <div id="acer-loading" class="state-msg">Cargando…</div>
@@ -689,10 +701,8 @@
         <select id="cnmc-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todos los años</option>
         </select>
-        <input type="date" id="cnmc-fecha-desde" title="Fecha inicio"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
-        <input type="date" id="cnmc-fecha-hasta" title="Fecha fin (igual = día exacto)"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <label class="date-range-lbl">Desde<input type="date" id="cnmc-fecha-desde"/></label>
+        <label class="date-range-lbl">Hasta<input type="date" id="cnmc-fecha-hasta"/></label>
         <span class="result-count" id="cnmc-count"></span>
       </div>
       <div id="cnmc-loading" class="state-msg">Cargando…</div>
@@ -771,10 +781,8 @@
         <input type="search" id="search" placeholder="Buscar por título, organismo, palabras clave…"
                autocomplete="off" spellcheck="false"/>
         <select id="todas-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"><option value="">Todos los años</option></select>
-        <input type="date" id="todas-fecha-desde" title="Fecha inicio"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
-        <input type="date" id="todas-fecha-hasta" title="Fecha fin (igual = día exacto)"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <label class="date-range-lbl">Desde<input type="date" id="todas-fecha-desde"/></label>
+        <label class="date-range-lbl">Hasta<input type="date" id="todas-fecha-hasta"/></label>
         <span class="result-count" id="count"></span>
       </div>
       <div id="loading" class="state-msg">Cargando datos…</div>
@@ -798,10 +806,8 @@
           <option value="90">Últimos 3 meses</option>
           <option value="9999">Toda la normativa</option>
         </select>
-        <input type="date" id="esp-fecha-desde" title="Fecha inicio (anula el selector de días)"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
-        <input type="date" id="esp-fecha-hasta" title="Fecha fin (igual que inicio = día exacto)"
-               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <label class="date-range-lbl">Desde<input type="date" id="esp-fecha-desde" title="Anula el selector de días"/></label>
+        <label class="date-range-lbl">Hasta<input type="date" id="esp-fecha-hasta"/></label>
         <span class="result-count" id="esp-count"></span>
       </div>
       <div id="esp-loading" class="state-msg">Cargando…</div>
@@ -822,12 +828,6 @@
           <button class="org-filter" data-org="CNMC_C">CNMC</button>
           <button class="org-filter" data-org="MITERD">MITERD</button>
         </div>
-        <button id="btn-otros-sectores" style="
-          padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
-          border:1px solid var(--gray2); background:var(--white); cursor:pointer;
-          color:var(--gray4); transition:all .15s;">
-          + Ver otros sectores
-        </button>
         <button id="btn-ver-cerradas" style="
           padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600;
           border:1px solid var(--gray2); background:var(--white); cursor:pointer;
@@ -1771,15 +1771,21 @@
     const el     = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    // Si hay fechas manuales usan esas; si no, el selector de días
+    // Calcular rango según selector de días o fechas manuales
     let cutoffISO = '2000-01-01';
     let maxISO    = '9999-12-31';
+    const desdeEl = document.getElementById('esp-fecha-desde');
+    const hastaEl = document.getElementById('esp-fecha-hasta');
+
     if (desde || hasta) {
+      // Fechas manuales tienen prioridad
       if (desde) cutoffISO = desde;
-      // Si fecha_hasta igual a fecha_desde → día exacto; si vacío → sin límite superior
       if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
-      const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
+      const hoy = new Date();
+      const hoyISO = hoy.toISOString().slice(0,10);
+      maxISO = hoyISO;
+      const refISO = (allEntries[0] && allEntries[0].fecha_real) || hoyISO;
       const [ry, rm, rd] = refISO.split('-').map(Number);
       const refDate = new Date(ry, rm-1, rd);
       const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
@@ -1787,6 +1793,13 @@
       cutoffISO = refDate.getFullYear() + '-'
         + String(refDate.getMonth()+1).padStart(2,'0') + '-'
         + String(refDate.getDate()).padStart(2,'0');
+      // Mostrar el rango calculado en los campos Desde/Hasta
+      if (desdeEl) desdeEl.value = cutoffISO;
+      if (hastaEl) hastaEl.value = hoyISO;
+    } else {
+      // Toda la normativa — limpiar campos de fecha
+      if (desdeEl) desdeEl.value = '';
+      if (hastaEl) hastaEl.value = '';
     }
 
     // ── BOE ──────────────────────────────────────────────────────────
@@ -1909,7 +1922,6 @@
     if (_ISLAS_RE.test(t)) return false;
     return true;
   }
-  let mostrarOtrosSectores  = false;
   let mostrarCerradas       = false;
   let acerData  = [];
   let cnmcNData   = [];
@@ -2000,16 +2012,7 @@
     const el = document.getElementById('con-entries');
     document.getElementById('con-loading').style.display = 'none';
 
-    const otrosCount = cnmcConsultas.filter(e => e.sector && e.sector !== 'electricidad').length;
     const cerradasCount = cnmcConsultas.filter(e => (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0).length;
-    const btn = document.getElementById('btn-otros-sectores');
-    if (btn) {
-      btn.textContent = mostrarOtrosSectores
-        ? '− Ocultar otros sectores'
-        : `+ Ver otros sectores (${otrosCount})`;
-      btn.style.background = mostrarOtrosSectores ? 'var(--teal)' : '';
-      btn.style.color      = mostrarOtrosSectores ? 'var(--navy)' : '';
-    }
     const btnCer = document.getElementById('btn-ver-cerradas');
     if (btnCer) {
       btnCer.textContent   = mostrarCerradas ? '− Ocultar consultas cerradas' : `Ver consultas cerradas (${cerradasCount})`;
@@ -2023,9 +2026,6 @@
       // Ocultar cerradas salvo que el botón esté activo
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
       if (!mostrarCerradas && esCerrada) return false;
-      // Ocultar otros sectores salvo que el botón esté activo O la consulta esté abierta con plazo
-      const esAbiertaConPlazo = !esCerrada && e.plazo && daysRemaining(e.plazo) >= 0;
-      if (!mostrarOtrosSectores && e.sector && e.sector !== 'electricidad' && !esAbiertaConPlazo) return false;
       // Filtro de fuente global (sidebar)
       if (activeSource === 'BOE') return false;
       if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
@@ -2108,25 +2108,65 @@
 
   /* ── Búsquedas ──────────────────────────────────────────────── */
   document.getElementById('search').addEventListener('input', () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-year').addEventListener('change',        () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-fecha-desde').addEventListener('change', () => { todasPage=1; renderTodas(); });
-  document.getElementById('todas-fecha-hasta').addEventListener('change', () => { todasPage=1; renderTodas(); });
+  document.getElementById('todas-year').addEventListener('change', () => {
+    document.getElementById('todas-fecha-desde').value = '';
+    document.getElementById('todas-fecha-hasta').value = '';
+    todasPage = 1; renderTodas();
+  });
+  document.getElementById('todas-fecha-desde').addEventListener('change', () => {
+    document.getElementById('todas-year').value = '';
+    todasPage = 1; renderTodas();
+  });
+  document.getElementById('todas-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('todas-year').value = '';
+    todasPage = 1; renderTodas();
+  });
   document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
   document.getElementById('eu-search').addEventListener('input',  () => { euPage=1; renderEu(); });
-  document.getElementById('eu-year').addEventListener('change',   () => { euPage=1; renderEu(); });
-  document.getElementById('eu-fecha-desde').addEventListener('change', () => { euPage=1; renderEu(); });
-  document.getElementById('eu-fecha-hasta').addEventListener('change', () => { euPage=1; renderEu(); });
+  document.getElementById('eu-year').addEventListener('change', () => {
+    document.getElementById('eu-fecha-desde').value = '';
+    document.getElementById('eu-fecha-hasta').value = '';
+    euPage = 1; renderEu();
+  });
+  document.getElementById('eu-fecha-desde').addEventListener('change', () => {
+    document.getElementById('eu-year').value = '';
+    euPage = 1; renderEu();
+  });
+  document.getElementById('eu-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('eu-year').value = '';
+    euPage = 1; renderEu();
+  });
   document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
   const euMasBtn = document.getElementById('eu-mas');
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
   document.getElementById('acer-search').addEventListener('input',       () => renderAcer());
-  document.getElementById('acer-year').addEventListener('change',         () => renderAcer());
-  document.getElementById('acer-fecha-desde').addEventListener('change',  () => renderAcer());
-  document.getElementById('acer-fecha-hasta').addEventListener('change',  () => renderAcer());
+  document.getElementById('acer-year').addEventListener('change', () => {
+    document.getElementById('acer-fecha-desde').value = '';
+    document.getElementById('acer-fecha-hasta').value = '';
+    renderAcer();
+  });
+  document.getElementById('acer-fecha-desde').addEventListener('change', () => {
+    document.getElementById('acer-year').value = '';
+    renderAcer();
+  });
+  document.getElementById('acer-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('acer-year').value = '';
+    renderAcer();
+  });
   document.getElementById('cnmc-search').addEventListener('input',        () => renderCnmc());
-  document.getElementById('cnmc-year').addEventListener('change',         () => renderCnmc());
-  document.getElementById('cnmc-fecha-desde').addEventListener('change',  () => renderCnmc());
-  document.getElementById('cnmc-fecha-hasta').addEventListener('change',  () => renderCnmc());
+  document.getElementById('cnmc-year').addEventListener('change', () => {
+    document.getElementById('cnmc-fecha-desde').value = '';
+    document.getElementById('cnmc-fecha-hasta').value = '';
+    renderCnmc();
+  });
+  document.getElementById('cnmc-fecha-desde').addEventListener('change', () => {
+    document.getElementById('cnmc-year').value = '';
+    renderCnmc();
+  });
+  document.getElementById('cnmc-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('cnmc-year').value = '';
+    renderCnmc();
+  });
   document.getElementById('cnmc-source').addEventListener('change', () => renderCnmc());
   document.getElementById('cnmcn-search').addEventListener('input', () => renderCnmcN());
   document.getElementById('cnmcn-year').addEventListener('change',  () => renderCnmcN());
@@ -2138,9 +2178,21 @@
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
   document.getElementById('esp-search').addEventListener('input',      () => { espPage=1; renderEsp(); });
-  document.getElementById('esp-dias').addEventListener('change',       () => { espPage=1; renderEsp(); });
-  document.getElementById('esp-fecha-desde').addEventListener('change',() => { espPage=1; renderEsp(); });
-  document.getElementById('esp-fecha-hasta').addEventListener('change',() => { espPage=1; renderEsp(); });
+  document.getElementById('esp-dias').addEventListener('change', () => {
+    // Al cambiar el selector de días, limpiar fechas manuales para que no tengan prioridad
+    document.getElementById('esp-fecha-desde').value = '';
+    document.getElementById('esp-fecha-hasta').value = '';
+    espPage = 1; renderEsp();
+  });
+  document.getElementById('esp-fecha-desde').addEventListener('change', () => {
+    // Al poner fecha manual, deseleccionar el selector de días
+    document.getElementById('esp-dias').value = '9999';
+    espPage = 1; renderEsp();
+  });
+  document.getElementById('esp-fecha-hasta').addEventListener('change', () => {
+    document.getElementById('esp-dias').value = '9999';
+    espPage = 1; renderEsp();
+  });
   const espMasBtn = document.getElementById('esp-mas');
   if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
@@ -2217,10 +2269,6 @@
   initCollapseStates();
   document.getElementById('btn-vista-cal').addEventListener('click', () => {
     vistaCalendario = !vistaCalendario;
-    renderConsultas();
-  });
-  document.getElementById('btn-otros-sectores').addEventListener('click', () => {
-    mostrarOtrosSectores = !mostrarOtrosSectores;
     renderConsultas();
   });
   document.getElementById('btn-ver-cerradas').addEventListener('click', () => {
