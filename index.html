@@ -1226,8 +1226,12 @@
       const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
       const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
 
-      // Summary: preferir el más largo/informativo
-      const bestSummary = g.entries.map(e => e.summary || '').sort((a,b) => b.length - a.length)[0];
+      // Summary: preferir CNMC_S o CNMC_N (vienen de _fetch_expediente_detail, texto limpio)
+      // CNMC_RSS tiene ruido de etiquetas internas — usar solo si no hay otra opción
+      const SUM_ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
+      const bestSummary = g.entries.slice()
+        .sort((a,b) => SUM_ORDER.indexOf(a.source) - SUM_ORDER.indexOf(b.source))
+        .map(e => e.summary || '').find(s => s.length > 20) || '';
       const bestImpacto = g.entries.map(e => e.impacto_ree || '').sort((a,b) => b.length - a.length)[0];
       const esNuevo = g.entries.some(e => e.es_nuevo);
 
@@ -1512,7 +1516,10 @@
         ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
         : `${codeSpan}${esc(g.desc)}`;
       const bestDate  = g.entries.map(e => e.published_date || '').sort().reverse()[0];
-      const bestSum   = g.entries.map(e => e.summary || '').sort((a,b) => b.length - a.length)[0];
+      const _SUM_ORD  = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
+      const bestSum   = g.entries.slice()
+        .sort((a,b) => _SUM_ORD.indexOf(a.source) - _SUM_ORD.indexOf(b.source))
+        .map(e => e.summary || '').find(s => s.length > 20) || '';
       const bestImp   = g.entries.map(e => e.impacto_ree || '').sort((a,b) => b.length - a.length)[0];
       const esNuevo   = g.entries.some(e => e.es_nuevo);
       return `<div class="norm-card" style="border-left-color:#1565c0">
