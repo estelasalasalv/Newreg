@@ -1,5 +1,5 @@
 """
-Analiza normativa nueva con Gemini API para:
+Analiza normativa nueva con Claude API (Anthropic) para:
   1. Generar un resumen del documento.
   2. Determinar qué funciones de Red Eléctrica (tabla ree_funciones) se ven afectadas.
 
@@ -23,7 +23,7 @@ import logging
 import argparse
 import requests
 import psycopg2
-from datetime import datetime, timezone
+import anthropic
 from typing import Optional
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -32,16 +32,17 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL   = "gemini-2.0-flash"
-GEMINI_URL     = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-)
-HEADERS_WEB = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
-MAX_DOC_CHARS = 12_000   # límite de texto enviado a Gemini
+CLAUDE_MODEL  = "claude-haiku-4-5-20251001"   # rápido y económico
+HEADERS_WEB   = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
+MAX_DOC_CHARS = 12_000   # límite de texto enviado al modelo
 MAX_RETRIES   = 3
 RETRY_WAIT    = 10       # segundos entre reintentos
+
+SYSTEM_PROMPT = (
+    "Eres un experto en regulación energética española y europea, especializado en "
+    "Red Eléctrica de España (REE) como transportista y operador del sistema eléctrico. "
+    "Respondes SIEMPRE con JSON válido, sin markdown ni texto adicional."
+)
 
 
 # ── Conexión BD ───────────────────────────────────────────────────────────────
@@ -128,32 +129,29 @@ Si no afecta a ninguna función de REE, devuelve "funciones_afectadas": [].
 Solo incluye funciones con afectación real y directa, no potencial o remota."""
 
 
-def call_gemini(prompt: str) -> Optional[dict]:
-    """Llama a la API de Gemini y devuelve el JSON parseado. Reintenta hasta MAX_RETRIES."""
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1024},
-    }
+def call_claude(client: anthropic.Anthropic, prompt: str) -> Optional[dict]:
+    """Llama a Claude API y devuelve el JSON parseado. Reintenta hasta MAX_RETRIES."""
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            r = requests.post(GEMINI_URL, json=payload, timeout=60)
-            if r.status_code == 429:
-                wait = RETRY_WAIT * attempt
-                logger.warning("Rate limit Gemini, esperando %ds (intento %d/%d)", wait, attempt, MAX_RETRIES)
-                time.sleep(wait)
-                continue
-            r.raise_for_status()
-            data = r.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-            # Limpiar posible markdown
+            msg = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=1024,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = msg.content[0].text.strip()
             text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.MULTILINE).strip()
             return json.loads(text)
         except (json.JSONDecodeError, KeyError) as exc:
-            logger.warning("Respuesta Gemini no parseable (intento %d): %s", attempt, exc)
+            logger.warning("Respuesta Claude no parseable (intento %d): %s", attempt, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
+        except anthropic.RateLimitError:
+            wait = RETRY_WAIT * attempt
+            logger.warning("Rate limit Claude, esperando %ds (intento %d/%d)", wait, attempt, MAX_RETRIES)
+            time.sleep(wait)
         except Exception as exc:
-            logger.warning("Error llamando Gemini (intento %d): %s", attempt, exc)
+            logger.warning("Error llamando Claude (intento %d): %s", attempt, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
     return None
@@ -331,10 +329,11 @@ def fetch_new_entries(conn, limit: int) -> list[dict]:
 
 # ── Proceso principal ─────────────────────────────────────────────────────────
 
-def process_entry(conn, entry: dict, funciones: list[dict], funcion_map: dict) -> bool:
-    tipo  = entry["normativa_tipo"]
-    nid   = entry["normativa_id"]
-    url   = entry.get("url") or ""
+def process_entry(conn, client: anthropic.Anthropic, entry: dict,
+                  funciones: list[dict], funcion_map: dict) -> bool:
+    tipo   = entry["normativa_tipo"]
+    nid    = entry["normativa_id"]
+    url    = entry.get("url") or ""
     titulo = entry.get("titulo") or ""
 
     logger.info("Analizando [%s id=%d] %s", tipo, nid, titulo[:70])
@@ -345,11 +344,11 @@ def process_entry(conn, entry: dict, funciones: list[dict], funcion_map: dict) -
         save_pending(conn, tipo, nid, url, titulo, "No se pudo descargar el texto del documento")
         return False
 
-    # 2. Llamar a Gemini
+    # 2. Llamar a Claude
     prompt = build_prompt(titulo, texto, funciones)
-    result = call_gemini(prompt)
+    result = call_claude(client, prompt)
     if not result:
-        save_pending(conn, tipo, nid, url, titulo, "Gemini no devolvió respuesta válida")
+        save_pending(conn, tipo, nid, url, titulo, "Claude no devolvió respuesta válida")
         return False
 
     # 3. Guardar resultado
@@ -373,9 +372,12 @@ def main():
                         help="Solo procesar entradas en cola de pendientes")
     args = parser.parse_args()
 
-    if not GEMINI_API_KEY:
-        logger.error("GEMINI_API_KEY no configurado. Añádela al .env o a los secretos de GitHub.")
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        logger.error("ANTHROPIC_API_KEY no configurado.")
         sys.exit(1)
+
+    client = anthropic.Anthropic(api_key=api_key)
 
     funciones = load_ree_funciones()
     if not funciones:
@@ -395,7 +397,6 @@ def main():
         if remaining > 0:
             new_entries = fetch_new_entries(conn, remaining)
             logger.info("Entradas nuevas sin análisis: %d", len(new_entries))
-            # Evitar duplicados (una entrada ya puede estar en pendientes)
             pending_keys = {(e["normativa_tipo"], e["normativa_id"]) for e in entries}
             for e in new_entries:
                 if (e["normativa_tipo"], e["normativa_id"]) not in pending_keys:
@@ -405,13 +406,12 @@ def main():
     ok = 0
     fail = 0
     for entry in entries:
-        success = process_entry(conn, entry, funciones, funcion_map)
+        success = process_entry(conn, client, entry, funciones, funcion_map)
         if success:
             ok += 1
         else:
             fail += 1
-        # Pausa entre llamadas para respetar rate limit (15 RPM gratuito)
-        time.sleep(4)
+        time.sleep(1)  # pausa breve entre llamadas
 
     conn.close()
     logger.info("Análisis REE completado. OK=%d  FAIL=%d (guardados en pendientes)", ok, fail)
