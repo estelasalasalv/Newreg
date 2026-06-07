@@ -109,6 +109,16 @@ def init_db():
         scraped_at      TIMESTAMPTZ DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_boe_n_desc_fecha ON boe_n_descarte(fecha DESC);
+
+    -- Tabla de funciones de Red Eléctrica (referencia estática)
+    CREATE TABLE IF NOT EXISTS ree_funciones (
+        id          SERIAL PRIMARY KEY,
+        categoria   TEXT NOT NULL,  -- 'transportista' | 'operador'
+        actividad   TEXT NOT NULL,
+        descripcion TEXT,
+        base_legal  TEXT,
+        keywords    TEXT            -- palabras clave para búsqueda en normativa
+    );
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -823,6 +833,12 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
     cnmc_rss_data  = fetch_cnmc_rss_entries()
     cnmc_all       = fetch_cnmc_all()
 
+    # Funciones de Red Eléctrica (referencia estática)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT categoria, actividad, descripcion, base_legal, keywords FROM ree_funciones ORDER BY categoria, id")
+            ree_funciones = [dict(r) for r in cur.fetchall()]
+
     # Aplicar filtro de año (solo visualización — datos históricos intactos en BD)
     entries_f   = _filter_year(entries,    YEAR_FILTER)
     acceso_f    = _filter_year(acceso_con, YEAR_FILTER)
@@ -844,6 +860,7 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
         "cnmc_s":          cnmc_s,                              # pestaña CNMC_S
         "cnmc_rss":        _filter_year(cnmc_rss_data, YEAR_FILTER),  # pestaña CNMC RSS
         "cnmc_all":        cnmc_all,                            # pestaña CNMC fusionada
+        "ree_funciones":   ree_funciones,                       # panel funciones REE
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
