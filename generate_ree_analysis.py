@@ -1,5 +1,5 @@
 """
-Analiza normativa nueva con OpenAI API (ChatGPT) para:
+Analiza normativa nueva con Ollama (modelo local llama3) para:
   1. Generar un resumen del documento.
   2. Determinar qué funciones de Red Eléctrica (tabla ree_funciones) se ven afectadas.
 
@@ -9,13 +9,16 @@ Guarda resultados en:
 
 Las entradas que fallan se guardan en ree_analisis_pendiente para reintento posterior.
 
-Clave API: https://platform.openai.com/api-keys
-Modelo: gpt-4o-mini (rápido y económico).
+Requisitos:
+  1. Instalar Ollama: https://ollama.com/download
+  2. Descargar el modelo: ollama pull llama3
+  3. Ollama debe estar corriendo (ollama serve) — arranca automáticamente en Windows al instalar
 
 Uso:
   python generate_ree_analysis.py              # procesa pendientes + nuevas (máx 30 por ejecución)
   python generate_ree_analysis.py --limit 10   # máximo 10 entradas
   python generate_ree_analysis.py --retry      # solo reintentar las pendientes
+  python generate_ree_analysis.py --model mistral  # usar otro modelo Ollama
 """
 import os
 import re
@@ -26,7 +29,6 @@ import logging
 import argparse
 import requests
 import psycopg2
-from openai import OpenAI, RateLimitError
 from typing import Optional
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -35,11 +37,12 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-OPENAI_MODEL  = "gpt-4o-mini"
+OLLAMA_URL    = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3")
 HEADERS_WEB   = {"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)"}
-MAX_DOC_CHARS = 12_000
-MAX_RETRIES   = 3
-RETRY_WAIT    = 10
+MAX_DOC_CHARS = 8_000   # llama3 8B tiene contexto más limitado que GPT-4
+MAX_RETRIES   = 2
+RETRY_WAIT    = 5
 
 SYSTEM_PROMPT = (
     "Eres un experto en regulación energética española y europea, especializado en "
@@ -132,32 +135,65 @@ Si no afecta a ninguna función de REE, devuelve "funciones_afectadas": [].
 Solo incluye funciones con afectación real y directa, no potencial o remota."""
 
 
-def call_openai(client: OpenAI, prompt: str) -> Optional[dict]:
-    """Llama a OpenAI API y devuelve el JSON parseado. Reintenta hasta MAX_RETRIES."""
+def check_ollama(model: str) -> bool:
+    """Verifica que Ollama está corriendo y el modelo está disponible."""
+    try:
+        r = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
+        r.raise_for_status()
+        models = [m["name"].split(":")[0] for m in r.json().get("models", [])]
+        if model.split(":")[0] not in models:
+            logger.error(
+                "Modelo '%s' no encontrado en Ollama. Descárgalo con: ollama pull %s", model, model
+            )
+            logger.error("Modelos disponibles: %s", models)
+            return False
+        return True
+    except requests.ConnectionError:
+        logger.error(
+            "Ollama no está corriendo en %s. "
+            "Instálalo en https://ollama.com/download y ejecuta: ollama serve",
+            OLLAMA_URL,
+        )
+        return False
+    except Exception as exc:
+        logger.error("Error conectando con Ollama: %s", exc)
+        return False
+
+
+def call_ollama(model: str, prompt: str) -> Optional[dict]:
+    """Llama a Ollama API local y devuelve el JSON parseado."""
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": prompt},
+        ],
+        "stream": False,
+        "options": {"temperature": 0.1, "num_predict": 1024},
+        "format": "json",   # fuerza respuesta JSON en modelos que lo soportan
+    }
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            response = client.chat.completions.create(
-                model=OPENAI_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user",   "content": prompt},
-                ],
-                temperature=0.1,
-                max_tokens=1024,
-                response_format={"type": "json_object"},
+            r = requests.post(
+                f"{OLLAMA_URL}/api/chat",
+                json=payload,
+                timeout=120,   # los modelos locales pueden ser lentos
             )
-            text = response.choices[0].message.content.strip()
+            r.raise_for_status()
+            text = r.json()["message"]["content"].strip()
+            # Limpiar posible markdown residual
+            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.MULTILINE).strip()
             return json.loads(text)
-        except RateLimitError:
-            wait = RETRY_WAIT * attempt
-            logger.warning("Rate limit OpenAI, esperando %ds (intento %d/%d)", wait, attempt, MAX_RETRIES)
-            time.sleep(wait)
         except (json.JSONDecodeError, KeyError) as exc:
-            logger.warning("Respuesta OpenAI no parseable (intento %d): %s", attempt, exc)
+            logger.warning("Respuesta Ollama no parseable (intento %d): %s", attempt, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
+        except requests.Timeout:
+            logger.warning("Timeout Ollama (intento %d) — el modelo puede estar cargando", attempt)
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_WAIT * 2)
         except Exception as exc:
-            logger.warning("Error llamando OpenAI (intento %d): %s", attempt, exc)
+            logger.warning("Error llamando Ollama (intento %d): %s", attempt, exc)
             if attempt < MAX_RETRIES:
                 time.sleep(RETRY_WAIT)
     return None
@@ -335,7 +371,7 @@ def fetch_new_entries(conn, limit: int) -> list[dict]:
 
 # ── Proceso principal ─────────────────────────────────────────────────────────
 
-def process_entry(conn, client: OpenAI, entry: dict,
+def process_entry(conn, model: str, entry: dict,
                   funciones: list[dict], funcion_map: dict) -> bool:
     tipo   = entry["normativa_tipo"]
     nid    = entry["normativa_id"]
@@ -350,11 +386,11 @@ def process_entry(conn, client: OpenAI, entry: dict,
         save_pending(conn, tipo, nid, url, titulo, "No se pudo descargar el texto del documento")
         return False
 
-    # 2. Llamar a OpenAI
+    # 2. Llamar a Ollama
     prompt = build_prompt(titulo, texto, funciones)
-    result = call_openai(client, prompt)
+    result = call_ollama(model, prompt)
     if not result:
-        save_pending(conn, tipo, nid, url, titulo, "OpenAI no devolvió respuesta válida")
+        save_pending(conn, tipo, nid, url, titulo, "Ollama no devolvió respuesta válida")
         return False
 
     # 3. Guardar resultado
@@ -376,14 +412,14 @@ def main():
                         help="Máximo de entradas a procesar por ejecución (default: 30)")
     parser.add_argument("--retry", action="store_true",
                         help="Solo procesar entradas en cola de pendientes")
+    parser.add_argument("--model", type=str, default=DEFAULT_MODEL,
+                        help=f"Modelo Ollama a usar (default: {DEFAULT_MODEL})")
     args = parser.parse_args()
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        logger.error("OPENAI_API_KEY no configurado. Obtén una clave en https://platform.openai.com/api-keys")
+    model = args.model if hasattr(args, 'model') and args.model else DEFAULT_MODEL
+    logger.info("Usando modelo Ollama: %s en %s", model, OLLAMA_URL)
+    if not check_ollama(model):
         sys.exit(1)
-
-    client = OpenAI(api_key=api_key)
 
     funciones = load_ree_funciones()
     if not funciones:
@@ -412,12 +448,12 @@ def main():
     ok = 0
     fail = 0
     for entry in entries:
-        success = process_entry(conn, client, entry, funciones, funcion_map)
+        success = process_entry(conn, model, entry, funciones, funcion_map)
         if success:
             ok += 1
         else:
             fail += 1
-        time.sleep(1)
+        time.sleep(0.5)
 
     conn.close()
     logger.info("Análisis REE completado. OK=%d  FAIL=%d (guardados en pendientes)", ok, fail)
