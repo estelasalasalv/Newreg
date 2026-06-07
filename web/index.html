@@ -664,6 +664,10 @@
         <select id="acer-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todos los años</option>
         </select>
+        <input type="date" id="acer-fecha-desde" title="Fecha inicio"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <input type="date" id="acer-fecha-hasta" title="Fecha fin (igual = día exacto)"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
         <span class="result-count" id="acer-count"></span>
       </div>
       <div id="acer-loading" class="state-msg">Cargando…</div>
@@ -685,6 +689,10 @@
         <select id="cnmc-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todos los años</option>
         </select>
+        <input type="date" id="cnmc-fecha-desde" title="Fecha inicio"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <input type="date" id="cnmc-fecha-hasta" title="Fecha fin (igual = día exacto)"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
         <span class="result-count" id="cnmc-count"></span>
       </div>
       <div id="cnmc-loading" class="state-msg">Cargando…</div>
@@ -1127,10 +1135,12 @@
 
   /* ── CNMC fusionado (RSS + S + N) ──────────────────────────────── */
   function renderCnmc() {
-    const q   = (document.getElementById('cnmc-search')  || {value:''}).value.toLowerCase().trim();
-    const yr  = (document.getElementById('cnmc-year')    || {value:''}).value;
-    const src = (document.getElementById('cnmc-source')  || {value:''}).value;
-    const el  = document.getElementById('cnmc-entries');
+    const q      = (document.getElementById('cnmc-search')      || {value:''}).value.toLowerCase().trim();
+    const yr     = (document.getElementById('cnmc-year')        || {value:''}).value;
+    const src    = (document.getElementById('cnmc-source')      || {value:''}).value;
+    const desde  = (document.getElementById('cnmc-fecha-desde') || {value:''}).value;
+    const hasta  = (document.getElementById('cnmc-fecha-hasta') || {value:''}).value;
+    const el     = document.getElementById('cnmc-entries');
     if (!el) return;
     document.getElementById('cnmc-loading').style.display = 'none';
 
@@ -1143,6 +1153,9 @@
       if (ocultarGas && esGasOnly(e)) return false;
       if (src && e.source !== src) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
+      const f = e.fecha_real || e.published_date || '';
+      if (desde && f && f < desde) return false;
+      if (hasta && f && f > hasta) return false;
       return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
     }).sort((a,b) =>
       (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||'')
@@ -1352,9 +1365,11 @@
   }
 
   function renderAcer() {
-    const q   = (document.getElementById('acer-search') || {value:''}).value.toLowerCase().trim();
-    const yr  = (document.getElementById('acer-year')   || {value:''}).value;
-    const el  = document.getElementById('acer-entries');
+    const q      = (document.getElementById('acer-search')      || {value:''}).value.toLowerCase().trim();
+    const yr     = (document.getElementById('acer-year')        || {value:''}).value;
+    const desde  = (document.getElementById('acer-fecha-desde') || {value:''}).value;
+    const hasta  = (document.getElementById('acer-fecha-hasta') || {value:''}).value;
+    const el     = document.getElementById('acer-entries');
     if (!el) return;
     document.getElementById('acer-loading').style.display = 'none';
 
@@ -1364,6 +1379,9 @@
       if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
+      const f = e.fecha_real || e.published_date || '';
+      if (desde && f && f < desde) return false;
+      if (hasta && f && f > hasta) return false;
       if (!q) return true;
       return ((e.title||'') + ' ' + (e.summary||'')).toLowerCase().includes(q);
     }).sort((a, b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
@@ -2090,10 +2108,14 @@
   document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
   const euMasBtn = document.getElementById('eu-mas');
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
-  document.getElementById('acer-search').addEventListener('input', () => renderAcer());
-  document.getElementById('acer-year').addEventListener('change',  () => renderAcer());
-  document.getElementById('cnmc-search').addEventListener('input',  () => renderCnmc());
-  document.getElementById('cnmc-year').addEventListener('change',   () => renderCnmc());
+  document.getElementById('acer-search').addEventListener('input',       () => renderAcer());
+  document.getElementById('acer-year').addEventListener('change',         () => renderAcer());
+  document.getElementById('acer-fecha-desde').addEventListener('change',  () => renderAcer());
+  document.getElementById('acer-fecha-hasta').addEventListener('change',  () => renderAcer());
+  document.getElementById('cnmc-search').addEventListener('input',        () => renderCnmc());
+  document.getElementById('cnmc-year').addEventListener('change',         () => renderCnmc());
+  document.getElementById('cnmc-fecha-desde').addEventListener('change',  () => renderCnmc());
+  document.getElementById('cnmc-fecha-hasta').addEventListener('change',  () => renderCnmc());
   document.getElementById('cnmc-source').addEventListener('change', () => renderCnmc());
   document.getElementById('cnmcn-search').addEventListener('input', () => renderCnmcN());
   document.getElementById('cnmcn-year').addEventListener('change',  () => renderCnmcN());
