@@ -1187,29 +1187,66 @@
       return { code: '', desc: title };
     }
 
-    el.innerHTML = filtered.map(e => {
-      const color = SOURCE_COLOR[e.source] || '#1565c0';
-      const label = SOURCE_LABEL[e.source] || e.source;
-      const { code: expNum, desc: expDesc } = extractCnmcCode(e.title || '');
-      const codeSpan = expNum ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(expNum)}</span>` : '';
-      const titleHtml = e.url
-        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${codeSpan}${esc(expDesc)}</a>`
-        : `${codeSpan}${esc(expDesc)}`;
+    // Agrupar entradas con el mismo código de expediente en una sola tarjeta
+    const groups = [];
+    const seenCodes = new Map(); // code → índice en groups
+    for (const e of filtered) {
+      const { code, desc } = extractCnmcCode(e.title || '');
+      if (code && seenCodes.has(code)) {
+        groups[seenCodes.get(code)].entries.push(e);
+      } else {
+        const idx = groups.length;
+        groups.push({ code, desc: desc || e.title, entries: [e] });
+        if (code) seenCodes.set(code, idx);
+      }
+    }
+
+    el.innerHTML = groups.map(g => {
+      // Entrada principal: preferir CNMC_S, luego CNMC_RSS, luego CNMC_N
+      const ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
+      const main = g.entries.slice().sort((a,b) =>
+        ORDER.indexOf(a.source) - ORDER.indexOf(b.source)
+      )[0];
+      const color = '#1565c0'; // azul uniforme para expedientes fusionados
+      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
+
+      // Chips de fuente con enlace por cada entrada del grupo
+      const sourceChips = g.entries.map(e => {
+        const c = SOURCE_COLOR[e.source] || '#1565c0';
+        const l = SOURCE_LABEL[e.source] || e.source;
+        return e.url
+          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
+          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
+      }).join('');
+
+      // Título con enlace a la fuente principal
+      const titleHtml = main.url
+        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
+        : `${codeSpan}${esc(g.desc)}`;
+
+      // Fecha más reciente del grupo
+      const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
+      const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
+
+      // Summary: preferir el más largo/informativo
+      const bestSummary = g.entries.map(e => e.summary || '').sort((a,b) => b.length - a.length)[0];
+      const bestImpacto = g.entries.map(e => e.impacto_ree || '').sort((a,b) => b.length - a.length)[0];
+      const esNuevo = g.entries.some(e => e.es_nuevo);
+
       return `
       <div class="norm-card" style="border-left-color:${color}">
         <div class="norm-header">
           <div class="norm-title">${titleHtml}</div>
-          ${recencyLabel(e.published_date)}
-          ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
+          ${recencyLabel(bestDateFmt)}
+          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
         </div>
         <div class="norm-meta">
-          <span class="org-chip" style="background:${color}1a;color:${color}">${label}</span>
-          ${e.published_date ? `<span>${e.published_date}</span>` : ''}
-          ${e.section && !['Actuación CNMC','CNMC RSS'].includes(e.section) ? `<span class="type-chip">${esc(e.section)}</span>` : ''}
-          ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
+          ${sourceChips}
+          ${bestDateFmt ? `<span>${bestDateFmt}</span>` : ''}
+          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
         </div>
-        ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
-        ${e.impacto_ree ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(e.impacto_ree)}</div>` : ''}
+        ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
+        ${bestImpacto ? `<div class="norm-card-impact"><strong>Impacto REE:</strong> ${esc(bestImpacto)}</div>` : ''}
       </div>`;
     }).join('');
   }
