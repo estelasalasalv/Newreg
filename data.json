@@ -1,5 +1,5 @@
 {
-  "updated_at": "07/06/2026 20:03",
+  "updated_at": "07/06/2026 21:32",
   "total": 794,
   "entries": [
     {
@@ -6983,7 +6983,7 @@
       "section": "Acuerdo de la Dirección - Incoación",
       "department": "CNMC",
       "tipo": null,
-      "importante": "No",
+      "importante": "Sí",
       "acceso_conexion": null,
       "tramitaciones": "No",
       "summary": "De la Dirección - Incoación Acuerdo de la Dirección Plazo máximo para resolver en meses: 18",
@@ -31595,7 +31595,7 @@
       "summary": "De la Dirección - Incoación Acuerdo de la Dirección Plazo máximo para resolver en meses: 18",
       "impacto_ree": null,
       "tramitaciones": "No",
-      "importante": "No",
+      "importante": "Sí",
       "published_date": "16/04/2026",
       "fecha_real": "2026-04-16",
       "anio": 2026,
@@ -38671,7 +38671,7 @@
       "summary": "De la Dirección - Incoación Acuerdo de la Dirección Plazo máximo para resolver en meses: 18",
       "impacto_ree": null,
       "tramitaciones": "No",
-      "importante": "No",
+      "importante": "Sí",
       "published_date": "16/04/2026",
       "fecha_real": "2026-04-16",
       "anio": 2026,
