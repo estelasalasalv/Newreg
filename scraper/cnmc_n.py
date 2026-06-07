@@ -394,14 +394,18 @@ def _fetch_expediente_detail(url: str) -> Optional[str]:
         )
         if m:
             detalle = m.group(1).strip()
-            # Eliminar prefijo "del Consejo TIPO del Consejo [Periodo: X]"
-            detalle = _re.sub(
-                r"^(?:del\s+Consejo\s+|de\s+la\s+Direcci[oó]n\s+|del\s+Secretario\s+)?"
-                r"(?:Resoluci[oó]n|Informe|Acuerdo|Sentencia|Auto|Providencia|Circular)"
+            # Eliminar prefijo de fecha + tipo de acto (puede repetirse dos veces)
+            # Ej: "14 May 2026 Resolución del Consejo Resolución del Consejo Texto real..."
+            _TIPO_ACTO = (
+                r"(?:\d{1,2}\s+\w+\s+\d{4}\s+)?"          # fecha opcional
+                r"(?:del\s+Consejo\s+|de\s+la\s+Direcci[oó]n\s+|del\s+Secretario\s+)?"
+                r"(?:Resoluci[oó]n|Informe|Acuerdo|Sentencia|Auto|Providencia|Circular|Liquidaci[oó]n)"
                 r"(?:\s+del\s+Consejo|\s+de\s+la\s+Direcci[oó]n|\s+del\s+Secretario(?:\s+del\s+Consejo)?)?"
-                r"(?:\s+Periodo:\s+\S+(?:\s+\S+){0,3})?\s+",
-                "", detalle, flags=_re.IGNORECASE
-            ).strip()
+                r"(?:\s+Periodo:\s+\S+(?:\s+\S+){0,3})?\s+"
+            )
+            # Aplicar hasta 2 veces para cubrir repeticiones
+            for _ in range(2):
+                detalle = _re.sub(r"^" + _TIPO_ACTO, "", detalle, flags=_re.IGNORECASE).strip()
             if detalle:
                 detalle = detalle[0].upper() + detalle[1:]
             return detalle[:500] if len(detalle) > 20 else None
