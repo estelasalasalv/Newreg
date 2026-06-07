@@ -786,8 +786,10 @@
           <option value="90">Últimos 3 meses</option>
           <option value="9999">Toda la normativa</option>
         </select>
-        <input type="date" id="esp-fecha-dia" style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);display:none" title="Buscar por día concreto"/>
-        <button id="btn-esp-dia" onclick="toggleEspFechaDia()" style="padding:5px 10px;font-size:11px;border:1px solid var(--gray2);border-radius:6px;background:var(--white);color:var(--gray4);cursor:pointer" title="Seleccionar día concreto">📅</button>
+        <input type="date" id="esp-fecha-desde" title="Fecha inicio (anula el selector de días)"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
+        <input type="date" id="esp-fecha-hasta" title="Fecha fin (igual que inicio = día exacto)"
+               style="padding:5px 8px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)"/>
         <span class="result-count" id="esp-count"></span>
       </div>
       <div id="esp-loading" class="state-msg">Cargando…</div>
@@ -1734,37 +1736,22 @@
     return words.every(w => t.includes(w));
   }
 
-  let espUsarFechaDia = false;
-
-  function toggleEspFechaDia() {
-    espUsarFechaDia = !espUsarFechaDia;
-    const fdEl = document.getElementById('esp-fecha-dia');
-    const btn  = document.getElementById('btn-esp-dia');
-    const dias = document.getElementById('esp-dias');
-    fdEl.style.display = espUsarFechaDia ? '' : 'none';
-    dias.style.display  = espUsarFechaDia ? 'none' : '';
-    btn.style.background = espUsarFechaDia ? 'var(--teal)' : '';
-    btn.style.color      = espUsarFechaDia ? 'var(--navy)' : '';
-    if (espUsarFechaDia && !fdEl.value) {
-      fdEl.value = new Date().toISOString().slice(0,10); // hoy por defecto
-    }
-    espPage = 1; renderEsp();
-  }
-
   function renderEsp() {
-    const q    = document.getElementById('esp-search').value.toLowerCase().trim();
-    const dias = parseInt(document.getElementById('esp-dias').value || '14');
-    const el   = document.getElementById('esp-entries');
+    const q      = document.getElementById('esp-search').value.toLowerCase().trim();
+    const dias   = parseInt(document.getElementById('esp-dias').value || '14');
+    const desde  = document.getElementById('esp-fecha-desde').value; // YYYY-MM-DD o ''
+    const hasta  = document.getElementById('esp-fecha-hasta').value; // YYYY-MM-DD o ''
+    const el     = document.getElementById('esp-entries');
     document.getElementById('esp-loading').style.display = 'none';
 
-    // Modo día concreto
+    // Si hay fechas manuales usan esas; si no, el selector de días
     let cutoffISO = '2000-01-01';
     let maxISO    = '9999-12-31';
-    if (espUsarFechaDia) {
-      const fd = document.getElementById('esp-fecha-dia').value;
-      if (fd) { cutoffISO = fd; maxISO = fd; }
+    if (desde || hasta) {
+      if (desde) cutoffISO = desde;
+      // Si fecha_hasta igual a fecha_desde → día exacto; si vacío → sin límite superior
+      if (hasta) maxISO = hasta;
     } else if (dias < 9999) {
-      // fecha_real viene en formato YYYY-MM-DD de la BD → comparación directa
       const refISO = (allEntries[0] && allEntries[0].fecha_real) || '2000-01-01';
       const [ry, rm, rd] = refISO.split('-').map(Number);
       const refDate = new Date(ry, rm-1, rd);
@@ -2117,9 +2104,10 @@
   document.getElementById('ac-search').addEventListener('input', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-year').addEventListener('change', () => { acPage=1; renderAcceso(); });
   document.getElementById('ac-mas').addEventListener('click', () => { acPage++; renderAcceso(); });
-  document.getElementById('esp-search').addEventListener('input', () => { espPage=1; renderEsp(); });
-  document.getElementById('esp-dias').addEventListener('change', () => { espPage=1; renderEsp(); });
-  document.getElementById('esp-fecha-dia').addEventListener('change', () => { espPage=1; renderEsp(); });
+  document.getElementById('esp-search').addEventListener('input',      () => { espPage=1; renderEsp(); });
+  document.getElementById('esp-dias').addEventListener('change',       () => { espPage=1; renderEsp(); });
+  document.getElementById('esp-fecha-desde').addEventListener('change',() => { espPage=1; renderEsp(); });
+  document.getElementById('esp-fecha-hasta').addEventListener('change',() => { espPage=1; renderEsp(); });
   const espMasBtn = document.getElementById('esp-mas');
   if (espMasBtn) espMasBtn.addEventListener('click', () => { espPage++; renderEsp(); });
   document.getElementById('con-search').addEventListener('input', renderConsultas);
