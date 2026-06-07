@@ -651,15 +651,16 @@
       <div class="search-bar">
         <input type="search" id="eu-search" placeholder="Buscar en normativa europea (DOUE)…"
                autocomplete="off" spellcheck="false"/>
-        <select id="eu-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
-          <option value="">Todos los años</option>
+        <select id="eu-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="1">Hoy</option>
+          <option value="7">Últimos 7 días</option>
+          <option value="14">Últimos 14 días</option>
+          <option value="30">Último mes</option>
+          <option value="90">Últimos 3 meses</option>
+          <option value="9999" selected>Toda la normativa</option>
         </select>
         <label class="date-range-lbl">Desde<input type="date" id="eu-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="eu-fecha-hasta"/></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="chk-eu-importante" style="accent-color:var(--teal);width:14px;height:14px"/>
-          Solo importantes
-        </label>
         <span class="result-count" id="eu-count"></span>
       </div>
       <div id="eu-loading" class="state-msg">Cargando…</div>
@@ -675,8 +676,13 @@
       <div class="search-bar">
         <input type="search" id="acer-search" placeholder="Buscar en ACER…"
                autocomplete="off" spellcheck="false"/>
-        <select id="acer-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
-          <option value="">Todos los años</option>
+        <select id="acer-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="1">Hoy</option>
+          <option value="7">Últimos 7 días</option>
+          <option value="14">Últimos 14 días</option>
+          <option value="30">Último mes</option>
+          <option value="90">Últimos 3 meses</option>
+          <option value="9999" selected>Toda la normativa</option>
         </select>
         <label class="date-range-lbl">Desde<input type="date" id="acer-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="acer-fecha-hasta"/></label>
@@ -692,17 +698,22 @@
       <div class="search-bar">
         <input type="search" id="cnmc-search" placeholder="Buscar en CNMC (RSS + Actuaciones + Transparencia)…"
                autocomplete="off" spellcheck="false"/>
+        <select id="cnmc-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+          <option value="1">Hoy</option>
+          <option value="7">Últimos 7 días</option>
+          <option value="14">Últimos 14 días</option>
+          <option value="30">Último mes</option>
+          <option value="90">Últimos 3 meses</option>
+          <option value="9999" selected>Toda la normativa</option>
+        </select>
+        <label class="date-range-lbl">Desde<input type="date" id="cnmc-fecha-desde"/></label>
+        <label class="date-range-lbl">Hasta<input type="date" id="cnmc-fecha-hasta"/></label>
         <select id="cnmc-source" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="">Todas las fuentes</option>
           <option value="CNMC_RSS">CNMC RSS</option>
           <option value="CNMC_S">CNMC_S</option>
           <option value="CNMC_N">CNMC Act.</option>
         </select>
-        <select id="cnmc-year" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
-          <option value="">Todos los años</option>
-        </select>
-        <label class="date-range-lbl">Desde<input type="date" id="cnmc-fecha-desde"/></label>
-        <label class="date-range-lbl">Hasta<input type="date" id="cnmc-fecha-hasta"/></label>
         <span class="result-count" id="cnmc-count"></span>
       </div>
       <div id="cnmc-loading" class="state-msg">Cargando…</div>
@@ -1140,7 +1151,7 @@
   /* ── CNMC fusionado (RSS + S + N) ──────────────────────────────── */
   function renderCnmc() {
     const q      = (document.getElementById('cnmc-search')      || {value:''}).value.toLowerCase().trim();
-    const yr     = (document.getElementById('cnmc-year')        || {value:''}).value;
+    const dias   = parseInt((document.getElementById('cnmc-dias') || {value:'9999'}).value || '9999');
     const src    = (document.getElementById('cnmc-source')      || {value:''}).value;
     const desde  = (document.getElementById('cnmc-fecha-desde') || {value:''}).value;
     const hasta  = (document.getElementById('cnmc-fecha-hasta') || {value:''}).value;
@@ -1151,15 +1162,39 @@
     const SOURCE_LABEL = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
     const SOURCE_COLOR = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
 
+    let cutoffISO = '2000-01-01';
+    let maxISO    = '9999-12-31';
+    const desdeEl = document.getElementById('cnmc-fecha-desde');
+    const hastaEl = document.getElementById('cnmc-fecha-hasta');
+    if (desde || hasta) {
+      if (desde) cutoffISO = desde;
+      if (hasta) maxISO = hasta;
+    } else if (dias < 9999) {
+      const hoy = new Date();
+      const hoyISO = hoy.toISOString().slice(0,10);
+      maxISO = hoyISO;
+      const refISO = (cnmcAllData[0] && cnmcAllData[0].fecha_real) || hoyISO;
+      const [ry, rm, rd] = refISO.split('-').map(Number);
+      const refDate = new Date(ry, rm-1, rd);
+      refDate.setDate(refDate.getDate() - dias);
+      cutoffISO = refDate.getFullYear() + '-'
+        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
+        + String(refDate.getDate()).padStart(2,'0');
+      if (desdeEl) desdeEl.value = cutoffISO;
+      if (hastaEl) hastaEl.value = hoyISO;
+    } else {
+      if (desdeEl) desdeEl.value = '';
+      if (hastaEl) hastaEl.value = '';
+    }
+
     const filtered = cnmcAllData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       if (src && e.source !== src) return false;
-      if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       const f = e.fecha_real || e.published_date || '';
-      if (desde && f && f < desde) return false;
-      if (hasta && f && f > hasta) return false;
+      if (f && f < cutoffISO) return false;
+      if (f && f > maxISO) return false;
       return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
     }).sort((a,b) =>
       (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||'')
@@ -1168,14 +1203,6 @@
     document.getElementById('cnmc-count').textContent =
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
     document.getElementById('cnmc-empty').style.display = filtered.length ? 'none' : 'block';
-
-    // Poblar select de años
-    const sel = document.getElementById('cnmc-year');
-    if (sel) {
-      const existing = [...sel.options].map(o => o.value);
-      [...new Set(cnmcAllData.map(e => e.fecha_real ? e.fecha_real.slice(0,4) : null).filter(Boolean))].sort((a,b)=>b-a)
-        .forEach(y => { if (!existing.includes(y)) { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); }});
-    }
 
     // Extrae {code, desc} del título según tres patrones CNMC:
     // Agrupar entradas con el mismo código de expediente en una sola tarjeta
@@ -1370,22 +1397,46 @@
 
   function renderAcer() {
     const q      = (document.getElementById('acer-search')      || {value:''}).value.toLowerCase().trim();
-    const yr     = (document.getElementById('acer-year')        || {value:''}).value;
+    const dias   = parseInt((document.getElementById('acer-dias') || {value:'9999'}).value || '9999');
     const desde  = (document.getElementById('acer-fecha-desde') || {value:''}).value;
     const hasta  = (document.getElementById('acer-fecha-hasta') || {value:''}).value;
     const el     = document.getElementById('acer-entries');
     if (!el) return;
     document.getElementById('acer-loading').style.display = 'none';
 
+    let cutoffISO = '2000-01-01';
+    let maxISO    = '9999-12-31';
+    const desdeEl = document.getElementById('acer-fecha-desde');
+    const hastaEl = document.getElementById('acer-fecha-hasta');
+    if (desde || hasta) {
+      if (desde) cutoffISO = desde;
+      if (hasta) maxISO = hasta;
+    } else if (dias < 9999) {
+      const hoy = new Date();
+      const hoyISO = hoy.toISOString().slice(0,10);
+      maxISO = hoyISO;
+      const refISO = (acerData[0] && acerData[0].fecha_real) || hoyISO;
+      const [ry, rm, rd] = refISO.split('-').map(Number);
+      const refDate = new Date(ry, rm-1, rd);
+      refDate.setDate(refDate.getDate() - dias);
+      cutoffISO = refDate.getFullYear() + '-'
+        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
+        + String(refDate.getDate()).padStart(2,'0');
+      if (desdeEl) desdeEl.value = cutoffISO;
+      if (hastaEl) hastaEl.value = hoyISO;
+    } else {
+      if (desdeEl) desdeEl.value = '';
+      if (hastaEl) hastaEl.value = '';
+    }
+
     const filtered = acerData.filter(e => {
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
-      if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       const f = e.fecha_real || e.published_date || '';
-      if (desde && f && f < desde) return false;
-      if (hasta && f && f > hasta) return false;
+      if (f && f < cutoffISO) return false;
+      if (f && f > maxISO) return false;
       if (!q) return true;
       return ((e.title||'') + ' ' + (e.summary||'')).toLowerCase().includes(q);
     }).sort((a, b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
@@ -1635,26 +1686,46 @@
 
   let euPage = 1;
   function renderEu() {
-    const q       = document.getElementById('eu-search').value.toLowerCase().trim();
-    const yr      = document.getElementById('eu-year').value;
-    const soloImp = document.getElementById('chk-eu-importante').checked;
-    const desde   = document.getElementById('eu-fecha-desde').value; // YYYY-MM-DD o ''
-    const hasta   = document.getElementById('eu-fecha-hasta').value; // YYYY-MM-DD o ''
-    const el      = document.getElementById('eu-entries');
+    const q      = document.getElementById('eu-search').value.toLowerCase().trim();
+    const dias   = parseInt(document.getElementById('eu-dias').value || '9999');
+    const desde  = document.getElementById('eu-fecha-desde').value;
+    const hasta  = document.getElementById('eu-fecha-hasta').value;
+    const el     = document.getElementById('eu-entries');
     document.getElementById('eu-loading').style.display = 'none';
+
+    // Calcular rango igual que Normativa
+    let cutoffISO = '2000-01-01';
+    let maxISO    = '9999-12-31';
+    const desdeEl = document.getElementById('eu-fecha-desde');
+    const hastaEl = document.getElementById('eu-fecha-hasta');
+    if (desde || hasta) {
+      if (desde) cutoffISO = desde;
+      if (hasta) maxISO = hasta;
+    } else if (dias < 9999) {
+      const hoy = new Date();
+      const hoyISO = hoy.toISOString().slice(0,10);
+      maxISO = hoyISO;
+      const refISO = (eurlex[0] && eurlex[0].fecha_real) || hoyISO;
+      const [ry, rm, rd] = refISO.split('-').map(Number);
+      const refDate = new Date(ry, rm-1, rd);
+      refDate.setDate(refDate.getDate() - dias);
+      cutoffISO = refDate.getFullYear() + '-'
+        + String(refDate.getMonth()+1).padStart(2,'0') + '-'
+        + String(refDate.getDate()).padStart(2,'0');
+      if (desdeEl) desdeEl.value = cutoffISO;
+      if (hastaEl) hastaEl.value = hoyISO;
+    } else {
+      if (desdeEl) desdeEl.value = '';
+      if (hastaEl) hastaEl.value = '';
+    }
 
     const filtered = eurlex.filter(e => {
       if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
-      if (soloImp && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (yr && String(e.anio) !== yr) return false;
-      // Filtro por rango de fechas (fecha_real en YYYY-MM-DD)
       const f = e.fecha_real || '';
-      if (desde && f && f < desde) return false;
-      // Si hasta === desde → buscar ese día exacto; si hasta vacío → sin límite superior
-      if (hasta && f && f > hasta) return false;
-      if (desde && hasta === desde && f && f !== desde) return false;
+      if (f && f < cutoffISO) return false;
+      if (f && f > maxISO) return false;
       if (!q) return true;
       return ((e.texto||'')+' '+(e.tipo||'')).toLowerCase().includes(q);
     });
@@ -1685,12 +1756,6 @@
         (e.resumen ? '<div class="norm-card-summary">'+esc(e.resumen)+'</div>' : '') +
       '</div>';
     }).join('');
-
-    // Poblar select de años UE
-    const sel = document.getElementById('eu-year');
-    const existingYears = [...sel.options].map(o=>o.value);
-    const years = [...new Set(eurlex.map(e=>String(e.anio)).filter(Boolean))].sort((a,b)=>b-a);
-    years.forEach(y => { if(!existingYears.includes(y)){const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o);}});
   }
 
   function renderAcceso() {
@@ -2122,49 +2187,48 @@
     todasPage = 1; renderTodas();
   });
   document.getElementById('todas-mas').addEventListener('click', () => { todasPage++; renderTodas(); });
-  document.getElementById('eu-search').addEventListener('input',  () => { euPage=1; renderEu(); });
-  document.getElementById('eu-year').addEventListener('change', () => {
+  document.getElementById('eu-search').addEventListener('input', () => { euPage=1; renderEu(); });
+  document.getElementById('eu-dias').addEventListener('change', () => {
     document.getElementById('eu-fecha-desde').value = '';
     document.getElementById('eu-fecha-hasta').value = '';
     euPage = 1; renderEu();
   });
   document.getElementById('eu-fecha-desde').addEventListener('change', () => {
-    document.getElementById('eu-year').value = '';
+    document.getElementById('eu-dias').value = '9999';
     euPage = 1; renderEu();
   });
   document.getElementById('eu-fecha-hasta').addEventListener('change', () => {
-    document.getElementById('eu-year').value = '';
+    document.getElementById('eu-dias').value = '9999';
     euPage = 1; renderEu();
   });
-  document.getElementById('chk-eu-importante').addEventListener('change', () => { euPage=1; renderEu(); });
   const euMasBtn = document.getElementById('eu-mas');
   if (euMasBtn) euMasBtn.addEventListener('click', () => { euPage++; renderEu(); });
-  document.getElementById('acer-search').addEventListener('input',       () => renderAcer());
-  document.getElementById('acer-year').addEventListener('change', () => {
+  document.getElementById('acer-search').addEventListener('input', () => renderAcer());
+  document.getElementById('acer-dias').addEventListener('change', () => {
     document.getElementById('acer-fecha-desde').value = '';
     document.getElementById('acer-fecha-hasta').value = '';
     renderAcer();
   });
   document.getElementById('acer-fecha-desde').addEventListener('change', () => {
-    document.getElementById('acer-year').value = '';
+    document.getElementById('acer-dias').value = '9999';
     renderAcer();
   });
   document.getElementById('acer-fecha-hasta').addEventListener('change', () => {
-    document.getElementById('acer-year').value = '';
+    document.getElementById('acer-dias').value = '9999';
     renderAcer();
   });
-  document.getElementById('cnmc-search').addEventListener('input',        () => renderCnmc());
-  document.getElementById('cnmc-year').addEventListener('change', () => {
+  document.getElementById('cnmc-search').addEventListener('input', () => renderCnmc());
+  document.getElementById('cnmc-dias').addEventListener('change', () => {
     document.getElementById('cnmc-fecha-desde').value = '';
     document.getElementById('cnmc-fecha-hasta').value = '';
     renderCnmc();
   });
   document.getElementById('cnmc-fecha-desde').addEventListener('change', () => {
-    document.getElementById('cnmc-year').value = '';
+    document.getElementById('cnmc-dias').value = '9999';
     renderCnmc();
   });
   document.getElementById('cnmc-fecha-hasta').addEventListener('change', () => {
-    document.getElementById('cnmc-year').value = '';
+    document.getElementById('cnmc-dias').value = '9999';
     renderCnmc();
   });
   document.getElementById('cnmc-source').addEventListener('change', () => renderCnmc());
