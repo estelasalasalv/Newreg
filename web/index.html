@@ -1157,11 +1157,9 @@
       if (src && e.source !== src) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
-    }).sort((a,b) => {
-      const sa = (b.scraped_at||'').localeCompare(a.scraped_at||'');
-      if (sa !== 0) return sa;
-      return (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||'');
-    });
+    }).sort((a,b) =>
+      (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||'')
+    );
 
     document.getElementById('cnmc-count').textContent =
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
