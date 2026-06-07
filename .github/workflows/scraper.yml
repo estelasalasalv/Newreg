@@ -48,7 +48,15 @@ jobs:
         run: python generate_summaries.py --limit 30
         continue-on-error: true   # No bloquea el deploy si falla la API
 
-      # ── 5. Deploy web/ to GitHub Pages ──────────────────────────────────
+      # ── 5. Análisis REE con Gemini (solo entradas nuevas sin análisis) ─────
+      - name: Análisis funciones REE con Gemini
+        env:
+          DATABASE_URL:    ${{ secrets.BBDD }}
+          GEMINI_API_KEY:  ${{ secrets.GEMINI_API_KEY }}
+        run: python generate_ree_analysis.py --limit 30
+        continue-on-error: true   # No bloquea el deploy si falla la API
+
+      # ── 6. Deploy web/ to GitHub Pages ──────────────────────────────────
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

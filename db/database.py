@@ -119,6 +119,33 @@ def init_db():
         base_legal  TEXT,
         keywords    TEXT            -- palabras clave para búsqueda en normativa
     );
+
+    -- Funciones REE afectadas por cada normativa
+    CREATE TABLE IF NOT EXISTS ree_normativa_funciones (
+        id              SERIAL PRIMARY KEY,
+        normativa_tipo  TEXT NOT NULL,  -- 'boe' | 'regulatory' | 'eurlex'
+        normativa_id    INT  NOT NULL,
+        funcion_id      INT  NOT NULL REFERENCES ree_funciones(id) ON DELETE CASCADE,
+        categoria       TEXT,
+        justificacion   TEXT,
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (normativa_tipo, normativa_id, funcion_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_ree_norm_func ON ree_normativa_funciones(normativa_tipo, normativa_id);
+
+    -- Cola de análisis pendientes (entradas que fallaron o aún no procesadas)
+    CREATE TABLE IF NOT EXISTS ree_analisis_pendiente (
+        id              SERIAL PRIMARY KEY,
+        normativa_tipo  TEXT NOT NULL,
+        normativa_id    INT  NOT NULL,
+        url             TEXT,
+        titulo          TEXT,
+        intentos        INT  DEFAULT 0,
+        ultimo_error    TEXT,
+        ultimo_intento  TIMESTAMPTZ,
+        created_at      TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (normativa_tipo, normativa_id)
+    );
     """
     with get_connection() as conn:
         with conn.cursor() as cur:
