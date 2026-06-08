@@ -30,6 +30,9 @@ TIPO_MAP = [
     (re.compile(r"Recommendation|Recomendación",                    re.I), "Recomendación (UE)"),
     (re.compile(r"Commission Notice|Aviso de la Comisi[oó]n",      re.I), "Aviso/Comunicación UE"),
     (re.compile(r"Court of Auditors|Tribunal de Cuentas",          re.I), "Dictamen Tribunal de Cuentas (UE)"),
+    (re.compile(r"Committee of the Regions|Comité de las Regiones", re.I), "Acto Comité de las Regiones (UE)"),
+    (re.compile(r"European Parliament|Parlamento Europeo",          re.I), "Acto Parlamento Europeo"),
+    (re.compile(r"Economic.*Social Committee|Comité Económico.*Social|CESE\b|EESC\b", re.I), "Dictamen CESE (UE)"),
     (re.compile(r"Corrigendum|Corrección de errores",               re.I), "Corrección de errores"),
 ]
 
@@ -60,7 +63,15 @@ _NON_LEGIS_RE = re.compile(
 _SERIES_C_ALLOWED_RE = re.compile(
     r"^COMMISSION NOTICE|^AVISO DE LA COMISI[OÓ]N"
     r"|^Opinion.*Court of Auditors|^Dictamen.*Tribunal de Cuentas"
-    r"|^Special Report.*Court of Auditors|^Informe Especial.*Tribunal de Cuentas",
+    r"|^Special Report.*Court of Auditors|^Informe Especial.*Tribunal de Cuentas"
+    # Organismos consultivos UE: Comité de las Regiones, Parlamento Europeo, CESE
+    r"|^Declaration.*Committee of the Regions|^Declaraci[oó]n.*Comit[eé] de las Regiones"
+    r"|^Resolution.*Committee of the Regions|^Resoluci[oó]n.*Comit[eé] de las Regiones"
+    r"|^Opinion.*Committee of the Regions|^Dictamen.*Comit[eé] de las Regiones"
+    r"|^Resolution.*European Parliament|^Resoluci[oó]n.*Parlamento Europeo"
+    r"|^Opinion.*European Parliament|^Dictamen.*Parlamento Europeo"
+    r"|^Opinion.*Economic.*Social Committee|^Dictamen.*Comit[eé] Econ[oó]mico.*Social"
+    r"|^Opinion.*EESC|^Dictamen.*CESE",
     re.IGNORECASE,
 )
 
@@ -83,7 +94,10 @@ SELECT DISTINCT ?work ?title ?date WHERE {{
     CONTAINS(STR(?title), "(UE)") OR CONTAINS(STR(?title), "(EU)") OR
     CONTAINS(STR(?title), "(EURATOM)") OR CONTAINS(STR(?title), "(Euratom)") OR
     CONTAINS(STR(?title), "COMMISSION NOTICE") OR CONTAINS(STR(?title), "Commission notice") OR
-    CONTAINS(STR(?title), "Court of Auditors") OR CONTAINS(STR(?title), "Tribunal de Cuentas")
+    CONTAINS(STR(?title), "Court of Auditors") OR CONTAINS(STR(?title), "Tribunal de Cuentas") OR
+    CONTAINS(STR(?title), "Committee of the Regions") OR CONTAINS(STR(?title), "Comité de las Regiones") OR
+    CONTAINS(STR(?title), "European Parliament") OR CONTAINS(STR(?title), "Parlamento Europeo") OR
+    CONTAINS(STR(?title), "Economic and Social Committee") OR CONTAINS(STR(?title), "Comité Económico y Social")
   )
   FILTER(
     CONTAINS(LCASE(STR(?title)), "energ") OR
