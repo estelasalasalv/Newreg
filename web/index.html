@@ -341,6 +341,16 @@
     }
     .btn-detalle:hover { background: var(--teal); color: var(--navy); border-color: var(--teal); }
 
+    /* ── AVISO EMERGENTE (toast) ───────────────────────────────── */
+    .aviso-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--navy); color: var(--white); font-size: 12.5px; line-height: 1.5;
+      padding: 12px 20px; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+      z-index: 1100; max-width: 90%; text-align: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+    }
+    .aviso-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* ── CONSULTA CARD (CNMC) ──────────────────────────────────── */
     .consulta-card {
       background: var(--white);
@@ -651,14 +661,15 @@
       <div class="search-bar">
         <input type="search" id="eu-search" placeholder="Buscar en normativa europea (DOUE)…"
                autocomplete="off" spellcheck="false"/>
-        <select id="eu-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="eu-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
-          <option value="14">Últimos 14 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
-          <option value="9999" selected>Toda la normativa</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <span id="eu-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="eu-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="eu-fecha-hasta"/></label>
         <span class="result-count" id="eu-count"></span>
@@ -676,14 +687,15 @@
       <div class="search-bar">
         <input type="search" id="acer-search" placeholder="Buscar en ACER…"
                autocomplete="off" spellcheck="false"/>
-        <select id="acer-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="acer-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
-          <option value="14">Últimos 14 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
-          <option value="9999" selected>Toda la normativa</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <span id="acer-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="acer-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="acer-fecha-hasta"/></label>
         <span class="result-count" id="acer-count"></span>
@@ -698,14 +710,15 @@
       <div class="search-bar">
         <input type="search" id="cnmc-search" placeholder="Buscar en CNMC (RSS + Actuaciones + Transparencia)…"
                autocomplete="off" spellcheck="false"/>
-        <select id="cnmc-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="cnmc-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
-          <option value="14">Últimos 14 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
-          <option value="9999" selected>Toda la normativa</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <span id="cnmc-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="cnmc-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="cnmc-fecha-hasta"/></label>
         <select id="cnmc-source" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
@@ -809,14 +822,15 @@
       <div class="search-bar">
         <input type="search" id="esp-search" placeholder="Buscar en normativa…"
                autocomplete="off" spellcheck="false"/>
-        <select id="esp-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="esp-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
           <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
           <option value="9999">Toda la normativa</option>
         </select>
+        <span id="esp-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="esp-fecha-desde" title="Anula el selector de días"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="esp-fecha-hasta"/></label>
         <span class="result-count" id="esp-count"></span>
@@ -866,6 +880,9 @@
     </footer>
   </div><!-- /.main -->
 </div><!-- /.layout -->
+
+<!-- ── Aviso emergente (toast) ─────────────────────────────────── -->
+<div class="aviso-toast" id="aviso-toast"></div>
 
 <!-- ── Modal de detalle ───────────────────────────────────────── -->
 <div class="modal-overlay" id="modal-overlay">
@@ -1229,21 +1246,27 @@
     let maxISO    = '9999-12-31';
     const desdeEl = document.getElementById('cnmc-fecha-desde');
     const hastaEl = document.getElementById('cnmc-fecha-hasta');
+    const cnmcNotaEl = document.getElementById('cnmc-dias-nota');
     if (desde || hasta) {
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      if (cnmcNotaEl) cnmcNotaEl.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      refDate.setDate(refDate.getDate() - (dias - 1));
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      if (cnmcNotaEl) cnmcNotaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      if (cnmcNotaEl) cnmcNotaEl.style.display = 'none';
     }
 
     const filtered = cnmcAllData.filter(e => {
@@ -1467,21 +1490,27 @@
     let maxISO    = '9999-12-31';
     const desdeEl = document.getElementById('acer-fecha-desde');
     const hastaEl = document.getElementById('acer-fecha-hasta');
+    const acerNotaEl = document.getElementById('acer-dias-nota');
     if (desde || hasta) {
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      if (acerNotaEl) acerNotaEl.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      refDate.setDate(refDate.getDate() - (dias - 1));
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      if (acerNotaEl) acerNotaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      if (acerNotaEl) acerNotaEl.style.display = 'none';
     }
 
     const filtered = acerData.filter(e => {
@@ -1505,6 +1534,16 @@
   // ── Período activo en el Resumen mensual ────────────────────────
   let resumenPeriodo = 'dia-curso';
 
+  let _avisoTimer = null;
+  function showAviso(msg) {
+    const el = document.getElementById('aviso-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    if (_avisoTimer) clearTimeout(_avisoTimer);
+    _avisoTimer = setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
   function getResumenRange() {
     const hoy = new Date();
     let desde, hasta = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
@@ -1523,8 +1562,13 @@
       desde = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() - 2);
       hasta = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + 4, 23, 59, 59);
     } else {
-      // "Hoy" = solo el día actual
-      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      // "Hoy" = solo el día actual; los lunes se amplía al sábado anterior
+      // para no perder la normativa publicada durante el fin de semana.
+      if (hoy.getDay() === 1) {
+        desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 2);
+      } else {
+        desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      }
     }
     return { desde, hasta };
   }
@@ -1756,21 +1800,27 @@
     let maxISO    = '9999-12-31';
     const desdeEl = document.getElementById('eu-fecha-desde');
     const hastaEl = document.getElementById('eu-fecha-hasta');
+    const euNotaEl = document.getElementById('eu-dias-nota');
     if (desde || hasta) {
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      if (euNotaEl) euNotaEl.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      refDate.setDate(refDate.getDate() - (dias - 1));
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      if (euNotaEl) euNotaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      if (euNotaEl) euNotaEl.style.display = 'none';
     }
 
     const filtered = eurlex.filter(e => {
@@ -1901,21 +1951,28 @@
       // Fechas manuales tienen prioridad
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      const notaElM = document.getElementById('esp-dias-nota');
+      if (notaElM) notaElM.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
       refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       // Mostrar el rango calculado en los campos Desde/Hasta
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      const notaEl = document.getElementById('esp-dias-nota');
+      if (notaEl) notaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       // Toda la normativa — limpiar campos de fecha
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      const notaEl = document.getElementById('esp-dias-nota');
+      if (notaEl) notaEl.style.display = 'none';
     }
 
     // ── BOE ──────────────────────────────────────────────────────────
@@ -2326,6 +2383,9 @@
       document.querySelectorAll('.resumen-periodo-btn').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
       resumenPeriodo = this.dataset.periodo;
+      if (resumenPeriodo === 'dia-curso' && new Date().getDay() === 1) {
+        showAviso('📅 Hoy es lunes: el resumen de "Hoy" incluye también el sábado anterior para no perder la normativa publicada durante el fin de semana.');
+      }
       renderResumen();
     });
   });
