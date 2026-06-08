@@ -1228,6 +1228,80 @@
     return { code: '', desc: title || '' };
   }
 
+  /* ── CNMC: agrupación y tarjeta fusionada por nº de expediente ──
+     Compartido por las pestañas CNMC, Normativa y Resumen mensual,
+     para no repetir tres veces la misma lógica de fusión/pintado. */
+  const CNMC_SOURCE_LABEL = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
+  const CNMC_SOURCE_COLOR = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
+  const CNMC_SOURCE_ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
+
+  function groupCnmcByCode(list) {
+    const groups = [];
+    const seenCodes = new Map(); // code → índice en groups
+    for (const e of list) {
+      const { code, desc } = extractCnmcCode(e.title || '');
+      if (code && seenCodes.has(code)) {
+        groups[seenCodes.get(code)].entries.push(e);
+      } else {
+        const idx = groups.length;
+        groups.push({ code, desc: desc || e.title, entries: [e] });
+        if (code) seenCodes.set(code, idx);
+      }
+    }
+    return groups;
+  }
+
+  function cnmcGroupCardHtml(g) {
+    const main = g.entries.slice().sort((a,b) =>
+      CNMC_SOURCE_ORDER.indexOf(a.source) - CNMC_SOURCE_ORDER.indexOf(b.source)
+    )[0];
+    const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
+
+    const sourceChips = g.entries.map(e => {
+      const c = CNMC_SOURCE_COLOR[e.source] || '#1565c0';
+      const l = CNMC_SOURCE_LABEL[e.source] || e.source;
+      return e.url
+        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
+        : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
+    }).join('');
+
+    const titleHtml = main.url
+      ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
+      : `${codeSpan}${esc(g.desc)}`;
+
+    const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
+    const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
+
+    const SUM_ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
+    const bestSummary = g.entries.slice()
+      .sort((a,b) => SUM_ORDER.indexOf(a.source) - SUM_ORDER.indexOf(b.source))
+      .map(e => e.summary || '').find(s => s.length > 20) || '';
+    const esNuevo = g.entries.some(e => e.es_nuevo);
+
+    return `
+      <div class="norm-card" style="border-left-color:#1565c0">
+        <div class="norm-header">
+          <div class="norm-title">${titleHtml}</div>
+          ${recencyLabel(bestDateFmt)}
+          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
+        </div>
+        <div class="norm-meta">
+          ${sourceChips}
+          ${bestDateFmt ? `<span>${bestDateFmt}</span>` : ''}
+          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
+        </div>
+        ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
+      </div>`;
+  }
+
+  // Agrupa y construye {fecha, html} listos para fusionar/ordenar junto a otras fuentes
+  function cnmcGroupCards(list) {
+    return groupCnmcByCode(list).map(g => ({
+      fecha: g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0],
+      html: cnmcGroupCardHtml(g),
+    }));
+  }
+
   /* ── CNMC fusionado (RSS + S + N) ──────────────────────────────── */
   function renderCnmc() {
     const q      = (document.getElementById('cnmc-search')      || {value:''}).value.toLowerCase().trim();
@@ -1238,9 +1312,6 @@
     const el     = document.getElementById('cnmc-entries');
     if (!el) return;
     document.getElementById('cnmc-loading').style.display = 'none';
-
-    const SOURCE_LABEL = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
-    const SOURCE_COLOR = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
 
     let cutoffISO = '2000-01-01';
     let maxISO    = '9999-12-31';
@@ -1286,71 +1357,10 @@
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
     document.getElementById('cnmc-empty').style.display = filtered.length ? 'none' : 'block';
 
-    // Extrae {code, desc} del título según tres patrones CNMC:
     // Agrupar entradas con el mismo código de expediente en una sola tarjeta
-    const groups = [];
-    const seenCodes = new Map(); // code → índice en groups
-    for (const e of filtered) {
-      const { code, desc } = extractCnmcCode(e.title || '');
-      if (code && seenCodes.has(code)) {
-        groups[seenCodes.get(code)].entries.push(e);
-      } else {
-        const idx = groups.length;
-        groups.push({ code, desc: desc || e.title, entries: [e] });
-        if (code) seenCodes.set(code, idx);
-      }
-    }
-
-    el.innerHTML = groups.map(g => {
-      // Entrada principal: preferir CNMC_S, luego CNMC_RSS, luego CNMC_N
-      const ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
-      const main = g.entries.slice().sort((a,b) =>
-        ORDER.indexOf(a.source) - ORDER.indexOf(b.source)
-      )[0];
-      const color = '#1565c0'; // azul uniforme para expedientes fusionados
-      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
-
-      // Chips de fuente con enlace por cada entrada del grupo
-      const sourceChips = g.entries.map(e => {
-        const c = SOURCE_COLOR[e.source] || '#1565c0';
-        const l = SOURCE_LABEL[e.source] || e.source;
-        return e.url
-          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
-          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
-      }).join('');
-
-      // Título con enlace a la fuente principal
-      const titleHtml = main.url
-        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
-        : `${codeSpan}${esc(g.desc)}`;
-
-      // Fecha más reciente del grupo
-      const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
-      const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
-
-      // Summary: preferir CNMC_S o CNMC_N (vienen de _fetch_expediente_detail, texto limpio)
-      // CNMC_RSS tiene ruido de etiquetas internas — usar solo si no hay otra opción
-      const SUM_ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
-      const bestSummary = g.entries.slice()
-        .sort((a,b) => SUM_ORDER.indexOf(a.source) - SUM_ORDER.indexOf(b.source))
-        .map(e => e.summary || '').find(s => s.length > 20) || '';
-      const esNuevo = g.entries.some(e => e.es_nuevo);
-
-      return `
-      <div class="norm-card" style="border-left-color:${color}">
-        <div class="norm-header">
-          <div class="norm-title">${titleHtml}</div>
-          ${recencyLabel(bestDateFmt)}
-          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
-        </div>
-        <div class="norm-meta">
-          ${sourceChips}
-          ${bestDateFmt ? `<span>${bestDateFmt}</span>` : ''}
-          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
-        </div>
-        ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
-      </div>`;
-    }).join('');
+    // (lógica compartida con Normativa y Resumen mensual — ver groupCnmcByCode/cnmcGroupCardHtml)
+    const groups = groupCnmcByCode(filtered);
+    el.innerHTML = groups.map(g => cnmcGroupCardHtml(g)).join('');
   }
 
   function renderCnmcN() {
@@ -1615,21 +1625,6 @@
       return isInResumenRange(scrapedAtISO(e) || e.fecha_real || e.published_date);
     });
 
-    // Fusionar por código igual que en pestaña CNMC
-    const cnmcGroups = [];
-    const cnmcCodes  = new Map();
-    for (const e of cnmcPeriodo) {
-      const { code } = extractCnmcCode(e.title || '');
-      if (code && cnmcCodes.has(code)) {
-        cnmcGroups[cnmcCodes.get(code)].entries.push(e);
-      } else {
-        const idx = cnmcGroups.length;
-        const { desc } = extractCnmcCode(e.title || '');
-        cnmcGroups.push({ code, desc: desc || e.title, entries: [e] });
-        if (code) cnmcCodes.set(code, idx);
-      }
-    }
-
     // BOE del período (sin CNMC_S/N que ya vienen por cnmcAllData)
     const boeNacional = allEntries.filter(e => {
       if (e.source === 'ACER' || e.source === 'CNMC_S' || e.source === 'CNMC_N' || e.source === 'CNMC_RSS') return false;
@@ -1640,55 +1635,19 @@
       return isInResumenRange(e.fecha_real || e.published_date);
     });
 
-    // Renderizar tarjetas CNMC fusionadas
-    const SOURCE_LABEL_R = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
-    const SOURCE_COLOR_R = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
-    const cnmcCards = cnmcGroups.map(g => {
-      const ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
-      const main = g.entries.slice().sort((a,b) => ORDER.indexOf(a.source) - ORDER.indexOf(b.source))[0];
-      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
-      const sourceChips = g.entries.map(e => {
-        const c = SOURCE_COLOR_R[e.source] || '#1565c0';
-        const l = SOURCE_LABEL_R[e.source] || e.source;
-        return e.url
-          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
-          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
-      }).join('');
-      const titleHtml = main.url
-        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
-        : `${codeSpan}${esc(g.desc)}`;
-      const bestDate  = g.entries.map(e => e.published_date || '').sort().reverse()[0];
-      const _SUM_ORD  = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
-      const bestSum   = g.entries.slice()
-        .sort((a,b) => _SUM_ORD.indexOf(a.source) - _SUM_ORD.indexOf(b.source))
-        .map(e => e.summary || '').find(s => s.length > 20) || '';
-      const esNuevo   = g.entries.some(e => e.es_nuevo);
-      return `<div class="norm-card" style="border-left-color:#1565c0">
-        <div class="norm-header">
-          <div class="norm-title">${titleHtml}</div>
-          ${recencyLabel(bestDate)}
-          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
-        </div>
-        <div class="norm-meta">
-          ${sourceChips}
-          ${bestDate ? `<span>${bestDate}</span>` : ''}
-          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
-        </div>
-        ${bestSum ? `<div class="norm-card-summary">${esc(bestSum)}</div>` : ''}
-      </div>`;
-    });
+    // Fusionar por código de expediente y pintar — lógica compartida con CNMC y Normativa
+    const cnmcCards = cnmcGroupCards(cnmcPeriodo);
 
-    const boeCards = boeNacional.map(e =>
+    // Fusionar anuncios BOE-N (Suplemento Notificaciones) duplicados — igual que en Normativa/Todas
+    const boeNacionalDeduped = dedupeBoeNotif(boeNacional, 'title', 'published_date', 'department');
+    const boeCards = boeNacionalDeduped.map(e =>
       normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
     );
 
     // Ordenar todo junto por fecha descendente
     const allNacionalCards = [
-      ...boeNacional.map((e, i) => ({ fecha: e.fecha_real || e.published_date || '', html: boeCards[i] })),
-      ...cnmcGroups.map((g, i) => ({
-        fecha: g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0],
-        html: cnmcCards[i]
-      }))
+      ...boeNacionalDeduped.map((e, i) => ({ fecha: e.fecha_real || e.published_date || '', html: boeCards[i] })),
+      ...cnmcCards,
     ].sort((a,b) => b.fecha.localeCompare(a.fecha));
 
     document.getElementById('resumen-nacional-empty').style.display = allNacionalCards.length ? 'none' : 'block';
@@ -2004,58 +1963,8 @@
         })
       : [];
 
-    // Fusionar por código igual que en pestaña CNMC
-    const cnmcEspGroups = [];
-    const cnmcEspCodes  = new Map();
-    for (const e of cnmcEspFilt) {
-      const { code, desc } = extractCnmcCode(e.title || '');
-      if (code && cnmcEspCodes.has(code)) {
-        cnmcEspGroups[cnmcEspCodes.get(code)].entries.push(e);
-      } else {
-        const idx = cnmcEspGroups.length;
-        cnmcEspGroups.push({ code, desc: desc || e.title, entries: [e] });
-        if (code) cnmcEspCodes.set(code, idx);
-      }
-    }
-
-    const SOURCE_LABEL_E = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
-    const SOURCE_COLOR_E = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
-    const cnmcEspCards = cnmcEspGroups.map(g => {
-      const ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
-      const main = g.entries.slice().sort((a,b) => ORDER.indexOf(a.source) - ORDER.indexOf(b.source))[0];
-      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
-      const chips = g.entries.map(e => {
-        const c = SOURCE_COLOR_E[e.source] || '#1565c0';
-        const l = SOURCE_LABEL_E[e.source] || e.source;
-        return e.url
-          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
-          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
-      }).join('');
-      const titleHtml = main.url
-        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
-        : `${codeSpan}${esc(g.desc)}`;
-      const bestDate = g.entries.map(e => e.published_date || '').sort().reverse()[0];
-      const _SO = ['CNMC_S','CNMC_N','CNMC_RSS'];
-      const bestSum = g.entries.slice().sort((a,b)=>_SO.indexOf(a.source)-_SO.indexOf(b.source))
-        .map(e=>e.summary||'').find(s=>s.length>20)||'';
-      const esNuevo = g.entries.some(e=>e.es_nuevo);
-      return {
-        fecha: g.entries.map(e=>e.fecha_real||e.published_date||'').sort().reverse()[0],
-        html: `<div class="norm-card" style="border-left-color:#1565c0">
-          <div class="norm-header">
-            <div class="norm-title">${titleHtml}</div>
-            ${recencyLabel(bestDate)}
-            ${esNuevo?'<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>':''}
-          </div>
-          <div class="norm-meta">
-            ${chips}
-            ${bestDate?`<span>${bestDate}</span>`:''}
-            ${main.tramitaciones==='Sí'?'<span class="badge badge-auth">📋 Tramitación</span>':''}
-          </div>
-          ${bestSum?`<div class="norm-card-summary">${esc(bestSum)}</div>`:''}
-        </div>`
-      };
-    });
+    // Fusionar por código de expediente — lógica compartida con CNMC y Resumen mensual
+    const cnmcEspCards = cnmcGroupCards(cnmcEspFilt);
 
     // Combinar BOE + CNMC ordenados por fecha
     const boeFiltDeduped = dedupeBoeNotif(boeFilt, 'title', 'published_date', 'department');
