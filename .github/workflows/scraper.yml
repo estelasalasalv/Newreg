@@ -2,11 +2,11 @@ name: Regulatory Scraper
 
 on:
   schedule:
-    # 08:00 y 12:00 hora peninsular España
-    # Verano CEST (UTC+2): 06:00 y 10:00 UTC
-    # Invierno CET  (UTC+1): 07:00 y 11:00 UTC
-    - cron: '55 5 * * 1-6'  # Lunes–Sábado 07:55 CEST
-    - cron: '0 10 * * 1-5'  # Lunes–Viernes 12:00 CEST
+    # Adelantadas 10 min para compensar el retraso habitual de GitHub Actions
+    # en triggers "schedule" de repos con poca actividad (puede tardar horas
+    # en disparar la ejecución respecto a la hora programada).
+    - cron: '45 5 * * 1-6'  # Lunes–Sábado 07:45 CEST (05:45 UTC)
+    - cron: '50 9 * * 1-5'  # Lunes–Viernes 11:50 CEST (09:50 UTC)
   workflow_dispatch:          # Permite ejecución manual desde GitHub
 
 permissions:
