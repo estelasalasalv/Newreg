@@ -1695,6 +1695,9 @@
 
     // ── Consultas públicas ────────────────────────────────────────
     const conFilt = cnmcConsultas.filter(e => {
+      if (ocultarGas && esGasOnly(e)) return false;
+      if (soloImportante && e.importante !== 'Sí') return false;
+      if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
       if (activeSource === 'BOE' || activeSource === 'ACER') return false;
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
