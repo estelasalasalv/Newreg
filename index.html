@@ -341,6 +341,16 @@
     }
     .btn-detalle:hover { background: var(--teal); color: var(--navy); border-color: var(--teal); }
 
+    /* ── AVISO EMERGENTE (toast) ───────────────────────────────── */
+    .aviso-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--navy); color: var(--white); font-size: 12.5px; line-height: 1.5;
+      padding: 12px 20px; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.25);
+      z-index: 1100; max-width: 90%; text-align: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+    }
+    .aviso-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* ── CONSULTA CARD (CNMC) ──────────────────────────────────── */
     .consulta-card {
       background: var(--white);
@@ -651,14 +661,15 @@
       <div class="search-bar">
         <input type="search" id="eu-search" placeholder="Buscar en normativa europea (DOUE)…"
                autocomplete="off" spellcheck="false"/>
-        <select id="eu-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="eu-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
-          <option value="14">Últimos 14 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
-          <option value="9999" selected>Toda la normativa</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <span id="eu-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="eu-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="eu-fecha-hasta"/></label>
         <span class="result-count" id="eu-count"></span>
@@ -676,14 +687,15 @@
       <div class="search-bar">
         <input type="search" id="acer-search" placeholder="Buscar en ACER…"
                autocomplete="off" spellcheck="false"/>
-        <select id="acer-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="acer-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
-          <option value="14">Últimos 14 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
-          <option value="9999" selected>Toda la normativa</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <span id="acer-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="acer-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="acer-fecha-hasta"/></label>
         <span class="result-count" id="acer-count"></span>
@@ -698,14 +710,15 @@
       <div class="search-bar">
         <input type="search" id="cnmc-search" placeholder="Buscar en CNMC (RSS + Actuaciones + Transparencia)…"
                autocomplete="off" spellcheck="false"/>
-        <select id="cnmc-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="cnmc-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
-          <option value="14">Últimos 14 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
-          <option value="9999" selected>Toda la normativa</option>
+          <option value="9999">Toda la normativa</option>
         </select>
+        <span id="cnmc-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="cnmc-fecha-desde"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="cnmc-fecha-hasta"/></label>
         <select id="cnmc-source" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
@@ -809,14 +822,15 @@
       <div class="search-bar">
         <input type="search" id="esp-search" placeholder="Buscar en normativa…"
                autocomplete="off" spellcheck="false"/>
-        <select id="esp-dias" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
+        <select id="esp-dias" title="Los lunes, «Últimos 7 días» se amplía automáticamente al sábado anterior para no perder las entradas del fin de semana (equivale a 14 días)" style="padding:6px 10px;border:1px solid var(--gray2);border-radius:8px;font-size:12px;background:var(--white);color:var(--text)">
           <option value="1">Hoy</option>
-          <option value="7">Últimos 7 días</option>
+          <option value="7" title="Los lunes se amplía al sábado anterior (14 días) para no perder el fin de semana">Últimos 7 días</option>
           <option value="14" selected>Últimos 14 días</option>
           <option value="30">Último mes</option>
           <option value="90">Últimos 3 meses</option>
           <option value="9999">Toda la normativa</option>
         </select>
+        <span id="esp-dias-nota" style="display:none;font-size:10.5px;color:var(--gray4)">📅 Lunes: «7 días» incluye el fin de semana anterior (≈14 días)</span>
         <label class="date-range-lbl">Desde<input type="date" id="esp-fecha-desde" title="Anula el selector de días"/></label>
         <label class="date-range-lbl">Hasta<input type="date" id="esp-fecha-hasta"/></label>
         <span class="result-count" id="esp-count"></span>
@@ -866,6 +880,9 @@
     </footer>
   </div><!-- /.main -->
 </div><!-- /.layout -->
+
+<!-- ── Aviso emergente (toast) ─────────────────────────────────── -->
+<div class="aviso-toast" id="aviso-toast"></div>
 
 <!-- ── Modal de detalle ───────────────────────────────────────── -->
 <div class="modal-overlay" id="modal-overlay">
@@ -1211,6 +1228,80 @@
     return { code: '', desc: title || '' };
   }
 
+  /* ── CNMC: agrupación y tarjeta fusionada por nº de expediente ──
+     Compartido por las pestañas CNMC, Normativa y Resumen mensual,
+     para no repetir tres veces la misma lógica de fusión/pintado. */
+  const CNMC_SOURCE_LABEL = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
+  const CNMC_SOURCE_COLOR = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
+  const CNMC_SOURCE_ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
+
+  function groupCnmcByCode(list) {
+    const groups = [];
+    const seenCodes = new Map(); // code → índice en groups
+    for (const e of list) {
+      const { code, desc } = extractCnmcCode(e.title || '');
+      if (code && seenCodes.has(code)) {
+        groups[seenCodes.get(code)].entries.push(e);
+      } else {
+        const idx = groups.length;
+        groups.push({ code, desc: desc || e.title, entries: [e] });
+        if (code) seenCodes.set(code, idx);
+      }
+    }
+    return groups;
+  }
+
+  function cnmcGroupCardHtml(g) {
+    const main = g.entries.slice().sort((a,b) =>
+      CNMC_SOURCE_ORDER.indexOf(a.source) - CNMC_SOURCE_ORDER.indexOf(b.source)
+    )[0];
+    const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
+
+    const sourceChips = g.entries.map(e => {
+      const c = CNMC_SOURCE_COLOR[e.source] || '#1565c0';
+      const l = CNMC_SOURCE_LABEL[e.source] || e.source;
+      return e.url
+        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
+        : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
+    }).join('');
+
+    const titleHtml = main.url
+      ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
+      : `${codeSpan}${esc(g.desc)}`;
+
+    const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
+    const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
+
+    const SUM_ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
+    const bestSummary = g.entries.slice()
+      .sort((a,b) => SUM_ORDER.indexOf(a.source) - SUM_ORDER.indexOf(b.source))
+      .map(e => e.summary || '').find(s => s.length > 20) || '';
+    const esNuevo = g.entries.some(e => e.es_nuevo);
+
+    return `
+      <div class="norm-card" style="border-left-color:#1565c0">
+        <div class="norm-header">
+          <div class="norm-title">${titleHtml}</div>
+          ${recencyLabel(bestDateFmt)}
+          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
+        </div>
+        <div class="norm-meta">
+          ${sourceChips}
+          ${bestDateFmt ? `<span>${bestDateFmt}</span>` : ''}
+          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
+        </div>
+        ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
+      </div>`;
+  }
+
+  // Agrupa y construye {fecha, html} listos para fusionar/ordenar junto a otras fuentes
+  function cnmcGroupCards(list) {
+    return groupCnmcByCode(list).map(g => ({
+      fecha: g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0],
+      html: cnmcGroupCardHtml(g),
+    }));
+  }
+
   /* ── CNMC fusionado (RSS + S + N) ──────────────────────────────── */
   function renderCnmc() {
     const q      = (document.getElementById('cnmc-search')      || {value:''}).value.toLowerCase().trim();
@@ -1222,28 +1313,31 @@
     if (!el) return;
     document.getElementById('cnmc-loading').style.display = 'none';
 
-    const SOURCE_LABEL = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
-    const SOURCE_COLOR = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
-
     let cutoffISO = '2000-01-01';
     let maxISO    = '9999-12-31';
     const desdeEl = document.getElementById('cnmc-fecha-desde');
     const hastaEl = document.getElementById('cnmc-fecha-hasta');
+    const cnmcNotaEl = document.getElementById('cnmc-dias-nota');
     if (desde || hasta) {
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      if (cnmcNotaEl) cnmcNotaEl.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      refDate.setDate(refDate.getDate() - (dias - 1));
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      if (cnmcNotaEl) cnmcNotaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      if (cnmcNotaEl) cnmcNotaEl.style.display = 'none';
     }
 
     const filtered = cnmcAllData.filter(e => {
@@ -1263,71 +1357,10 @@
       filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
     document.getElementById('cnmc-empty').style.display = filtered.length ? 'none' : 'block';
 
-    // Extrae {code, desc} del título según tres patrones CNMC:
     // Agrupar entradas con el mismo código de expediente en una sola tarjeta
-    const groups = [];
-    const seenCodes = new Map(); // code → índice en groups
-    for (const e of filtered) {
-      const { code, desc } = extractCnmcCode(e.title || '');
-      if (code && seenCodes.has(code)) {
-        groups[seenCodes.get(code)].entries.push(e);
-      } else {
-        const idx = groups.length;
-        groups.push({ code, desc: desc || e.title, entries: [e] });
-        if (code) seenCodes.set(code, idx);
-      }
-    }
-
-    el.innerHTML = groups.map(g => {
-      // Entrada principal: preferir CNMC_S, luego CNMC_RSS, luego CNMC_N
-      const ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
-      const main = g.entries.slice().sort((a,b) =>
-        ORDER.indexOf(a.source) - ORDER.indexOf(b.source)
-      )[0];
-      const color = '#1565c0'; // azul uniforme para expedientes fusionados
-      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
-
-      // Chips de fuente con enlace por cada entrada del grupo
-      const sourceChips = g.entries.map(e => {
-        const c = SOURCE_COLOR[e.source] || '#1565c0';
-        const l = SOURCE_LABEL[e.source] || e.source;
-        return e.url
-          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
-          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
-      }).join('');
-
-      // Título con enlace a la fuente principal
-      const titleHtml = main.url
-        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
-        : `${codeSpan}${esc(g.desc)}`;
-
-      // Fecha más reciente del grupo
-      const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
-      const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
-
-      // Summary: preferir CNMC_S o CNMC_N (vienen de _fetch_expediente_detail, texto limpio)
-      // CNMC_RSS tiene ruido de etiquetas internas — usar solo si no hay otra opción
-      const SUM_ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
-      const bestSummary = g.entries.slice()
-        .sort((a,b) => SUM_ORDER.indexOf(a.source) - SUM_ORDER.indexOf(b.source))
-        .map(e => e.summary || '').find(s => s.length > 20) || '';
-      const esNuevo = g.entries.some(e => e.es_nuevo);
-
-      return `
-      <div class="norm-card" style="border-left-color:${color}">
-        <div class="norm-header">
-          <div class="norm-title">${titleHtml}</div>
-          ${recencyLabel(bestDateFmt)}
-          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
-        </div>
-        <div class="norm-meta">
-          ${sourceChips}
-          ${bestDateFmt ? `<span>${bestDateFmt}</span>` : ''}
-          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
-        </div>
-        ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
-      </div>`;
-    }).join('');
+    // (lógica compartida con Normativa y Resumen mensual — ver groupCnmcByCode/cnmcGroupCardHtml)
+    const groups = groupCnmcByCode(filtered);
+    el.innerHTML = groups.map(g => cnmcGroupCardHtml(g)).join('');
   }
 
   function renderCnmcN() {
@@ -1467,21 +1500,27 @@
     let maxISO    = '9999-12-31';
     const desdeEl = document.getElementById('acer-fecha-desde');
     const hastaEl = document.getElementById('acer-fecha-hasta');
+    const acerNotaEl = document.getElementById('acer-dias-nota');
     if (desde || hasta) {
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      if (acerNotaEl) acerNotaEl.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      refDate.setDate(refDate.getDate() - (dias - 1));
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      if (acerNotaEl) acerNotaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      if (acerNotaEl) acerNotaEl.style.display = 'none';
     }
 
     const filtered = acerData.filter(e => {
@@ -1505,6 +1544,16 @@
   // ── Período activo en el Resumen mensual ────────────────────────
   let resumenPeriodo = 'dia-curso';
 
+  let _avisoTimer = null;
+  function showAviso(msg) {
+    const el = document.getElementById('aviso-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    if (_avisoTimer) clearTimeout(_avisoTimer);
+    _avisoTimer = setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
   function getResumenRange() {
     const hoy = new Date();
     let desde, hasta = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
@@ -1523,8 +1572,13 @@
       desde = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() - 2);
       hasta = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + 4, 23, 59, 59);
     } else {
-      // "Hoy" = solo el día actual
-      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      // "Hoy" = solo el día actual; los lunes se amplía al sábado anterior
+      // para no perder la normativa publicada durante el fin de semana.
+      if (hoy.getDay() === 1) {
+        desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 2);
+      } else {
+        desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      }
     }
     return { desde, hasta };
   }
@@ -1571,21 +1625,6 @@
       return isInResumenRange(scrapedAtISO(e) || e.fecha_real || e.published_date);
     });
 
-    // Fusionar por código igual que en pestaña CNMC
-    const cnmcGroups = [];
-    const cnmcCodes  = new Map();
-    for (const e of cnmcPeriodo) {
-      const { code } = extractCnmcCode(e.title || '');
-      if (code && cnmcCodes.has(code)) {
-        cnmcGroups[cnmcCodes.get(code)].entries.push(e);
-      } else {
-        const idx = cnmcGroups.length;
-        const { desc } = extractCnmcCode(e.title || '');
-        cnmcGroups.push({ code, desc: desc || e.title, entries: [e] });
-        if (code) cnmcCodes.set(code, idx);
-      }
-    }
-
     // BOE del período (sin CNMC_S/N que ya vienen por cnmcAllData)
     const boeNacional = allEntries.filter(e => {
       if (e.source === 'ACER' || e.source === 'CNMC_S' || e.source === 'CNMC_N' || e.source === 'CNMC_RSS') return false;
@@ -1596,55 +1635,19 @@
       return isInResumenRange(e.fecha_real || e.published_date);
     });
 
-    // Renderizar tarjetas CNMC fusionadas
-    const SOURCE_LABEL_R = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
-    const SOURCE_COLOR_R = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
-    const cnmcCards = cnmcGroups.map(g => {
-      const ORDER = ['CNMC_S', 'CNMC_RSS', 'CNMC_N'];
-      const main = g.entries.slice().sort((a,b) => ORDER.indexOf(a.source) - ORDER.indexOf(b.source))[0];
-      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
-      const sourceChips = g.entries.map(e => {
-        const c = SOURCE_COLOR_R[e.source] || '#1565c0';
-        const l = SOURCE_LABEL_R[e.source] || e.source;
-        return e.url
-          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
-          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
-      }).join('');
-      const titleHtml = main.url
-        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
-        : `${codeSpan}${esc(g.desc)}`;
-      const bestDate  = g.entries.map(e => e.published_date || '').sort().reverse()[0];
-      const _SUM_ORD  = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
-      const bestSum   = g.entries.slice()
-        .sort((a,b) => _SUM_ORD.indexOf(a.source) - _SUM_ORD.indexOf(b.source))
-        .map(e => e.summary || '').find(s => s.length > 20) || '';
-      const esNuevo   = g.entries.some(e => e.es_nuevo);
-      return `<div class="norm-card" style="border-left-color:#1565c0">
-        <div class="norm-header">
-          <div class="norm-title">${titleHtml}</div>
-          ${recencyLabel(bestDate)}
-          ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
-        </div>
-        <div class="norm-meta">
-          ${sourceChips}
-          ${bestDate ? `<span>${bestDate}</span>` : ''}
-          ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
-        </div>
-        ${bestSum ? `<div class="norm-card-summary">${esc(bestSum)}</div>` : ''}
-      </div>`;
-    });
+    // Fusionar por código de expediente y pintar — lógica compartida con CNMC y Normativa
+    const cnmcCards = cnmcGroupCards(cnmcPeriodo);
 
-    const boeCards = boeNacional.map(e =>
+    // Fusionar anuncios BOE-N (Suplemento Notificaciones) duplicados — igual que en Normativa/Todas
+    const boeNacionalDeduped = dedupeBoeNotif(boeNacional, 'title', 'published_date', 'department');
+    const boeCards = boeNacionalDeduped.map(e =>
       normCardBOE(e, 'title', 'published_date', 'summary', 'section', 'department', 'tipo', 'url')
     );
 
     // Ordenar todo junto por fecha descendente
     const allNacionalCards = [
-      ...boeNacional.map((e, i) => ({ fecha: e.fecha_real || e.published_date || '', html: boeCards[i] })),
-      ...cnmcGroups.map((g, i) => ({
-        fecha: g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0],
-        html: cnmcCards[i]
-      }))
+      ...boeNacionalDeduped.map((e, i) => ({ fecha: e.fecha_real || e.published_date || '', html: boeCards[i] })),
+      ...cnmcCards,
     ].sort((a,b) => b.fecha.localeCompare(a.fecha));
 
     document.getElementById('resumen-nacional-empty').style.display = allNacionalCards.length ? 'none' : 'block';
@@ -1756,21 +1759,27 @@
     let maxISO    = '9999-12-31';
     const desdeEl = document.getElementById('eu-fecha-desde');
     const hastaEl = document.getElementById('eu-fecha-hasta');
+    const euNotaEl = document.getElementById('eu-dias-nota');
     if (desde || hasta) {
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      if (euNotaEl) euNotaEl.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      refDate.setDate(refDate.getDate() - (dias - 1));
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
+      refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      if (euNotaEl) euNotaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      if (euNotaEl) euNotaEl.style.display = 'none';
     }
 
     const filtered = eurlex.filter(e => {
@@ -1901,21 +1910,28 @@
       // Fechas manuales tienen prioridad
       if (desde) cutoffISO = desde;
       if (hasta) maxISO = hasta;
+      const notaElM = document.getElementById('esp-dias-nota');
+      if (notaElM) notaElM.style.display = 'none';
     } else if (dias < 9999) {
       const hoy = new Date();
       const hoyISO = isoLocal(hoy);
       maxISO = hoyISO;
       const refDate = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-      const diasEfectivos = (refDate.getDay() === 1 && dias === 7) ? 14 : dias;
+      const esLunesAmpliado = (refDate.getDay() === 1 && dias === 7);
+      const diasEfectivos = esLunesAmpliado ? 14 : dias;
       refDate.setDate(refDate.getDate() - (diasEfectivos - 1));
       cutoffISO = isoLocal(refDate);
       // Mostrar el rango calculado en los campos Desde/Hasta
       if (desdeEl) desdeEl.value = cutoffISO;
       if (hastaEl) hastaEl.value = hoyISO;
+      const notaEl = document.getElementById('esp-dias-nota');
+      if (notaEl) notaEl.style.display = esLunesAmpliado ? 'inline' : 'none';
     } else {
       // Toda la normativa — limpiar campos de fecha
       if (desdeEl) desdeEl.value = '';
       if (hastaEl) hastaEl.value = '';
+      const notaEl = document.getElementById('esp-dias-nota');
+      if (notaEl) notaEl.style.display = 'none';
     }
 
     // ── BOE ──────────────────────────────────────────────────────────
@@ -1947,58 +1963,8 @@
         })
       : [];
 
-    // Fusionar por código igual que en pestaña CNMC
-    const cnmcEspGroups = [];
-    const cnmcEspCodes  = new Map();
-    for (const e of cnmcEspFilt) {
-      const { code, desc } = extractCnmcCode(e.title || '');
-      if (code && cnmcEspCodes.has(code)) {
-        cnmcEspGroups[cnmcEspCodes.get(code)].entries.push(e);
-      } else {
-        const idx = cnmcEspGroups.length;
-        cnmcEspGroups.push({ code, desc: desc || e.title, entries: [e] });
-        if (code) cnmcEspCodes.set(code, idx);
-      }
-    }
-
-    const SOURCE_LABEL_E = { CNMC_RSS: 'CNMC RSS', CNMC_S: 'CNMC_S', CNMC_N: 'CNMC Act.' };
-    const SOURCE_COLOR_E = { CNMC_RSS: '#6a1b9a', CNMC_S: '#1565c0', CNMC_N: '#1565c0' };
-    const cnmcEspCards = cnmcEspGroups.map(g => {
-      const ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
-      const main = g.entries.slice().sort((a,b) => ORDER.indexOf(a.source) - ORDER.indexOf(b.source))[0];
-      const codeSpan = g.code ? `<span style="font-family:monospace;font-size:.82em;color:var(--gray4);margin-right:5px">${esc(g.code)}</span>` : '';
-      const chips = g.entries.map(e => {
-        const c = SOURCE_COLOR_E[e.source] || '#1565c0';
-        const l = SOURCE_LABEL_E[e.source] || e.source;
-        return e.url
-          ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="org-chip" style="background:${c}1a;color:${c};cursor:pointer">${l}</span></a>`
-          : `<span class="org-chip" style="background:${c}1a;color:${c}">${l}</span>`;
-      }).join('');
-      const titleHtml = main.url
-        ? `<a href="${esc(main.url)}" target="_blank" rel="noopener">${codeSpan}${esc(g.desc)}</a>`
-        : `${codeSpan}${esc(g.desc)}`;
-      const bestDate = g.entries.map(e => e.published_date || '').sort().reverse()[0];
-      const _SO = ['CNMC_S','CNMC_N','CNMC_RSS'];
-      const bestSum = g.entries.slice().sort((a,b)=>_SO.indexOf(a.source)-_SO.indexOf(b.source))
-        .map(e=>e.summary||'').find(s=>s.length>20)||'';
-      const esNuevo = g.entries.some(e=>e.es_nuevo);
-      return {
-        fecha: g.entries.map(e=>e.fecha_real||e.published_date||'').sort().reverse()[0],
-        html: `<div class="norm-card" style="border-left-color:#1565c0">
-          <div class="norm-header">
-            <div class="norm-title">${titleHtml}</div>
-            ${recencyLabel(bestDate)}
-            ${esNuevo?'<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>':''}
-          </div>
-          <div class="norm-meta">
-            ${chips}
-            ${bestDate?`<span>${bestDate}</span>`:''}
-            ${main.tramitaciones==='Sí'?'<span class="badge badge-auth">📋 Tramitación</span>':''}
-          </div>
-          ${bestSum?`<div class="norm-card-summary">${esc(bestSum)}</div>`:''}
-        </div>`
-      };
-    });
+    // Fusionar por código de expediente — lógica compartida con CNMC y Resumen mensual
+    const cnmcEspCards = cnmcGroupCards(cnmcEspFilt);
 
     // Combinar BOE + CNMC ordenados por fecha
     const boeFiltDeduped = dedupeBoeNotif(boeFilt, 'title', 'published_date', 'department');
@@ -2326,6 +2292,9 @@
       document.querySelectorAll('.resumen-periodo-btn').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
       resumenPeriodo = this.dataset.periodo;
+      if (resumenPeriodo === 'dia-curso' && new Date().getDay() === 1) {
+        showAviso('📅 Hoy es lunes: el resumen de "Hoy" incluye también el sábado anterior para no perder la normativa publicada durante el fin de semana.');
+      }
       renderResumen();
     });
   });
