@@ -799,3 +799,9 @@ python -m compileall .
 ---
 
 *Documento generado a partir del código fuente del proyecto en junio 2026.*
+
+---
+
+© 2026 Estela Salas Alvaro. Todos los derechos reservados.  
+El código fuente, la documentación y los datos de este proyecto son propiedad de su autora.  
+Queda prohibida su reproducción, distribución o uso sin autorización expresa.
