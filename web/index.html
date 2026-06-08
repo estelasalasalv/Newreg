@@ -1034,6 +1034,39 @@
   }
 
   /* ── Templates ──────────────────────────────────────────────── */
+
+  // Agrupa anuncios BOE-N (Suplemento Notificaciones) con título/fecha/organismo
+  // idénticos pero external_id distinto — el BOE publica varios anuncios oficiales
+  // independientes el mismo día con el mismo texto de índice genérico (el contenido
+  // real de cada uno solo está en su PDF). Se muestra una sola tarjeta con un aviso
+  // "(N anuncios con distinto ID)" para que no parezca un error de scraping.
+  function dedupeBoeNotif(list, titleField, fechaField, orgField) {
+    const groups = new Map();
+    const order  = [];
+    for (const e of list) {
+      if (e.section !== 'Suplemento Notificaciones') {
+        order.push(e);
+        continue;
+      }
+      const key = [e[titleField]||'', e[fechaField]||'', e[orgField]||''].join('|');
+      if (groups.has(key)) {
+        groups.get(key).push(e);
+      } else {
+        const arr = [e];
+        groups.set(key, arr);
+        order.push({ __group: arr, __key: key });
+      }
+    }
+    return order.map(item => {
+      if (!item.__group) return item;
+      const arr = item.__group;
+      if (arr.length === 1) return arr[0];
+      const main = { ...arr[0] };
+      main[titleField] = `${main[titleField]} (${arr.length} anuncios con distinto ID)`;
+      return main;
+    });
+  }
+
   function normCardBOE(e, titleField, fechaField, kwField, secField, orgField, subField, enlaceField) {
     const title  = e[titleField]  || '';
     const fecha  = e[fechaField]  || '';
@@ -1823,9 +1856,10 @@
       if (!q) return true;
       return (e.title+' '+(e.department||'')+' '+(e.section||'')+' '+(e.summary||'')).toLowerCase().includes(q);
     });
-    const todasVisible = filtered.slice(0, todasPage * PAGE);
+    const deduped = dedupeBoeNotif(filtered, 'title', 'published_date', 'department');
+    const todasVisible = deduped.slice(0, todasPage * PAGE);
     document.getElementById('count').textContent = filtered.length + ' resultado' + (filtered.length!==1?'s':'');
-    document.getElementById('todas-mas').style.display = todasVisible.length < filtered.length ? 'block' : 'none';
+    document.getElementById('todas-mas').style.display = todasVisible.length < deduped.length ? 'block' : 'none';
     document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
     el.innerHTML = todasVisible.map(e => {
       if (e.source === 'BOE') {
@@ -1967,8 +2001,9 @@
     });
 
     // Combinar BOE + CNMC ordenados por fecha
+    const boeFiltDeduped = dedupeBoeNotif(boeFilt, 'title', 'published_date', 'department');
     const allEspItems = [
-      ...boeFilt.map(e => ({
+      ...boeFiltDeduped.map(e => ({
         fecha: e.fecha_real || '',
         html: normCardBOE(e,'title','published_date','summary','section','department','tipo','url')
       })),
