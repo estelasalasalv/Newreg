@@ -41,6 +41,16 @@ _EXCLUDED_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Anuncios sobre operaciones de mantenimiento/obra puntual (limpieza, dragado,
+# trabajos varios) en aprovechamientos energéticos — no tratan sobre la concesión
+# o instalación en sí, así que no aportan valor regulatorio aunque mencionen
+# "hidroeléctrico" u otros términos energéticos.
+_EXCLUDED_TRABAJOS_RE = re.compile(
+    r"autorizaci[oó]n.*(limpieza|dragado|trabajos)|"
+    r"(limpieza|dragado|trabajos).*autorizaci[oó]n",
+    re.IGNORECASE,
+)
+
 # Para ser admitido, el anuncio debe contener términos específicamente energéticos
 _ENERGY_SPECIFIC_RE = re.compile(
     r"industria y energ[ií]a|fotovoltai|solar|e[oó]lic|"
@@ -147,6 +157,8 @@ def scrape(date_obj=None, days_back: int = 1) -> List[Dict]:
                 continue
             if _EXCLUDED_CONTRATOS_RE.search(item_text):
                 continue
+            if _EXCLUDED_TRABAJOS_RE.search(item_text):
+                continue
 
             # Estrategia: filtrar primero con el texto corto del índice (evita peticiones innecesarias).
             # Solo se descarga el título completo en dos casos:
@@ -177,6 +189,10 @@ def scrape(date_obj=None, days_back: int = 1) -> List[Dict]:
                 texto_filtro = titulo
 
             if not _ENERGY_SPECIFIC_RE.search(texto_filtro):
+                continue
+            # Re-comprobar exclusión de trabajos/limpieza con el título completo
+            # (el texto corto del índice puede no incluir estos términos)
+            if _EXCLUDED_TRABAJOS_RE.search(texto_filtro):
                 continue
 
             results.append({
