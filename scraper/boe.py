@@ -10,7 +10,7 @@ import unicodedata
 import logging
 import requests
 from datetime import datetime, timedelta
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -379,10 +379,19 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
     # Regla 3: Leyes y Decretos-Leyes de rango alto — verificar contenido antes de incluir.
     # Se descarga el texto completo del BOE y se buscan keywords energéticas.
     # Así ninguna ley omnibus (CCAA o estatal) entra si no tiene contenido energético real.
+    # Los Decretos-ley / Reales Decretos-ley (estatales o de CCAA) se someten a un criterio
+    # más estricto: solo se guardan si tratan alguna de las materias energéticas concretas
+    # de _MATERIAS_RDL_PATTERNS (ver _has_materias_rdl_in_text), no cualquier keyword general.
+    _DECRETO_LEY_RE = re.compile(
+        r"^(decreto.?ley\s+\d|real\s+decreto.?ley\s+\d)",
+        re.IGNORECASE
+    )
     _ALTO_RANGO_RE = re.compile(
         r"^(ley\s+de\s+|ley\s+\d|ley\s+org[aá]nica\s+\d|decreto.?ley\s+\d|real\s+decreto.?ley\s+\d)",
         re.IGNORECASE
     )
+    if _DECRETO_LEY_RE.search(titulo) and not _EXCLUDED_ORGANISMS.search(dept):
+        return "CHECK_FULL_TEXT_RDL"
     if _ALTO_RANGO_RE.search(titulo) and not _EXCLUDED_ORGANISMS.search(dept):
         # La señal de que hay contenido energético vendrá al comprobar el texto completo
         # en _parse_sumario() mediante _check_full_text(). Aquí marcamos como candidato.
@@ -411,33 +420,73 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
 # ── Verificación de contenido energético en texto completo ──────────────────
 _BOE_TXT_URL = "https://www.boe.es/diario_boe/txt.php?id={doc_id}"
 
-def _has_energy_keywords_in_text(url: str) -> bool:
-    """Descarga el texto del BOE (solo el cuerpo del documento) y busca keywords energéticas.
-    Se usa para Leyes y RDL que no tienen keywords en el título (Regla 3)."""
+# Materias que justifican guardar un Decreto-ley / Real Decreto-ley (estatal o de CCAA).
+# Criterio más estricto que las keywords energéticas generales: solo estas materias
+# concretas, para evitar guardar decretos-ley ómnibus con alguna mención energética
+# tangencial que no aporta valor regulatorio real.
+_MATERIAS_RDL_RAW: List[str] = [
+    "autorizacion", "autorizaciones",
+    "comercializacion",
+    "comision nacional de los mercados y la competencia",
+    "consumo de energia",
+    "direccion general de politica energetica y minas",
+    "distribucion de energia",
+    "energia electrica",
+    "procedimiento sancionador",
+    "produccion de energia",
+    "red electrica de espana",
+    "registro administrativo", "registros administrativos",
+    "sancion", "sanciones",
+    "servidumbre", "servidumbres",
+    "suministro de energia",
+    "transporte de energia",
+    "tarifa", "tarifas",
+]
+_MATERIAS_RDL_PATTERNS: List[re.Pattern] = [
+    re.compile(r"\b" + re.escape(m) + r"\b") for m in _MATERIAS_RDL_RAW
+]
+
+
+def _fetch_boe_body_text(url: str) -> Optional[str]:
+    """Descarga el texto del cuerpo de un documento BOE (sin navegación ni footer),
+    normalizado (minúsculas, sin acentos). Devuelve None si no se puede obtener."""
     if not url:
-        return False
+        return None
     try:
         import requests as _req
         from bs4 import BeautifulSoup as _BS
         r = _req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
         if r.status_code != 200:
-            return False
+            return None
         soup = _BS(r.text, "lxml")
-        # Extraer solo el cuerpo del documento, no navegación ni footer
         body = (soup.find(id="textoxslt") or
                 soup.find("div", class_="diariosoficiales") or
                 soup.find("div", class_="documento") or
                 soup.body)
         if not body:
-            return False
+            return None
         text = body.get_text(" ", strip=True)
-        norm_text = _norm(text[:80000])
-        for _, pat in _KW_PATTERNS:
-            if pat.search(norm_text):
-                return True
-        return False
+        return _norm(text[:80000])
     except Exception:
+        return None
+
+
+def _has_energy_keywords_in_text(url: str) -> bool:
+    """Descarga el texto del BOE y busca keywords energéticas generales.
+    Se usa para Leyes de rango alto que no tienen keywords en el título (Regla 3)."""
+    norm_text = _fetch_boe_body_text(url)
+    if norm_text is None:
         return False
+    return any(pat.search(norm_text) for _, pat in _KW_PATTERNS)
+
+
+def _has_materias_rdl_in_text(url: str) -> bool:
+    """Descarga el texto del BOE y busca las materias energéticas concretas que
+    justifican guardar un Decreto-ley / Real Decreto-ley (estatal o de CCAA)."""
+    norm_text = _fetch_boe_body_text(url)
+    if norm_text is None:
+        return False
+    return any(pat.search(norm_text) for pat in _MATERIAS_RDL_PATTERNS)
 
 
 # ── Parser del sumario ────────────────────────────────────────────────────────
@@ -463,6 +512,13 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                             if include == "CHECK_FULL_TEXT":
                                 url_txt = _get_url(item)
                                 if not _has_energy_keywords_in_text(url_txt):
+                                    continue
+                            elif include == "CHECK_FULL_TEXT_RDL":
+                                # Decretos-ley / RDL: criterio más estricto — solo
+                                # se guardan si tratan alguna materia concreta de
+                                # _MATERIAS_RDL_RAW (no cualquier keyword energética)
+                                url_txt = _get_url(item)
+                                if not _has_materias_rdl_in_text(url_txt):
                                     continue
 
                             kw       = _find_keywords(titulo, ep_nombre)
