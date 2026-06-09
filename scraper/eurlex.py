@@ -13,6 +13,7 @@ import requests
 from datetime import date, timedelta
 from typing import List, Dict, Optional
 from scraper.boe import _detect_tramitaciones
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -249,14 +250,149 @@ def _process_bindings(bindings: List[Dict]) -> List[Dict]:
     return results
 
 
+_DAILY_BASE = "https://eur-lex.europa.eu/oj/daily-view/{serie}-series/default.html?ojDate={fecha}"
+_EURLEX_BASE_URL = "https://eur-lex.europa.eu"
+
+# Keywords energéticas para filtrar el índice diario (mismas que el SPARQL)
+_DAILY_ENERGY_RE = re.compile(
+    r"energ|electr|renew|renovable|hidrog|hydrogen|emission|emisi|climate|solar|"
+    r"wind|gas natural|natural gas|carbon|decarboni|biofuel|biomass|net.zero|"
+    r"storage|almacen|\bgrid\b|\bpower\b|nuclear|eficiencia|efficiency|greenhouse|"
+    r"invernadero|fotovoltai|offshore|eolic|aerogen|taxonomy|remit|omnibus|"
+    r"accelerateu|energy.union|affordable.and.secure.energy",
+    re.IGNORECASE,
+)
+
+
+def _scrape_daily_index(target_date: date) -> List[Dict]:
+    """Scrape del índice HTML diario del DOUE (series C y L).
+
+    Complementa el SPARQL para capturar documentos recientes que aún no están
+    indexados en el endpoint RDF (el lag habitual es de 3-10 días hábiles).
+    """
+    results: List[Dict] = []
+    fecha_str = target_date.strftime("%d%m%Y")  # formato ojDate: DDMMYYYY
+    fecha_iso = target_date.isoformat()
+
+    for serie in ("L", "C"):
+        url = _DAILY_BASE.format(serie=serie, fecha=fecha_str)
+        try:
+            r = requests.get(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (RegulatoryBot/1.0)", "Accept-Language": "es,en"},
+                timeout=20,
+            )
+            if r.status_code != 200:
+                logger.debug("EUR-Lex daily %s %s: HTTP %d", serie, fecha_iso, r.status_code)
+                continue
+        except requests.RequestException as exc:
+            logger.warning("EUR-Lex daily %s %s: %s", serie, fecha_iso, exc)
+            continue
+
+        soup = BeautifulSoup(r.text, "lxml")
+
+        # Estructura: div.col-md-2 contiene la referencia (p.ej. "C/2026/3099")
+        # El div.col-md-* hermano siguiente contiene el enlace con el título
+        ref_re = re.compile(rf"^[{serie}]/\d{{4}}/\d+$")
+
+        for ref_div in soup.find_all("div", class_="col-md-2"):
+            ref_text = ref_div.get_text(strip=True)
+            if not ref_re.match(ref_text):
+                continue
+
+            # Buscar el div hermano con el título/enlace
+            row = ref_div.parent  # div.row o similar
+            if not row:
+                continue
+            a_tag = row.find("a", href=True)
+            if not a_tag:
+                continue
+
+            title = a_tag.get_text(strip=True)
+            href  = a_tag.get("href", "")
+
+            if not title or len(title) < 15:
+                continue
+
+            # Filtro temático energético
+            if not _DAILY_ENERGY_RE.search(title):
+                continue
+
+            # Filtro de tipo: solo actos con marcador UE/EU/organismos permitidos
+            if not EU_ACT_STRICT_RE.search(title) and not _SERIES_C_ALLOWED_RE.search(title):
+                continue
+
+            # Filtro: excluir no-legislativos
+            if _NON_LEGIS_RE.search(title):
+                continue
+
+            full_url = href if href.startswith("http") else _EURLEX_BASE_URL + href
+            # Normalizar a versión ES si viene en EN
+            full_url = re.sub(r"/legal-content/[A-Z]{2}/TXT/", "/legal-content/ES/TXT/", full_url)
+
+            ext_id = f"eu-daily-{re.sub(r'[^a-z0-9]', '', ref_text.lower())}"
+            tipo = _detect_tipo(title)
+            tramitaciones = _detect_tramitaciones(title)
+
+            results.append({
+                "external_id":     ext_id,
+                "fecha":           fecha_iso,
+                "fuente":          "DOUE",
+                "seccion":         f"DOUE — Serie {serie}",
+                "tipo":            tipo,
+                "organismo":       "Unión Europea",
+                "subseccion":      "",
+                "texto":           title,
+                "enlace":          full_url,
+                "palabras_clave":  "",
+                "resumen":         None,
+                "importante":      "No",
+                "acceso_conexion": "No",
+                "tramitaciones":   tramitaciones,
+                "publicable":      "NO",
+            })
+
+    if results:
+        logger.info("EUR-Lex daily index %s: %d actos energéticos", fecha_iso, len(results))
+    return results
+
+
 def scrape(days_back: int = 1) -> List[Dict]:
-    """Scrape normativa europea energética del día actual (o últimos N días)."""
+    """Scrape normativa europea energética del día actual (o últimos N días).
+
+    Combina dos métodos:
+    1. SPARQL (days_back=7): captura actos ya indexados en el RDF del Publications Office.
+    2. Índice HTML diario (days_back días): captura actos recientes aún no en el SPARQL.
+    Los resultados se deduplicán por external_id antes de devolverse.
+    """
     today     = date.today()
-    date_from = (today - timedelta(days=days_back)).isoformat()
+    date_from = (today - timedelta(days=max(days_back, 7))).isoformat()
     date_to   = today.isoformat()
-    bindings  = _sparql_query(date_from, date_to)
-    results   = _process_bindings(bindings)
-    logger.info("EUR-Lex diario: %d actos UE energéticos", len(results))
+
+    # Método 1: SPARQL (siempre 7 días para cubrir el lag de indexación)
+    bindings = _sparql_query(date_from, date_to)
+    results  = _process_bindings(bindings)
+    logger.info("EUR-Lex SPARQL: %d actos UE energéticos", len(results))
+
+    # Método 2: índice HTML diario (últimos days_back días)
+    # Captura los documentos recientes que el SPARQL aún no tiene indexados
+    seen_ids = {e["external_id"] for e in results}
+    # También registrar títulos normalizados para evitar duplicados con distinto ID
+    seen_titles = {re.sub(r"\s+", " ", e["texto"][:80]).lower() for e in results}
+
+    for i in range(days_back):
+        day = today - timedelta(days=i)
+        if day.weekday() == 6:  # sin domingos (el DOUE no se publica)
+            continue
+        daily = _scrape_daily_index(day)
+        for e in daily:
+            title_key = re.sub(r"\s+", " ", e["texto"][:80]).lower()
+            if e["external_id"] not in seen_ids and title_key not in seen_titles:
+                results.append(e)
+                seen_ids.add(e["external_id"])
+                seen_titles.add(title_key)
+
+    logger.info("EUR-Lex total (SPARQL + daily): %d actos UE energéticos", len(results))
     return results
 
 
