@@ -3,7 +3,7 @@
 **Proyecto:** New_regulation  
 **Repositorio:** https://github.com/estelasalasalv/Newreg  
 **Web pública:** GitHub Pages (rama `gh-pages`, directorio `web/`)  
-**Última actualización de este documento:** junio 2026
+**Última actualización de este documento:** 9 de junio de 2026
 
 ---
 
@@ -37,7 +37,7 @@ Fuentes externas
   CNMC (consultas, actuaciones, RSS)
   MITERD (participación pública)
   ACER (RSS + decisiones)
-  EUR-Lex (SPARQL)
+  EUR-Lex (SPARQL + índice diario HTML)
         │
         ▼
   Scrapers Python
@@ -431,12 +431,18 @@ El parser extrae el enlace y el texto del elemento `<a>` hijo, y normaliza la fe
 
 ### 4.9 EUR-Lex / DOUE (`scraper/eurlex.py`)
 
-**Fuente:** SPARQL endpoint del Publications Office de la UE  
-`https://publications.europa.eu/webapi/rdf/sparql`
+El scraper combina **dos métodos complementarios** para cubrir tanto actos ya indexados como publicaciones del mismo día:
 
-#### Query SPARQL
+- **Método 1 — SPARQL**: cubre los últimos 7 días (margen para lag de indexación).
+- **Método 2 — Índice diario HTML**: cubre el día actual (o los últimos N días configurables), sin lag.
 
-Pide actos publicados en los últimos 7 días (margen para compensar el lag de indexación del endpoint SPARQL) que cumplan dos filtros simultáneos:
+Ambos métodos se ejecutan siempre y sus resultados se deduplicación por `external_id` y por título normalizado.
+
+#### Método 1 — SPARQL (`_sparql_query`)
+
+**Fuente:** `https://publications.europa.eu/webapi/rdf/sparql`
+
+Pide actos publicados en los últimos 7 días que cumplan dos filtros simultáneos:
 
 **Filtro de tipo de acto** — el título debe contener uno de:
 - `(UE)`, `(EU)`, `(Euratom)` → actos legislativos UE
@@ -446,15 +452,39 @@ Pide actos publicados en los últimos 7 días (margen para compensar el lag de i
 - `European Parliament` / `Parlamento Europeo` → Parlamento Europeo
 - `Economic and Social Committee` → CESE
 
-**Filtro temático** — el título debe contener alguna de ~35 palabras clave energéticas: `energ`, `electr`, `renew`, `renovable`, `hidrog`, `hydrogen`, `emission`, `climate`, `solar`, `wind`, `gas natural`, `carbon`, `decarboni`, `biofuel`, `biomass`, `net zero`, `storage`, `grid`, `power`, `nuclear`, `eficiencia`, `efficiency`, `greenhouse`, `fotovoltai`, `offshore`, `eolic`, `aerogen`, `taxonomy`, `remit`, `omnibus`…
+**Filtro temático** — el título debe contener alguna de ~35 palabras clave energéticas (véase `_DAILY_ENERGY_RE` más abajo).
 
-#### Procesamiento de resultados (`_process_bindings`)
+#### Procesamiento de resultados SPARQL (`_process_bindings`)
 
 1. **Agrupa** los títulos por URI del documento (`work`).
 2. **Selecciona el idioma** en orden de preferencia: español → inglés → cualquiera.
 3. **Excluye** documentos no legislativos: informes de staff, comunicaciones, actas, minutos, agenda.
 4. **Excluye** legislación nacional que se cuela en los resultados (decretos portugueses, italianos, franceses, alemanes…).
 5. **Deduplica** por título normalizado.
+
+#### Método 2 — Índice diario HTML (`_scrape_daily_index`)
+
+**Fuente:** `https://eur-lex.europa.eu/oj/daily-view/{L|C}-series/default.html?ojDate={DDMMYYYY}`
+
+Disponibilidad: mismo día de publicación (sin lag). Se scrapa tanto la **Serie L** (legislación vinculante) como la **Serie C** (comunicaciones, opiniones, informes).
+
+**Flujo:**
+1. Descarga el HTML del índice diario de cada serie.
+2. Extrae pares `(referencia, título, enlace)` de los elementos `div.col-md-2` (referencia) y el `<a>` hermano (título + href).
+3. Aplica los mismos filtros que el método SPARQL:
+   - `_DAILY_ENERGY_RE` — palabras clave energéticas.
+   - `EU_ACT_STRICT_RE` — requiere marcador UE en el título, salvo exención por `_SERIES_C_ALLOWED_RE`.
+   - `_NON_LEGIS_RE` — excluye actas, minutos, agendas, informes de staff.
+4. El `external_id` se forma como `eu-daily-{referencia_normalizada}` (ej. `eu-daily-c20263099`).
+
+**`_DAILY_ENERGY_RE`** — mismas ~35 palabras clave que el filtro BOE español: `energ`, `electr`, `renew`, `renovable`, `hidrog`, `hydrogen`, `emission`, `emisi`, `climate`, `solar`, `wind`, `gas natural`, `natural gas`, `carbon`, `decarboni`, `biofuel`, `biomass`, `net zero`, `storage`, `almacen`, `grid`, `power`, `nuclear`, `eficiencia`, `efficiency`, `greenhouse`, `invernadero`, `fotovoltai`, `offshore`, `eolic`, `aerogen`, `taxonomy`, `remit`, `omnibus`, `accelerateu`, `energy union`, `affordable and secure energy`.
+
+**`_SERIES_C_ALLOWED_RE`** — permite documentos Serie C sin marcador `(UE)` si provienen de organismos autorizados:
+- Avisos de la Comisión (`COMMISSION NOTICE`)
+- Tribunal de Cuentas UE (`Court of Auditors`)
+- Comité de las Regiones (`Committee of the Regions`)
+- Parlamento Europeo (`European Parliament`)
+- CESE (`Economic and Social Committee`)
 
 #### Tipos de acto reconocidos
 
@@ -475,7 +505,7 @@ Pide actos publicados en los últimos 7 días (margen para compensar el lag de i
 | Dictamen CESE | `Dictamen CESE (UE)` |
 | Otros | `Acto UE` |
 
-**Nota sobre lag de indexación**: el SPARQL del Publications Office suele tardar entre 2 y 7 días en indexar un acto tras su publicación en el DOUE. Por eso el scraper pide siempre los últimos 7 días, no solo el día actual.
+**Nota sobre lag de indexación SPARQL**: el endpoint suele tardar 2-7 días en indexar un acto. El índice diario HTML mitiga este lag cubriendo el día actual sin espera. Como resultado, un acto recién publicado puede aparecer primero con `external_id` tipo `eu-daily-*` y más tarde enriquecerse o deduplicarse cuando SPARQL lo indexe.
 
 ---
 
@@ -648,7 +678,7 @@ La web carga `data.json` y muestra los datos sin backend. Todo el procesamiento 
 
 ### 9.2 Filtros globales
 
-Los siguientes filtros se aplican de forma consistente en **todas** las pestañas y en el Resumen mensual:
+Los siguientes filtros se aplican de forma consistente en **todas** las pestañas y en el Resumen mensual (incluida la sección de Consultas CNMC del resumen):
 
 | Checkbox | Variable | Efecto |
 |---|---|---|
@@ -658,10 +688,14 @@ Los siguientes filtros se aplican de forma consistente en **todas** las pestaña
 
 **`ocultarGas = true` por defecto** al cargar la web.
 
+Los tres filtros son aplicados explícitamente en cada función de render (`renderTodas`, `renderEsp`, `renderCnmc`, `renderConsultas`, `renderResumen`, etc.) para garantizar comportamiento uniforme.
+
 ### 9.3 Funciones de agrupación visual
 
 #### `dedupeBoeNotif(list, titleField, fechaField, orgField)`
 Fusiona anuncios BOE-N (Suplemento de Notificaciones) que comparten **mismo título + misma fecha + mismo organismo** pero tienen distinto `external_id`, mostrándolos como una única tarjeta con el sufijo "(N anuncios con distinto ID)".
+
+Ejemplo: "Registro de la Propiedad de Icod de los Vinos" puede aparecer con 3 `external_id` distintos en el mismo día; `dedupeBoeNotif` los colapsa en una sola tarjeta.
 
 Aplicada en: `renderTodas`, `renderEsp` (Normativa española), `renderResumen` (sección nacional).
 
@@ -750,7 +784,7 @@ python -m http.server 8000
 # Abrir http://localhost:8000
 ```
 
-### Backfill histórico
+### Backfill histórico (BOE)
 
 ```bash
 # Cargar todo 2025 y 2026
@@ -759,6 +793,35 @@ python backfill_historico.py --desde 2025-01-01
 # Solo un rango específico
 python backfill_historico.py --desde 2026-01-01 --hasta 2026-03-31 --solo-boe
 ```
+
+### Backfill EUR-Lex por rango de fechas
+
+Para recuperar normativa europea de un período pasado (p. ej. cuando el SPARQL tenía lag o el índice diario no estaba implementado):
+
+```python
+# Script inline — ejecutar desde el directorio del proyecto
+from datetime import date, timedelta
+from scraper.eurlex import _scrape_daily_index
+from db.database import upsert_eurlex, export_to_json
+
+start = date(2026, 5, 1)
+end   = date(2026, 6, 9)  # fecha hasta (inclusive)
+
+all_entries = []
+d = start
+while d <= end:
+    if d.weekday() != 6:  # excluir domingos
+        entries = _scrape_daily_index(d)
+        all_entries.extend(entries)
+        print(f"{d}: {len(entries)} actos")
+    d += timedelta(days=1)
+
+upsert_eurlex(all_entries)
+export_to_json()
+print(f"Total: {len(all_entries)} actos procesados")
+```
+
+Este procedimiento es **idempotente**: si un acto ya existe en BD (por `external_id`), se omite sin duplicar.
 
 ### Forzar ejecución del scraper en GitHub
 
