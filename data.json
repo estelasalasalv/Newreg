@@ -1,5 +1,5 @@
 {
-  "updated_at": "09/06/2026 01:54",
+  "updated_at": "09/06/2026 02:19",
   "total": 803,
   "entries": [
     {
@@ -19,7 +19,7 @@
       "filtro": "BOE",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 09:01",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -38,7 +38,7 @@
       "filtro": "BOE",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 09:01",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -57,7 +57,7 @@
       "filtro": "BOE",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 09:01",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -76,7 +76,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 08:53",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -95,7 +95,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 08:53",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -114,7 +114,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 08:53",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -133,7 +133,7 @@
       "filtro": "BOE",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 08:53",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -152,7 +152,7 @@
       "filtro": "BOE",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 08:53",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -171,7 +171,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-08",
       "scraped_at": "08/06/2026 08:53",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_N",
@@ -190,7 +190,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -209,7 +209,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_N",
@@ -228,7 +228,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -247,7 +247,7 @@
       "filtro": "CNMC_S",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_N",
@@ -266,7 +266,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -285,7 +285,7 @@
       "filtro": "CNMC_S",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_N",
@@ -304,7 +304,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -323,7 +323,7 @@
       "filtro": "CNMC_S",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -342,7 +342,7 @@
       "filtro": "CNMC_S",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -361,7 +361,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -380,7 +380,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_N",
@@ -399,7 +399,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -418,7 +418,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -437,7 +437,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -456,7 +456,7 @@
       "filtro": "CNMC_S",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -475,7 +475,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_N",
@@ -494,7 +494,7 @@
       "filtro": "CNMC_N",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -513,7 +513,7 @@
       "filtro": "CNMC_S",
       "fecha_real": "2026-06-07",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -532,7 +532,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-06",
       "scraped_at": "06/06/2026 10:31",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -551,7 +551,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-06",
       "scraped_at": "06/06/2026 10:31",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -570,7 +570,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-06",
       "scraped_at": "06/06/2026 10:31",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -589,7 +589,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-06",
       "scraped_at": "06/06/2026 10:31",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -608,7 +608,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-06",
       "scraped_at": "06/06/2026 10:31",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "BOE",
@@ -627,7 +627,7 @@
       "filtro": "MITERD",
       "fecha_real": "2026-06-06",
       "scraped_at": "06/06/2026 10:31",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -646,7 +646,7 @@
       "filtro": "CNMC_RSS",
       "fecha_real": "2026-06-05",
       "scraped_at": "07/06/2026 11:38",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_S",
@@ -30615,24 +30615,6 @@
   ],
   "eurlex": [
     {
-      "external_id": "eu-commissionnoticeontheinterpretation",
-      "fecha": "30/04/2026",
-      "anio": 2026,
-      "fuente": "DOUE",
-      "seccion": "DOUE — Serie L",
-      "tipo": "Reglamento (UE)",
-      "organismo": "Unión Europea",
-      "texto": "COMMISSION NOTICE on the interpretation and implementation of certain legal provisions of the Disclosures Delegated Act under Article 8 of the EU Taxonomy Regulation, as amended by the Omnibus Delegated Act, on the reporting of Taxonomy-eligible and Taxonomy-aligned economic activities and assets (fourth notice)",
-      "enlace": "http://publications.europa.eu/resource/cellar/d956c221-4450-11f1-8095-01aa75ed71a1",
-      "palabras_clave": "",
-      "resumen": null,
-      "impacto_ree": null,
-      "importante": "Sí",
-      "acceso_conexion": "No",
-      "tramitaciones": "No",
-      "fecha_real": "2026-04-30"
-    },
-    {
       "external_id": "eu-d956c221-4450-11f1-8095-01aa75",
       "fecha": "30/04/2026",
       "anio": 2026,
@@ -30644,6 +30626,24 @@
       "enlace": "https://eur-lex.europa.eu/legal-content/ES/ALL/?uri=CELEX:52026XC02558",
       "palabras_clave": "",
       "resumen": "Cuarto aviso de la Comisión Europea sobre la interpretación y aplicación del Acto Delegado de Divulgación del Reglamento de Taxonomía UE, modificado por el Acto Delegado Ómnibus, en materia de actividades económicas elegibles y alineadas con la Taxonomía verde europea.\n\n**Impacto TSO/OS:** Como empresa cotizada, REE debe aplicar los criterios de Taxonomía UE en su información no financiera. Este aviso aclara cómo reportar actividades elegibles y alineadas, especialmente relevante para inversiones en red de transporte clasificables como mitigación del cambio climático.",
+      "impacto_ree": null,
+      "importante": "Sí",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-04-30"
+    },
+    {
+      "external_id": "eu-commissionnoticeontheinterpretation",
+      "fecha": "30/04/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie L",
+      "tipo": "Reglamento (UE)",
+      "organismo": "Unión Europea",
+      "texto": "COMMISSION NOTICE on the interpretation and implementation of certain legal provisions of the Disclosures Delegated Act under Article 8 of the EU Taxonomy Regulation, as amended by the Omnibus Delegated Act, on the reporting of Taxonomy-eligible and Taxonomy-aligned economic activities and assets (fourth notice)",
+      "enlace": "http://publications.europa.eu/resource/cellar/d956c221-4450-11f1-8095-01aa75ed71a1",
+      "palabras_clave": "",
+      "resumen": null,
       "impacto_ree": null,
       "importante": "Sí",
       "acceso_conexion": "No",
@@ -30723,6 +30723,78 @@
       "fecha_real": "2026-05-26"
     },
     {
+      "external_id": "eu-daily-c20262685",
+      "fecha": "26/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Directiva (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Case C-514/24, Magyar Telekom: Judgment of the Court (Second Chamber) of 12 March 2026 (request for a preliminary ruling from the Kúria – Hungary) – Magyar Telekom Nyrt. v Nemzeti Média- és Hírközlési Hatóság Elnöke (Reference for a preliminary ruling – Approximation of laws – Telecommunications sector – Directive (EU) 2018/1972 – European Electronic Communications Code – First subparagraph of Article 105(4)– Right of end-users to terminate their contact without further costs due to modifications unilaterally proposed by a provider of electronic communication services – Exceptions – Modifications directly imposed by EU law or national law)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602685",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-26"
+    },
+    {
+      "external_id": "eu-daily-c20262682",
+      "fecha": "26/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento de Ejecución (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Case C-316/24 P: Judgment of the Court (Fourth Chamber) of 18 December 2025 – PAN Europe v Commission (Appeal – Agriculture – Plant protection products – Article 4 – Regulation (EC) No 1107/2009 – Implementing Regulation (EU) 2021/2049 – Renewal of the approval of the active substance cypermethrin – Request for internal review – Regulation (EC) No 1367/2006 – Article 10(1) – Decision refusing the request – Risk assessment and risk management – Identification of critical areas of concern – Realistic conditions of use – Precautionary principle)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602682",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-26"
+    },
+    {
+      "external_id": "eu-daily-c20262674",
+      "fecha": "26/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Case C-633/23, Electrabel and Others: Judgment of the Court (Fourth Chamber) of 18 December 2025 (request for a preliminary ruling from the cour d’appel de Bruxelles – Belgium) – Electrabel SA, Fédération Belge des Entreprises Électriques et Gazières ASBL, Organisatie voor Duurzame Energie Vlaanderen ASBL, Wind4Wallonia 2 SA, Luminus SA, EDF Belgium SA, ActiVent Wallonie SCRL, Eol’Wapi SA, Lumiwind SC, Luminus Wind Together SC v Commission de Régulation de l’Électricité et du Gaz (CREG) (Reference for a preliminary ruling – Internal market for electricity – Regulation (EU) 2022/1854 – Emergency intervention to address high energy prices – Article 2(5) and (9) – Articles 6 to 8 – Cap on market revenues obtained by electricity producers using certain energy sources – Determination of market revenues – National legislation providing for the use of presumptions that are either irrebuttable or rebuttable by means of other presumptions – Principle of proportionality – Article 22(2)(c) – Period of application of Articles 6 to 8 of that regulation – Application of a measure capping revenue for a period prior to that provided for in that regulation, pursuant to national legislation adopted after the entry into force of that regulation – Principles of the primacy and effectiveness of EU law – Principle of sincere cooperation)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602674",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-26"
+    },
+    {
+      "external_id": "eu-daily-c20262693",
+      "fecha": "26/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento (UE)",
+      "organismo": "Unión Europea",
+      "texto": "CaseC-403/24, Prvo plinarsko društvo: Order of the Court (Ninth Chamber) of 26 February 2026 (request for a preliminary ruling from the Visoki trgovački sud – Croatia) – PRVO PLINARSKO DRUŠTVO d.o.o. v Gazprom export LLC, Privredna banka Zagreb d.d. (Reference for a preliminary ruling – Article 53(2) of the Rules of Procedure of the Court of Justice – Article 19(1), second subparagraph, TEU – Effective judicial protection in matters covered by EU law – Independence of judges – Court established in advance by law – Fair trial – National legislation providing for the establishment of a registration judge in courts of second instance who, in practice, has the power to suspend the delivery of a judgment – Incompatibility of that practice – Final nature of the judgment concerned – Regulation (EU) 2020/1998 – Decision (CFSP) 2020/1999 – Irrelevance of the interpretation sought – Hypothetical question – Manifest inadmissibility)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602693",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-26"
+    },
+    {
       "external_id": "eu-71ca50f4-4451-11f1-8095-01aa75",
       "fecha": "25/03/2026",
       "anio": 2026,
@@ -30757,6 +30829,24 @@
       "acceso_conexion": "No",
       "tramitaciones": "No",
       "fecha_real": "2026-02-23"
+    },
+    {
+      "external_id": "eu-daily-c20262540",
+      "fecha": "22/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Dictamen CESE (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Opinion of the European Economic and Social Committee – Energy connectivity, electricity grids (exploratory opinion at the request of the Cyprus Presidency)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602540",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-22"
     },
     {
       "external_id": "eu-regulationeu2015757oftheeuropean",
@@ -30813,6 +30903,24 @@
       "fecha_real": "2026-05-12"
     },
     {
+      "external_id": "eu-regelingvandeministervanvolkshuisve",
+      "fecha": "12/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie L",
+      "tipo": "Acto UE",
+      "organismo": "Unión Europea",
+      "texto": "Regeling van de Minister van Volkshuisvesting en Ruimtelijke Ordening van 24 april 2026, nr. 2026-0000173784, tot wijziging van de Omgevingsregeling in verband met nieuwe versies van NTA 8800, BRL 9500-U, BRL 9500-W en BRL 9501 vanwege de implementatie van Richtlijn (EU) 2024/1275 van het Europees Parlement en de Raad van 24 april 2024 betreffende de energieprestatie van gebouwen (PbEU 2024, L 1275) en de verbetering kwaliteitsborging energielabel",
+      "enlace": "http://publications.europa.eu/resource/cellar/830ea510-ae78-4fb9-83d8-81ccf787bd3a",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-12"
+    },
+    {
       "external_id": "eu-commissionrecommendationeu2026of",
       "fecha": "10/03/2026",
       "anio": 2026,
@@ -30849,6 +30957,24 @@
       "fecha_real": "2026-04-09"
     },
     {
+      "external_id": "eu-daily-c20263099",
+      "fecha": "08/06/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Acto Comité de las Regiones (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Declaration of the Bureau of the European Committee of the Regions on AccelerateEU – Energy Union – Affordable and Secure Energy through Accelerated Action",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202603099",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-06-08"
+    },
+    {
       "external_id": "eu-councildecisioneu20252307of13oc",
       "fecha": "08/01/2026",
       "anio": 2026,
@@ -30867,6 +30993,60 @@
       "fecha_real": "2026-01-08"
     },
     {
+      "external_id": "eu-daily-c20262174",
+      "fecha": "06/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento (UE)",
+      "organismo": "Unión Europea",
+      "texto": "P10_TA(2025)0330 – Phasing out Russian natural gas imports and improving monitoring of potential energy dependencies – European Parliament legislative resolution of 17 December 2025 on the proposal for a regulation of the European Parliament and of the Council on phasing out Russian natural gas imports, improving monitoring of potential energy dependencies and amending Regulation (EU) 2017/1938 (COM(2025)0828 – C10-0123/2025 – 2025/0180(COD)) (Ordinary legislative procedure: first reading)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602174",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-06"
+    },
+    {
+      "external_id": "eu-daily-c20262373",
+      "fecha": "04/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento Delegado (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Case T-575/22: Judgment of the General Court of 18 March 2026 – Robin Wood and Others v Commission (Environment – Aarhus Convention – Rejection of request for internal review – Article 10(1) of Regulation (EC) No 1367/2006 – Delegated Regulation (EU) 2021/2139 – Forest management – Activities relating to the production of fuels and bioenergy from forest biomass – Taxonomy – Requirements for technical screening criteria – Article 19 of Regulation (EU) 2020/852 – Substantial contribution to climate change mitigation and adaptation – Significant harm to environmental objectives)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602373",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-04"
+    },
+    {
+      "external_id": "eu-daily-c20262380",
+      "fecha": "04/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento Delegado (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Case T-108/25: Judgment of the General Court of 18 March 2026 – MAN Truck &amp;amp; Bus v EUIPO – Rolls-Royce Power Systems (V12X) (EU trade mark – Invalidity proceedings – EU word mark V12X – Absolute ground for invalidity – Descriptive character – Article 7(1)(c) and Article 59(1)(a) of Regulation (EU) 2017/1001 – Validity of evidence – Article 95(1) of Regulation 2017/1001 – Evidence submitted for the first time before the Board of Appeal – Article 95(2) of Regulation 2017/1001 – Article 27(4) of Delegated Regulation (EU) 2018/625 – Right to property – Article 17 of the Charter of Fundamental Rights)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602380",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-04"
+    },
+    {
       "external_id": "eu-commissiondecisiongrantingtheportugu",
       "fecha": "04/05/2026",
       "anio": 2026,
@@ -30883,6 +31063,24 @@
       "acceso_conexion": "No",
       "tramitaciones": "No",
       "fecha_real": "2026-05-04"
+    },
+    {
+      "external_id": "eu-daily-c20262992",
+      "fecha": "03/06/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Directiva (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Commission Notice on the publication of the details for the calculation of the price difference between kerosene and relevant eligible aviation fuels and for the allocation of allowances for the use of eligible fuels under the EU Emissions Trading System established by Directive 2003/87/EC",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602992",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-06-03"
     },
     {
       "external_id": "eu-directiveeu20181972oftheeuropean",
@@ -30919,6 +31117,42 @@
       "acceso_conexion": "No",
       "tramitaciones": "No",
       "fecha_real": "2026-01-02"
+    },
+    {
+      "external_id": "eu-daily-c20262558",
+      "fecha": "01/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento (UE)",
+      "organismo": "Unión Europea",
+      "texto": "COMMISSION NOTICE on the interpretation and implementation of certain legal provisions of the Disclosures Delegated Act under Article 8 of the EU Taxonomy Regulation, as amended by the Omnibus Delegated Act, on the reporting of Taxonomy-eligible and Taxonomy-aligned economic activities and assets (fourth notice)",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602558",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-01"
+    },
+    {
+      "external_id": "eu-daily-c20262586",
+      "fecha": "01/05/2026",
+      "anio": 2026,
+      "fuente": "DOUE",
+      "seccion": "DOUE — Serie C",
+      "tipo": "Reglamento (UE)",
+      "organismo": "Unión Europea",
+      "texto": "Opinion 13/2026: concerning the proposal for a regulation of the European Parliament and of the Council establishing the Temporary Decarbonisation Fund – COM (2025) 990 final",
+      "enlace": "https://eur-lex.europa.eu./../../../legal-content/ES/TXT/?uri=OJ:C_202602586",
+      "palabras_clave": "",
+      "resumen": null,
+      "impacto_ree": null,
+      "importante": "No",
+      "acceso_conexion": "No",
+      "tramitaciones": "No",
+      "fecha_real": "2026-05-01"
     }
   ],
   "acer": [
@@ -37742,7 +37976,7 @@
       "fecha_real": "2026-06-01",
       "anio": 2026,
       "scraped_at": "01/06/2026 10:20",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
@@ -44256,7 +44490,7 @@
       "fecha_real": "2026-06-01",
       "anio": 2026,
       "scraped_at": "01/06/2026 10:20",
-      "es_nuevo": true
+      "es_nuevo": false
     },
     {
       "source": "CNMC_RSS",
