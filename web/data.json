@@ -1,5 +1,5 @@
 {
-  "updated_at": "15/06/2026 14:44",
+  "updated_at": "15/06/2026 15:08",
   "total": 300,
   "entries": [
     {
@@ -14149,7 +14149,7 @@
         "palabras_clave": "eléctrica, energía",
         "resumen": "Nuevo reglamento general de suministro, comercialización y agregación de energía eléctrica, que transpone la Directiva UE 2019/944 y establece el marco para el agregador independiente.",
         "impacto_ree": "Consolida el marco de acceso de terceros a la red para suministro y agregación. Los agregadores independientes generan nuevos flujos de potencia que REE debe gestionar como operador del sistema.",
-        "importante": "No",
+        "importante": "Sí",
         "acceso_conexion": "No",
         "tramitaciones": "No",
         "publicable": "NO"
