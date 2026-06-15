@@ -1,5 +1,5 @@
 {
-  "updated_at": "15/06/2026 12:33",
+  "updated_at": "15/06/2026 12:40",
   "total": 300,
   "entries": [
     {
@@ -13061,7 +13061,7 @@
         "palabras_clave": "eléctrico, sistema eléctrico",
         "resumen": "La CNMC modifica los procedimientos de operación 3.1 (energía reactiva), 3.2 (restricciones técnicas) y 7.2 (calidad del suministro) para facilitar la estabilización de la tensión del sistema.",
         "impacto_ree": "Afecta directamente a la operación del sistema, obligando a REE a adaptar los procedimientos operativos en tiempo real y los protocolos de coordinación con los generadores para el control de la tensión y la energía reactiva.",
-        "importante": "No",
+        "importante": "Sí",
         "acceso_conexion": "Transporte/Operador",
         "tramitaciones": "No",
         "publicable": "NO"
@@ -18700,7 +18700,7 @@
       "section": "III. Otras disposiciones",
       "department": "COMISIÓN NACIONAL DE LOS MERCADOS Y LA COMPETENCIA",
       "tipo": "Resolucion",
-      "importante": "No",
+      "importante": "Sí",
       "acceso_conexion": "Transporte/Operador",
       "tramitaciones": "No",
       "summary": "eléctrico, sistema eléctrico",
