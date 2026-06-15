@@ -1,5 +1,5 @@
 {
-  "updated_at": "15/06/2026 15:08",
+  "updated_at": "15/06/2026 15:26",
   "total": 300,
   "entries": [
     {
@@ -14132,7 +14132,7 @@
         "palabras_clave": "eléctrica, conexión a la red",
         "resumen": "Actualiza los requisitos técnicos de conexión a la red para módulos de generación y almacenamiento, introduciendo especificaciones para sistemas no peninsulares. Entrada en vigor el 12 de mayo de 2026.",
         "impacto_ree": "Obliga a adaptar los procedimientos de operación para los nuevos requisitos técnicos de conexión, afectando a los criterios de despacho y la coordinación con generadores renovables.",
-        "importante": "No",
+        "importante": "Sí",
         "acceso_conexion": "Acceso/Conexion",
         "tramitaciones": "No",
         "publicable": "NO"
@@ -19992,7 +19992,7 @@
       "section": "I. Disposiciones generales",
       "department": "MINISTERIO PARA LA TRANSICIÓN ECOLÓGICA Y EL RETO DEMOGRÁFICO",
       "tipo": "Orden",
-      "importante": "No",
+      "importante": "Sí",
       "acceso_conexion": "Acceso/Conexion",
       "tramitaciones": "No",
       "summary": "eléctrica, conexión a la red",
