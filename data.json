@@ -1,5 +1,5 @@
 {
-  "updated_at": "24/07/2026 10:08",
+  "updated_at": "24/07/2026 13:35",
   "total": 1259,
   "entries": [
     {
@@ -45247,6 +45247,22 @@
     },
     {
       "source": "ACER",
+      "title": "Las elevadas facturas de energía y los contratos fijos siguen prevaleciendo en los mercados minoristas de energía de la UE",
+      "url": "https://www.acer.europa.eu/news/high-energy-bills-and-fixed-contracts-continue-prevail-eu-retail-energy-markets",
+      "section": "ACER Noticias",
+      "department": "ACER",
+      "summary": "ACER’s new retail energy markets dashboard offers an interactive, country-by-country view of electricity and gas markets across the EU and Norway.",
+      "impacto_ree": null,
+      "tramitaciones": "No",
+      "importante": "No",
+      "published_date": "24/07/2026",
+      "fecha_real": "2026-07-24",
+      "anio": 2026,
+      "scraped_at": "24/07/2026 13:34",
+      "es_nuevo": true
+    },
+    {
+      "source": "ACER",
       "title": "ACER actualiza la metodología para una evaluación más eficiente de los requisitos de reserva eléctrica regional",
       "url": "https://www.acer.europa.eu/news/acer-updates-methodology-more-efficient-assessment-regional-electricity-reserve-requirements",
       "section": "ACER Noticias",
@@ -45343,11 +45359,11 @@
     },
     {
       "source": "ACER",
-      "title": "ACER modifica las normas de reparto de costes para el redespacho y el comercio compensatorio de electricidad en la región central",
-      "url": "https://www.acer.europa.eu/news/acer-amends-cost-sharing-rules-electricity-redispatching-and-countertrading-core-region",
-      "section": "ACER Noticias",
+      "title": "Decisión ACER N° 11-2026 sobre la metodología para el reparto de costos de redespacho y comercio compensatorio de la región de cálculo de capacidad central",
+      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-11-2026-Core-RDCT-Cost-Sharing-methodology.pdf",
+      "section": "ACER Decisión",
       "department": "ACER",
-      "summary": "ACER has adopted a Decision amending the electricity redispatching and countertrading cost sharing methodology for the Core capacity calculation region, concluding the review process initiated in October 2025.",
+      "summary": null,
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
@@ -45359,11 +45375,11 @@
     },
     {
       "source": "ACER",
-      "title": "Decisión ACER N° 11-2026 sobre la metodología para el reparto de costos de redespacho y comercio compensatorio de la región de cálculo de capacidad central",
-      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-11-2026-Core-RDCT-Cost-Sharing-methodology.pdf",
-      "section": "ACER Decisión",
+      "title": "ACER modifica las normas de reparto de costes para el redespacho y el comercio compensatorio de electricidad en la región central",
+      "url": "https://www.acer.europa.eu/news/acer-amends-cost-sharing-rules-electricity-redispatching-and-countertrading-core-region",
+      "section": "ACER Noticias",
       "department": "ACER",
-      "summary": null,
+      "summary": "ACER has adopted a Decision amending the electricity redispatching and countertrading cost sharing methodology for the Core capacity calculation region, concluding the review process initiated in October 2025.",
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
