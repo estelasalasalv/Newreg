@@ -1,5 +1,5 @@
 {
-  "updated_at": "29/07/2026 10:15",
+  "updated_at": "29/07/2026 13:55",
   "total": 1276,
   "entries": [
     {
@@ -45709,6 +45709,22 @@
     },
     {
       "source": "ACER",
+      "title": "La ACER decidirá sobre cambios en la metodología de los algoritmos del mercado diario e intradiario de la UE",
+      "url": "https://www.acer.europa.eu/news/acer-decide-changes-methodology-eu-day-ahead-and-intraday-market-algorithms",
+      "section": "ACER Noticias",
+      "department": "ACER",
+      "summary": "On 21 July 2026, ACER received a proposal from all nominated electricity market operators to amend the methodology for the price coupling, continuous trading matching and intraday auction algorithms. ACER will decide by 21 January 2027.",
+      "impacto_ree": null,
+      "tramitaciones": "No",
+      "importante": "No",
+      "published_date": "29/07/2026",
+      "fecha_real": "2026-07-29",
+      "anio": 2026,
+      "scraped_at": "29/07/2026 13:55",
+      "es_nuevo": true
+    },
+    {
+      "source": "ACER",
       "title": "Los menores niveles de congestión en 2024 y 2025 apuntan a un nuevo equilibrio en el mercado del gas de la UE",
       "url": "https://www.acer.europa.eu/news/lower-congestion-levels-2024-and-2025-point-new-equilibrium-eu-gas-market",
       "section": "ACER Noticias",
@@ -46157,11 +46173,11 @@
     },
     {
       "source": "ACER",
-      "title": "ACER acoge favorablemente la aplicación del REMIT por los reguladores nacionales y pide mejoras en la supervisión de los intermediarios comerciales",
-      "url": "https://www.acer.europa.eu/news/acer-welcomes-nras-remit-enforcement-and-calls-targeted-improvements-surveillance-trading-intermediaries",
+      "title": "La evaluación de adecuación de Irlanda e Irlanda del Norte destaca la interconexión como elemento central para la seguridad del suministro eléctrico",
+      "url": "https://www.acer.europa.eu/news/ireland-and-northern-ireland-adequacy-assessment-highlights-interconnection-central-security-electricity-supply",
       "section": "ACER Noticias",
       "department": "ACER",
-      "summary": "ACER publishes its annual reports on energy market surveillance the preparedness of persons professionally arranging transactions (PPATs) to detect suspicious behaviour and national regulatory authorities’ (NRAs’) analysis of suspicious transaction.",
+      "summary": "Today, ACER releases its Opinion on the All-Island Resource Adequacy Assessments for Ireland, Northern Ireland and the Single Electricity Market (SEM) as a whole. ",
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
@@ -46173,11 +46189,11 @@
     },
     {
       "source": "ACER",
-      "title": "La evaluación de adecuación de Irlanda e Irlanda del Norte destaca la interconexión como elemento central para la seguridad del suministro eléctrico",
-      "url": "https://www.acer.europa.eu/news/ireland-and-northern-ireland-adequacy-assessment-highlights-interconnection-central-security-electricity-supply",
+      "title": "ACER acoge favorablemente la aplicación del REMIT por los reguladores nacionales y pide mejoras en la supervisión de los intermediarios comerciales",
+      "url": "https://www.acer.europa.eu/news/acer-welcomes-nras-remit-enforcement-and-calls-targeted-improvements-surveillance-trading-intermediaries",
       "section": "ACER Noticias",
       "department": "ACER",
-      "summary": "Today, ACER releases its Opinion on the All-Island Resource Adequacy Assessments for Ireland, Northern Ireland and the Single Electricity Market (SEM) as a whole. ",
+      "summary": "ACER publishes its annual reports on energy market surveillance the preparedness of persons professionally arranging transactions (PPATs) to detect suspicious behaviour and national regulatory authorities’ (NRAs’) analysis of suspicious transaction.",
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
