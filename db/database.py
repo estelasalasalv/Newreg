@@ -67,8 +67,9 @@ def init_db():
     ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS impacto_ree        TEXT;
-    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tramitaciones       VARCHAR(3)  DEFAULT 'No';
-    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado          VARCHAR(1)  DEFAULT 'N';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tramitaciones            VARCHAR(3)  DEFAULT 'No';
+    ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado               VARCHAR(1)  DEFAULT 'N';
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS fecha_publicacion_cnmc   DATE;
 
     -- Tabla de rechazos: normativa descartada (AENA, etc.) — conservada para auditoría
     CREATE TABLE IF NOT EXISTS boe_rechazos (
@@ -389,9 +390,9 @@ def upsert_entries(entries: List[Dict]) -> int:
         return 0
     sql = """
     INSERT INTO regulatory_entries
-        (source, external_id, title, published_date, url, section, department, summary, tipo, plazo, estado, sector, tramitaciones)
+        (source, external_id, title, published_date, fecha_publicacion_cnmc, url, section, department, summary, tipo, plazo, estado, sector, tramitaciones)
     VALUES
-        (%(source)s, %(external_id)s, %(title)s, %(published_date)s,
+        (%(source)s, %(external_id)s, %(title)s, %(published_date)s, %(fecha_publicacion_cnmc)s,
          %(url)s, %(section)s, %(department)s, %(summary)s,
          %(tipo)s, %(plazo)s, %(estado)s, %(sector)s, %(tramitaciones)s)
     ON CONFLICT (external_id) DO UPDATE SET
@@ -433,13 +434,15 @@ def upsert_entries(entries: List[Dict]) -> int:
                 if e.get("url") and e["url"] in existing_urls:
                     continue
 
-                # Para fuentes CNMC sin fecha explícita, usar fecha de hoy como published_date
+                # Para fuentes CNMC: fecha_publicacion_cnmc = fecha en que la CNMC lo pone a disposición pública
+                # (= fecha de grabado en BBDD para nuevas entradas; published_date conserva la fecha del acto)
                 _source = e.get("source", "")
-                _pub = e.get("published_date")
-                if not _pub and _source.startswith("CNMC"):
-                    from datetime import date as _date
-                    _pub = _date.today().isoformat()
-                row = {**e, "published_date": _pub, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
+                from datetime import date as _date
+                _fecha_publ_cnmc = e.get("fecha_publicacion_cnmc") or (
+                    _date.today().isoformat() if _source.startswith("CNMC") else None
+                )
+                row = {**e, "fecha_publicacion_cnmc": _fecha_publ_cnmc,
+                       "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
                        "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
                        "tramitaciones": e.get("tramitaciones", "No")}
                 cur.execute(sql, row)
@@ -567,13 +570,14 @@ def fetch_cnmc_rss_entries(limit: int = 300) -> List[Dict]:
     SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
            COALESCE(importante, 'No')                                        AS importante,
            TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
-           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
-           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'DD/MM/YYYY') AS fecha_publ_cnmc,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'YYYY-MM-DD') AS fecha_real,
+           EXTRACT(YEAR FROM COALESCE(fecha_publicacion_cnmc, published_date))::int AS anio,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+           (COALESCE(fecha_publicacion_cnmc, scraped_at::date) >= CURRENT_DATE - 7) AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'CNMC_RSS'
-    ORDER  BY published_date DESC NULLS LAST, scraped_at DESC
+    ORDER  BY COALESCE(fecha_publicacion_cnmc, published_date) DESC NULLS LAST, scraped_at DESC
     LIMIT  %(limit)s
     """
     with get_connection() as conn:
@@ -589,13 +593,14 @@ def fetch_cnmc_s(limit: int = 500) -> List[Dict]:
     SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
            COALESCE(importante, 'No')                                        AS importante,
            TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
-           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
-           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'DD/MM/YYYY') AS fecha_publ_cnmc,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'YYYY-MM-DD') AS fecha_real,
+           EXTRACT(YEAR FROM COALESCE(fecha_publicacion_cnmc, published_date))::int AS anio,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+           (COALESCE(fecha_publicacion_cnmc, scraped_at::date) >= CURRENT_DATE - 7) AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'CNMC_S'
-    ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
+    ORDER  BY COALESCE(fecha_publicacion_cnmc, scraped_at) DESC NULLS LAST, published_date DESC NULLS LAST
     LIMIT  %(limit)s
     """
     with get_connection() as conn:
@@ -611,13 +616,14 @@ def fetch_cnmc_n(limit: int = 200) -> List[Dict]:
     SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
            COALESCE(importante, 'No')                                        AS importante,
            TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
-           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
-           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'DD/MM/YYYY') AS fecha_publ_cnmc,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'YYYY-MM-DD') AS fecha_real,
+           EXTRACT(YEAR FROM COALESCE(fecha_publicacion_cnmc, published_date))::int AS anio,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+           (COALESCE(fecha_publicacion_cnmc, scraped_at::date) >= CURRENT_DATE - 7) AS es_nuevo
     FROM   regulatory_entries
     WHERE  source = 'CNMC_N'
-    ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
+    ORDER  BY COALESCE(fecha_publicacion_cnmc, scraped_at) DESC NULLS LAST, published_date DESC NULLS LAST
     LIMIT  %(limit)s
     """
     with get_connection() as conn:
@@ -633,13 +639,14 @@ def fetch_cnmc_all(limit: int = 800) -> List[Dict]:
     SELECT source, title, url, section, department, summary, impacto_ree, tramitaciones,
            COALESCE(importante, 'No')                                        AS importante,
            TO_CHAR(published_date, 'DD/MM/YYYY')                            AS published_date,
-           TO_CHAR(published_date, 'YYYY-MM-DD')                            AS fecha_real,
-           EXTRACT(YEAR FROM published_date)::int                           AS anio,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'DD/MM/YYYY') AS fecha_publ_cnmc,
+           TO_CHAR(COALESCE(fecha_publicacion_cnmc, published_date), 'YYYY-MM-DD') AS fecha_real,
+           EXTRACT(YEAR FROM COALESCE(fecha_publicacion_cnmc, published_date))::int AS anio,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid','DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date >= CURRENT_DATE - 7)                           AS es_nuevo
+           (COALESCE(fecha_publicacion_cnmc, scraped_at::date) >= CURRENT_DATE - 7) AS es_nuevo
     FROM   regulatory_entries
     WHERE  source IN ('CNMC_RSS', 'CNMC_S', 'CNMC_N')
-    ORDER  BY scraped_at DESC, published_date DESC NULLS LAST
+    ORDER  BY COALESCE(fecha_publicacion_cnmc, scraped_at) DESC NULLS LAST, published_date DESC NULLS LAST
     LIMIT  %(limit)s
     """
     with get_connection() as conn:
