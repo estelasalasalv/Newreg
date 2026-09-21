@@ -995,6 +995,12 @@
 
   function daysRemaining(plazoStr) {
     if (!plazoStr) return null;
+    // Formato ISO YYYY-MM-DD (entradas MITERD)
+    const iso = plazoStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) {
+      const end  = new Date(+iso[1], +iso[2]-1, +iso[3]);
+      return Math.ceil((end - new Date()) / 86400000);
+    }
     // Formatos: "hasta 27 de Abr del 2026" / "Hasta miércoles, 19 de mayo de 2026"
     // [^\d,]+ cubre nombres de día con acento (miércoles, sábado...)
     const m = plazoStr.match(/hasta\s+(?:[^\d,]+,\s*)?(\d{1,2})\s+de\s+(\w+)\s+(?:de[l]?\s+)(\d{4})/i);
@@ -1721,6 +1727,13 @@
         if (da===null && db===null) return 0;
         if (da===null) return 1; if (db===null) return -1;
         return da - db;
+      }
+      // Para cerradas: ordenar por published_date desc (más reciente primero)
+      const pa = a.published_date || '', pb = b.published_date || '';
+      if (pa !== pb) {
+        // published_date viene en DD/MM/YYYY — convertir a YYYY-MM-DD para comparar
+        const toISO = s => s.length===10 ? `${s.slice(6)}-${s.slice(3,5)}-${s.slice(0,2)}` : s;
+        return toISO(pb).localeCompare(toISO(pa));
       }
       return (b.scraped_at||'').localeCompare(a.scraped_at||'');
     });
