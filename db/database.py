@@ -433,7 +433,13 @@ def upsert_entries(entries: List[Dict]) -> int:
                 if e.get("url") and e["url"] in existing_urls:
                     continue
 
-                row = {**e, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
+                # Para fuentes CNMC sin fecha explícita, usar fecha de hoy como published_date
+                _source = e.get("source", "")
+                _pub = e.get("published_date")
+                if not _pub and _source.startswith("CNMC"):
+                    from datetime import date as _date
+                    _pub = _date.today().isoformat()
+                row = {**e, "published_date": _pub, "tipo": e.get("tipo", "regulacion"), "plazo": e.get("plazo"),
                        "estado": e.get("estado", "Abierta"), "sector": e.get("sector", "electricidad"),
                        "tramitaciones": e.get("tramitaciones", "No")}
                 cur.execute(sql, row)
