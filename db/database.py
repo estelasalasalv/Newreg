@@ -452,12 +452,14 @@ def fetch_cnmc_consultas() -> List[Dict]:
            COALESCE(estado, 'Abierta') AS estado,
            COALESCE(sector, 'electricidad') AS sector,
            TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at,
-           (scraped_at::date >= CURRENT_DATE - 7) AS es_nuevo
+           (scraped_at::date >= CURRENT_DATE - 7) AS es_nuevo,
+           (summary ILIKE '%prorrogado%' OR summary ILIKE '%prórroga%' OR summary ILIKE '%plazo prorrogado%') AS es_prorrogada
     FROM   regulatory_entries
     WHERE  source IN ('CNMC_C', 'MITERD')
       AND  tipo = 'consulta'
     ORDER  BY
            CASE WHEN COALESCE(estado,'Abierta') = 'Abierta' THEN 0 ELSE 1 END,
+           published_date DESC NULLS LAST,
            scraped_at DESC
     """
     with get_connection() as conn:

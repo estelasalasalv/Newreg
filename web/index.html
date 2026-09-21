@@ -1172,6 +1172,7 @@
           ${e.section && !['Consultas CNMC','Consultas MITERD','CNMC RSS','ACER Noticias','ACER Decisión'].includes(e.section)
             ? `<span class="badge" style="background:rgba(46,125,50,.12);color:#2e7d32;font-size:.68rem">${esc(e.section)}</span>` : ''}
           ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.68rem">NUEVO</span>' : ''}
+          ${e.es_prorrogada ? '<span class="badge" style="background:rgba(156,39,176,.15);color:#7b1fa2;font-size:.68rem">PRORROGADA</span>' : ''}
         </div>
         <div class="consulta-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
