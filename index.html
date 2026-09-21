@@ -1141,7 +1141,8 @@
       </div>
       <div class="norm-meta">
         <span class="org-chip" ${chipStyle ? `style="${chipStyle}"` : ''}>${srcLabel}</span>
-        ${e.published_date ? `<span>${e.published_date}</span>` : ''}
+        ${e.published_date ? `<span title="Fecha del acto">📄 ${e.published_date}</span>` : ''}
+        ${e.fecha_publ_cnmc && e.fecha_publ_cnmc !== e.published_date ? `<span title="Publicado en CNMC" style="color:var(--teal2)">🌐 ${e.fecha_publ_cnmc}</span>` : ''}
         ${e.es_circular ? '<span class="badge badge-trimestre">📋 Circular</span>' : ''}
       </div>
       ${e.summary ? `<div class="norm-card-summary">${esc(e.summary)}</div>` : ''}
@@ -1210,7 +1211,8 @@
       </div>
       <div class="norm-meta">
         <span class="org-chip" style="background:rgba(21,101,192,.12);color:#1565c0">CNMC Act.</span>
-        ${e.published_date ? `<span>${e.published_date}</span>` : ''}
+        ${e.published_date ? `<span title="Fecha del acto">📄 ${e.published_date}</span>` : ''}
+        ${e.fecha_publ_cnmc && e.fecha_publ_cnmc !== e.published_date ? `<span title="Publicado en CNMC" style="color:var(--teal2)">🌐 ${e.fecha_publ_cnmc}</span>` : ''}
         ${e.section && e.section !== 'Actuación CNMC' ? `<span class="type-chip">${esc(e.section)}</span>` : ''}
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
       </div>
@@ -1278,7 +1280,9 @@
       : `${codeSpan}${esc(g.desc)}`;
 
     const bestDate = g.entries.map(e => e.fecha_real || e.published_date || '').sort().reverse()[0];
-    const bestDateFmt = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate)?.published_date || '';
+    const bestEntry = g.entries.find(e => (e.fecha_real||e.published_date||'') === bestDate);
+    const bestDateFmt    = bestEntry?.published_date   || '';
+    const bestPublCnmc   = bestEntry?.fecha_publ_cnmc  || '';
 
     const SUM_ORDER = ['CNMC_S', 'CNMC_N', 'CNMC_RSS'];
     const bestSummary = g.entries.slice()
@@ -1290,12 +1294,13 @@
       <div class="norm-card" style="border-left-color:#1565c0">
         <div class="norm-header">
           <div class="norm-title">${titleHtml}</div>
-          ${recencyLabel(bestDateFmt)}
+          ${recencyLabel(bestPublCnmc || bestDateFmt)}
           ${esNuevo ? '<span class="badge badge-new" style="font-size:.7rem">NUEVO</span>' : ''}
         </div>
         <div class="norm-meta">
           ${sourceChips}
-          ${bestDateFmt ? `<span>${bestDateFmt}</span>` : ''}
+          ${bestDateFmt ? `<span title="Fecha del acto">📄 ${bestDateFmt}</span>` : ''}
+          ${bestPublCnmc && bestPublCnmc !== bestDateFmt ? `<span title="Publicado en CNMC" style="color:var(--teal2)">🌐 ${bestPublCnmc}</span>` : ''}
           ${main.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
         </div>
         ${bestSummary ? `<div class="norm-card-summary">${esc(bestSummary)}</div>` : ''}
