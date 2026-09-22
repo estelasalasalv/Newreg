@@ -1,5 +1,5 @@
 {
-  "updated_at": "22/09/2026 12:23",
+  "updated_at": "22/09/2026 16:20",
   "total": 1500,
   "entries": [
     {
@@ -52284,6 +52284,22 @@
     },
     {
       "source": "ACER",
+      "title": "ACER modifica los marcos de implementación de dos plataformas europeas de balance eléctrico",
+      "url": "https://www.acer.europa.eu/news/acer-amends-implementation-frameworks-two-european-electricity-balancing-platforms",
+      "section": "ACER Noticias",
+      "department": "ACER",
+      "summary": "ACER approved two proposals from all electricity transmission system operators (TSOs) to amend the implementation frameworks for PICASSO and MARI, the EU platforms for exchanging balancing energy from frequency restoration reserves.",
+      "impacto_ree": null,
+      "tramitaciones": "No",
+      "importante": "No",
+      "published_date": "22/09/2026",
+      "fecha_real": "2026-09-22",
+      "anio": 2026,
+      "scraped_at": "22/09/2026 16:19",
+      "es_nuevo": true
+    },
+    {
+      "source": "ACER",
       "title": "Decisión ACER n.º 12-2026 sobre la tercera modificación del marco de implementación de la plataforma de la UE para el intercambio de energía de equilibrio procedente de reservas de restauración de frecuencia con activación automática",
       "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-12-2026-aFRRIF-third-amendment.pdf",
       "section": "ACER Decisión",
@@ -52460,8 +52476,8 @@
     },
     {
       "source": "ACER",
-      "title": "Decisión ACER n.º 10-2026 sobre la cuarta modificación de la metodología de cálculo de la capacidad diaria de la región central",
-      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-10-2026-Core-DayAhead-CCM-Amendment.pdf",
+      "title": "Decisión ACER N° 09-2026 sobre la primera modificación de la metodología de cálculo de capacidad a largo plazo de la región Núcleo",
+      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-09-2026-Core-Longterm-CCM-Amendment.pdf",
       "section": "ACER Decisión",
       "department": "ACER",
       "summary": null,
@@ -52476,8 +52492,8 @@
     },
     {
       "source": "ACER",
-      "title": "Decisión ACER N° 09-2026 sobre la primera modificación de la metodología de cálculo de capacidad a largo plazo de la región Núcleo",
-      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-09-2026-Core-Longterm-CCM-Amendment.pdf",
+      "title": "Decisión ACER n.º 10-2026 sobre la cuarta modificación de la metodología de cálculo de la capacidad diaria de la región central",
+      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-10-2026-Core-DayAhead-CCM-Amendment.pdf",
       "section": "ACER Decisión",
       "department": "ACER",
       "summary": null,
@@ -52780,11 +52796,11 @@
     },
     {
       "source": "ACER",
-      "title": "ACER modificará la metodología para evaluar las necesidades regionales de reservas eléctricas",
-      "url": "https://www.acer.europa.eu/news/acer-amend-methodology-assessing-regional-electricity-reserve-needs",
+      "title": "ACER pide mayor transparencia en las tarifas de transporte de gas letón",
+      "url": "https://www.acer.europa.eu/news/acer-calls-greater-transparency-latvian-gas-transmission-tariffs",
       "section": "ACER Noticias",
       "department": "ACER",
-      "summary": "On 25 March 2026, ACER received a proposal from the European Network of Transmission System Operators for Electricity (ENTSO-E) to amend the methodology for the regional sizing of reserve capacity. ACER will decide on the amendment by June 2026.",
+      "summary": "ACER released its report on the Latvian gas transmission tariffs, evaluating compliance of the proposed reference price methodology (RPM) with the requirements of the EU Network Code on Harmonised Transmission Tariff Structures.",
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
@@ -52796,11 +52812,11 @@
     },
     {
       "source": "ACER",
-      "title": "ACER pide mayor transparencia en las tarifas de transporte de gas letón",
-      "url": "https://www.acer.europa.eu/news/acer-calls-greater-transparency-latvian-gas-transmission-tariffs",
+      "title": "ACER modificará la metodología para evaluar las necesidades regionales de reservas eléctricas",
+      "url": "https://www.acer.europa.eu/news/acer-amend-methodology-assessing-regional-electricity-reserve-needs",
       "section": "ACER Noticias",
       "department": "ACER",
-      "summary": "ACER released its report on the Latvian gas transmission tariffs, evaluating compliance of the proposed reference price methodology (RPM) with the requirements of the EU Network Code on Harmonised Transmission Tariff Structures.",
+      "summary": "On 25 March 2026, ACER received a proposal from the European Network of Transmission System Operators for Electricity (ENTSO-E) to amend the methodology for the regional sizing of reserve capacity. ACER will decide on the amendment by June 2026.",
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
