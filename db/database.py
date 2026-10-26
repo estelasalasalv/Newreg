@@ -464,7 +464,8 @@ def fetch_cnmc_consultas() -> List[Dict]:
            (scraped_at::date >= CURRENT_DATE - 7) AS es_nuevo,
            (summary ILIKE '%prorrogado%' OR summary ILIKE '%prórroga%' OR summary ILIKE '%plazo prorrogado%') AS es_prorrogada
     FROM   regulatory_entries
-    WHERE  source IN ('CNMC_C', 'MITERD')
+    WHERE  source IN ('CNMC_C', 'MITERD',
+                      'MPR', 'TRANSPORTES')  -- [Inclusión nuevas consultas]
       AND  tipo = 'consulta'
     ORDER  BY
            CASE WHEN COALESCE(estado,'Abierta') = 'Abierta' THEN 0 ELSE 1 END,

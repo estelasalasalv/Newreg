@@ -90,6 +90,17 @@ def main():
     mit_new     = upsert_entries(mit_entries)
     logger.info("MITERD: %d entradas, %d nuevas en BD", len(mit_entries), mit_new)
 
+    # ── [Inclusión nuevas consultas] MPR (incendios industriales) + Transportes (ferroviario) ──
+    logger.info("=== Scraping nuevas consultas (MPR + Transportes) ===")
+    try:
+        from scraper import nuevas_consultas
+        nc_entries = nuevas_consultas.scrape()
+        nc_new     = upsert_entries(nc_entries)
+        logger.info("Nuevas consultas: %d entradas, %d nuevas en BD", len(nc_entries), nc_new)
+    except Exception as exc:
+        logger.warning("Nuevas consultas fallo: %s", exc)
+    # ── [Fin Inclusión nuevas consultas] ──
+
     # Intento 2 — después de MITERD si falló antes
     if cnmc_new < 0 and cnmc_intentos < MAX_INTENTOS:
         cnmc_intentos += 1

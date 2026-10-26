@@ -164,6 +164,9 @@ Cada scraper tiene una fuente y responsabilidad clara. No mezclar scraping con p
 | `cnmc_rss.py` | `cnmc.es/rss.xml` | RSS + detail HTML | Diario |
 | `eurlex.py` | SPARQL publications.europa.eu | SPARQL | Diario (7 días atrás) |
 | `miterd.py` | `miteco.gob.es/…/participacion.html` | HTML scraping | Diario |
+| `nuevas_consultas.py` | `mpr.gob.es/…/audienciapublica` (incendios industriales) + `transportes.gob.es/…/participacion-publica/buscador` (ferroviario RD/Ley/Reglamento) | HTML scraping | Diario |
+
+> **[Inclusión nuevas consultas]** Novedad del 26/10/2026 (fuentes `MPR` y `TRANSPORTES` en `regulatory_entries`, pestaña Consultas). Para revertirla, buscar el texto "Inclusión nuevas consultas" en `main.py`, `db/database.py`, `web/index.html`, este archivo y borrar `scraper/nuevas_consultas.py`. Los registros ya guardados se eliminan con `DELETE FROM regulatory_entries WHERE source IN ('MPR','TRANSPORTES')`.
 
 Al modificar un scraper:
 
