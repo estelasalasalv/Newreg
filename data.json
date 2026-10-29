@@ -1,5 +1,5 @@
 {
-  "updated_at": "29/10/2026 13:53",
+  "updated_at": "29/10/2026 18:32",
   "total": 1714,
   "entries": [
     {
@@ -58194,6 +58194,22 @@
     },
     {
       "source": "ACER",
+      "title": "La nueva guía de ACER ayuda a los participantes del mercado a cumplir con las reglas revisadas de presentación de datos REMIT",
+      "url": "https://www.acer.europa.eu/news/new-acer-guidance-helps-market-participants-comply-revised-remit-data-reporting-rules",
+      "section": "ACER Noticias",
+      "department": "ACER",
+      "summary": "ACER publishes the first set of its revised REMIT data reporting documents, providing policy and technical instructions on how to report wholesale energy market data.",
+      "impacto_ree": null,
+      "tramitaciones": "No",
+      "importante": "No",
+      "published_date": "29/10/2026",
+      "fecha_real": "2026-10-29",
+      "anio": 2026,
+      "scraped_at": "29/10/2026 17:32",
+      "es_nuevo": true
+    },
+    {
+      "source": "ACER",
       "title": "ACER finds hidrógeno network planning frameworks across EU still incomplete",
       "url": "https://www.acer.europa.eu/news/acer-finds-hydrogen-network-planning-frameworks-across-eu-still-incomplete",
       "section": "ACER Noticias",
@@ -58402,8 +58418,8 @@
     },
     {
       "source": "ACER",
-      "title": "Decisión ACER n.º 12-2026 sobre la tercera modificación del marco de implementación de la plataforma de la UE para el intercambio de energía de equilibrio procedente de reservas de restauración de frecuencia con activación automática",
-      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-12-2026-aFRRIF-third-amendment.pdf",
+      "title": "Decisión ACER n.º 13-2026 sobre la tercera modificación del marco de implementación de la plataforma de la UE para el intercambio de energía de equilibrio procedente de reservas de restauración de frecuencia con activación manual",
+      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-13-2026-mFRRIF-third-amendment.pdf",
       "section": "ACER Decisión",
       "department": "ACER",
       "summary": null,
@@ -58418,8 +58434,8 @@
     },
     {
       "source": "ACER",
-      "title": "Decisión ACER n.º 13-2026 sobre la tercera modificación del marco de implementación de la plataforma de la UE para el intercambio de energía de equilibrio procedente de reservas de restauración de frecuencia con activación manual",
-      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-13-2026-mFRRIF-third-amendment.pdf",
+      "title": "Decisión ACER n.º 12-2026 sobre la tercera modificación del marco de implementación de la plataforma de la UE para el intercambio de energía de equilibrio procedente de reservas de restauración de frecuencia con activación automática",
+      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-12-2026-aFRRIF-third-amendment.pdf",
       "section": "ACER Decisión",
       "department": "ACER",
       "summary": null,
@@ -58626,11 +58642,11 @@
     },
     {
       "source": "ACER",
-      "title": "ACER actualiza las normas eléctricas de la región central para respaldar el cálculo de capacidad basado en el flujo a largo plazo",
-      "url": "https://www.acer.europa.eu/news/acer-updates-core-regions-electricity-rules-support-long-term-flow-based-capacity-calculation",
-      "section": "ACER Noticias",
+      "title": "Decisión ACER n.º 10-2026 sobre la cuarta modificación de la metodología de cálculo de la capacidad diaria de la región central",
+      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-10-2026-Core-DayAhead-CCM-Amendment.pdf",
+      "section": "ACER Decisión",
       "department": "ACER",
-      "summary": "ACER has adopted two decisions amending the day-ahead and long-term capacity calculation methodologies for the Core capacity calculation region (CCR).",
+      "summary": null,
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
@@ -58642,11 +58658,11 @@
     },
     {
       "source": "ACER",
-      "title": "Decisión ACER n.º 10-2026 sobre la cuarta modificación de la metodología de cálculo de la capacidad diaria de la región central",
-      "url": "https://www.acer.europa.eu/sites/default/files/documents/Individual%20Decisions/ACER-Decision-10-2026-Core-DayAhead-CCM-Amendment.pdf",
-      "section": "ACER Decisión",
+      "title": "ACER actualiza las normas eléctricas de la región central para respaldar el cálculo de capacidad basado en el flujo a largo plazo",
+      "url": "https://www.acer.europa.eu/news/acer-updates-core-regions-electricity-rules-support-long-term-flow-based-capacity-calculation",
+      "section": "ACER Noticias",
       "department": "ACER",
-      "summary": null,
+      "summary": "ACER has adopted two decisions amending the day-ahead and long-term capacity calculation methodologies for the Core capacity calculation region (CCR).",
       "impacto_ree": null,
       "tramitaciones": "No",
       "importante": "No",
