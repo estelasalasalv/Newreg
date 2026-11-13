@@ -427,7 +427,7 @@ def upsert_entries(entries: List[Dict]) -> int:
                 existing_urls = {r[0]: r[1] for r in _cur.fetchall()}
 
     # Consulta ya guardada: si la fuente amplía o cambia el plazo, se actualiza y se
-    # conserva el anterior en plazo_anterior (la web lo muestra como "Plazo ampliado").
+    # conserva el anterior en plazo_anterior (la web lo marca con la etiqueta "AMPLIADO PLAZO").
     # Solo con plazo no vacío: hay fuentes que dejan de publicarlo en consultas antiguas.
     sql_plazo = """
     UPDATE regulatory_entries
