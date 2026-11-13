@@ -416,6 +416,7 @@
     /* Badges organismo */
     .badge-cnmc   { background: rgba(0,43,69,.1);  color: var(--navy); }
     .badge-miterd { background: rgba(46,125,50,.15); color: #2e7d32; }
+    .badge-ce     { background: rgba(0,51,153,.1);   color: #003399; } /* [Inclusión consultas CE] */
     .badge-open   { background: rgba(46,125,50,.2); color: #2e7d32; }
     .badge-closed { background: var(--gray2); color: var(--gray4); }
 
@@ -862,6 +863,7 @@
           <!-- [Inclusión nuevas consultas] -->
           <button class="org-filter" data-org="MPR">MPR</button>
           <button class="org-filter" data-org="TRANSPORTES">Transportes</button>
+          <button class="org-filter" data-org="CE">Comisión Europea</button><!-- [Inclusión consultas CE] -->
           <!-- [Fin Inclusión nuevas consultas] -->
         </div>
         <button id="btn-ver-cerradas" style="
@@ -1165,7 +1167,8 @@
     const days    = daysRemaining(e.plazo);
     const cerrada = (e.estado||'Abierta') === 'Cerrada' || (days !== null && days < 0);
     const org     = e.source || 'CNMC';
-    const orgCls  = ['CNMC_C','CNMC_N'].includes(org) ? 'badge-cnmc' : 'badge-miterd';
+    const orgCls  = ['CNMC_C','CNMC_N'].includes(org) ? 'badge-cnmc'
+                  : org === 'CE' ? 'badge-ce' : 'badge-miterd';  // [Inclusión consultas CE]
     const resumen = e.summary || '';
 
     // Indicador de plazo
