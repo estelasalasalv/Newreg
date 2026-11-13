@@ -70,6 +70,8 @@ def init_db():
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS tramitaciones            VARCHAR(3)  DEFAULT 'No';
     ALTER TABLE eurlex_entries     ADD COLUMN IF NOT EXISTS comprobado               VARCHAR(1)  DEFAULT 'N';
     ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS fecha_publicacion_cnmc   DATE;
+    ALTER TABLE regulatory_entries ADD COLUMN IF NOT EXISTS plazo_anterior           TEXT;
+    ALTER TABLE boe_entries        ADD COLUMN IF NOT EXISTS infraestructuras         VARCHAR(3)  DEFAULT 'No';  -- [Inclusión infraestructuras]
 
     -- Tabla de rechazos: normativa descartada (AENA, etc.) — conservada para auditoría
     CREATE TABLE IF NOT EXISTS boe_rechazos (
@@ -276,19 +278,20 @@ def upsert_boe(entries: List[Dict]) -> int:
     INSERT INTO boe_entries
         (external_id, fecha, fuente, seccion, tipo, organismo, subseccion,
          texto, enlace, palabras_clave, resumen, importante, acceso_conexion,
-         tramitaciones, publicable, impacto_ree)
+         tramitaciones, publicable, impacto_ree, infraestructuras)
     VALUES
         (%(external_id)s, %(fecha)s, %(fuente)s, %(seccion)s, %(tipo)s,
          %(organismo)s, %(subseccion)s, %(texto)s, %(enlace)s, %(palabras_clave)s,
          %(resumen)s, %(importante)s, %(acceso_conexion)s,
-         %(tramitaciones)s, %(publicable)s, %(impacto_ree)s)
+         %(tramitaciones)s, %(publicable)s, %(impacto_ree)s, %(infraestructuras)s)
     ON CONFLICT (external_id) DO NOTHING
     """
     inserted = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for e in entries:
-                cur.execute(sql, {**e, "impacto_ree": e.get("impacto_ree"), "tramitaciones": e.get("tramitaciones", "No")})
+                cur.execute(sql, {**e, "impacto_ree": e.get("impacto_ree"), "tramitaciones": e.get("tramitaciones", "No"),
+                                  "infraestructuras": e.get("infraestructuras", "No")})
                 inserted += cur.rowcount
         conn.commit()
     return inserted
@@ -412,16 +415,26 @@ def upsert_entries(entries: List[Dict]) -> int:
     sources_in_batch = list({e.get("source") for e in entries if e.get("source")})
     # Si el batch incluye CNMC_N, también cargar URLs de CNMC_S para evitar duplicados cruzados
     sources_check = list(set(sources_in_batch) | ({'CNMC_S'} if 'CNMC_N' in sources_in_batch else set()))
-    existing_urls: set = set()
+    existing_urls: dict = {}   # url → external_id
     if sources_check:
         import psycopg2 as _pg2
         with _pg2.connect(os.environ["DATABASE_URL"]) as _conn:
             with _conn.cursor() as _cur:
                 _cur.execute(
-                    "SELECT url FROM regulatory_entries WHERE source = ANY(%s) AND url IS NOT NULL",
+                    "SELECT url, external_id FROM regulatory_entries WHERE source = ANY(%s) AND url IS NOT NULL",
                     (sources_check,),
                 )
-                existing_urls = {r[0] for r in _cur.fetchall()}
+                existing_urls = {r[0]: r[1] for r in _cur.fetchall()}
+
+    # Consulta ya guardada: si la fuente amplía o cambia el plazo, se actualiza y se
+    # conserva el anterior en plazo_anterior (la web lo muestra como "Plazo ampliado").
+    # Solo con plazo no vacío: hay fuentes que dejan de publicarlo en consultas antiguas.
+    sql_plazo = """
+    UPDATE regulatory_entries
+    SET    plazo_anterior = plazo, plazo = %(plazo)s, estado = COALESCE(%(estado)s, estado)
+    WHERE  external_id = %(external_id)s AND plazo IS DISTINCT FROM %(plazo)s
+    RETURNING plazo_anterior
+    """
 
     import re as _re
     _EXP_RE = _re.compile(r'([A-Z]{2,4}/[A-Z]{2}/[0-9]{3}/[0-9]{2})')
@@ -432,6 +445,14 @@ def upsert_entries(entries: List[Dict]) -> int:
             for e in entries:
                 # Omitir si la URL ya existe (previene duplicados con external_id distinto)
                 if e.get("url") and e["url"] in existing_urls:
+                    if (e.get("tipo") == "consulta" and e.get("plazo")
+                            and existing_urls[e["url"]] == e.get("external_id")):
+                        cur.execute(sql_plazo, {"plazo": e["plazo"], "estado": e.get("estado"),
+                                                "external_id": e["external_id"]})
+                        row = cur.fetchone()
+                        if row:
+                            logger.info("Plazo actualizado [%s] %s: '%s' → '%s'", e.get("source"),
+                                        e["external_id"], row["plazo_anterior"], e["plazo"])
                     continue
 
                 # Para fuentes CNMC: fecha_publicacion_cnmc = fecha en que la CNMC lo pone a disposición pública
@@ -448,7 +469,7 @@ def upsert_entries(entries: List[Dict]) -> int:
                 cur.execute(sql, row)
                 if cur.rowcount:
                     inserted += cur.rowcount
-                    existing_urls.add(e.get("url"))  # actualizar el set en memoria
+                    existing_urls[e.get("url")] = e.get("external_id")  # actualizar el mapa en memoria
         conn.commit()
     return inserted
 
@@ -456,7 +477,7 @@ def upsert_entries(entries: List[Dict]) -> int:
 def fetch_cnmc_consultas() -> List[Dict]:
     """Devuelve consultas públicas de CNMC y MITERD."""
     sql = """
-    SELECT source, title, url, plazo, summary, impacto_ree, tramitaciones,
+    SELECT source, title, url, plazo, plazo_anterior, summary, impacto_ree, tramitaciones,
            TO_CHAR(published_date, 'DD/MM/YYYY') AS published_date,
            COALESCE(estado, 'Abierta') AS estado,
            COALESCE(sector, 'electricidad') AS sector,
@@ -487,6 +508,7 @@ def fetch_boe_trimestre(days: int = 92) -> List[Dict]:
         fuente, seccion, tipo, organismo, subseccion,
         texto, enlace, palabras_clave, resumen, impacto_ree,
         importante, acceso_conexion, tramitaciones, publicable,
+        infraestructuras,  -- [Inclusión infraestructuras]
         TO_CHAR(scraped_at AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS scraped_at
     FROM   boe_entries
     WHERE  fecha >= CURRENT_DATE - %(days)s
@@ -514,6 +536,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         importante,
         acceso_conexion,
         tramitaciones,
+        infraestructuras,  -- [Inclusión infraestructuras]
         palabras_clave                                          AS summary,
         resumen,
         impacto_ree,
@@ -544,6 +567,7 @@ def fetch_recent(limit: int = 300) -> List[Dict]:
         COALESCE(importante, 'No')                             AS importante,
         NULL::text                                              AS acceso_conexion,
         tramitaciones,
+        NULL::text                                              AS infraestructuras,  -- [Inclusión infraestructuras]
         summary,
         NULL::text                                              AS resumen,
         impacto_ree,
@@ -883,8 +907,14 @@ def export_to_json(path: str = "web/data.json", limit: int = 300):
 
     acer_f = _filter_year(acer, YEAR_FILTER)
 
+    # Hora peninsular con cambio horario automático (antes era UTC+2 fijo: 1 h de más en invierno)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT TO_CHAR(NOW() AT TIME ZONE 'Europe/Madrid', 'DD/MM/YYYY HH24:MI') AS t")
+            updated_at = cur.fetchone()["t"]
+
     payload = {
-        "updated_at":    (datetime.utcnow() + timedelta(hours=2)).strftime("%d/%m/%Y %H:%M"),
+        "updated_at":    updated_at,
         "total":         len(entries_f),
         "entries":       entries_f,      # pestaña Todas (solo 2026)
         "boe_trimestre": boe_trimestre,  # pestaña BOE Último Trimestre (ya es reciente)

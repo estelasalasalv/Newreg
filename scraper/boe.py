@@ -342,6 +342,18 @@ _LIBRE_DESIG_OK  = [
 ]
 
 
+# [Inclusión infraestructuras] Patrones sobre el título normalizado (sin acentos).
+# Solo normas con rango de ley o real decreto (y sus correcciones de errores): se dejan
+# fuera órdenes, resoluciones y anuncios para no llenar la web de actos de obra concretos.
+_INFRA_RANGO_RE = re.compile(
+    r"^(correccion de errores (de la |del )?)?"
+    r"(ley (organica |foral )?\d|ley de |real decreto|decreto.?ley \d"
+    r"|decreto legislativo \d|decreto foral.?legislativo \d)"
+)
+_INFRA_MATERIA_RE = re.compile(r"\b(carreteras?|vias? pecuarias?|ferrocarril(es)?|ferroviari[oa]s?)\b")
+# [Fin Inclusión infraestructuras]
+
+
 def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
     """True si el documento debe incluirse según las reglas."""
     # Excluir subsecciones, organismos y títulos no deseados
@@ -375,6 +387,14 @@ def _should_include(titulo: str, epigrafe: str, dept: str) -> bool:
     for _, pat in _KW_PATTERNS:
         if pat.search(norm_titulo):
             return True
+
+    # [Inclusión infraestructuras] Regla 2b: leyes y reales decretos de carreteras, vías
+    # pecuarias o ferrocarril. Va tras la Regla 2 para marcar solo lo que no entraría ya
+    # por contenido energético, de modo que revertir no borre normativa energética.
+    if (_INFRA_RANGO_RE.search(norm_titulo) and _INFRA_MATERIA_RE.search(norm_titulo)
+            and not _NOM_TERMS.search(norm_titulo_ep)):
+        return "INFRAESTRUCTURAS"
+    # [Fin Inclusión infraestructuras]
 
     # Regla 3: Leyes y Decretos-Leyes de rango alto — verificar contenido antes de incluir.
     # Se descarga el texto completo del BOE y se buscan keywords energéticas.
@@ -552,6 +572,7 @@ def _parse_sumario(data: dict, fecha_str: str) -> List[Dict]:
                                 "tramitaciones": autorizacion,
                                 "impacto_ree":   art64 if art64 else None,
                                 "publicable":    "NO",
+                                "infraestructuras": "Sí" if include == "INFRAESTRUCTURAS" else "No",  # [Inclusión infraestructuras]
                             })
     except (KeyError, TypeError) as exc:
         logger.warning("Estructura inesperada en respuesta BOE: %s", exc)

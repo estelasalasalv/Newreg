@@ -9,7 +9,8 @@ Fuentes:
     Solo proyectos de Real Decreto / Ley / Reglamento sobre incendios en
     instalaciones o establecimientos industriales abiertos desde MPR_DESDE.
   - Ministerio de Transportes y Movilidad Sostenible (buscador de participación pública):
-    Solo Reales Decretos, Leyes o Reglamentos del ámbito ferroviario (generales).
+    Solo Reales Decretos, Leyes o Reglamentos generales de los ámbitos ferroviario y de
+    carreteras.
 """
 import re
 import logging
@@ -126,13 +127,15 @@ def scrape_mpr() -> List[Dict]:
 
 
 # ── Ministerio de Transportes ───────────────────────────────────────────────
-# URL facilitada (ámbitos Ferroviario/Expropiaciones/Estudios/Otras) + filtro por
+# URL facilitada (ámbitos Carreteras/Ferroviario/Expropiaciones/Estudios/Otras/Transporte
+# por Carretera y Ferrocarril) + filtro por
 # tipo de participación normativa (666 Proyecto Normativo, 669 Consulta pública
 # previa, 670 Audiencia e Información pública) para descartar las expropiaciones
 # ADIF ("Proyecto No Normativo"), que son la gran mayoría de resultados.
 TRANSPORTES_URL = (
     "https://www.transportes.gob.es/ministerio/buen-gobierno/participacion-publica/buscador"
     "?search_api_fulltext=&field_state_public_participation=open"
+    "&field_areas_action%5B639%5D=639&field_areas_action%5B650%5D=650"
     "&field_areas_action%5B640%5D=640&field_areas_action%5B642%5D=642"
     "&field_areas_action%5B645%5D=645&field_areas_action%5B647%5D=647"
     "&field_participation_type%5B666%5D=666&field_participation_type%5B669%5D=669"
@@ -141,7 +144,7 @@ TRANSPORTES_URL = (
 TRANSPORTES_BASE = "https://www.transportes.gob.es"
 # Además de las abiertas, se siguen las iniciadas desde esta fecha para actualizar su estado
 TRANSPORTES_DESDE = date(2026, 9, 1)
-TRANSPORTES_MAX_PAGES = 2   # 10 resultados/página, ordenados por fecha descendente
+TRANSPORTES_MAX_PAGES = 3   # 10 resultados/página, ordenados por fecha descendente
 # La web devuelve "Página web bloqueada" con User-Agent de bot; se usa uno de navegador
 _MT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -152,7 +155,7 @@ _MT_EXCLUIR_RE = re.compile(r"expropiaci|subvenci|bases reguladoras", re.IGNOREC
 
 
 def _mt_relevante(title: str, rango: str, ambito: str) -> bool:
-    if "ferroviari" not in ambito.lower():
+    if not re.search(r"ferroviari|carretera", ambito, re.IGNORECASE):
         return False
     if _MT_EXCLUIR_RE.search(title):
         return False
@@ -247,7 +250,7 @@ def scrape_transportes() -> List[Dict]:
                 "sector":         "otros",
             })
 
-    logger.info("TRANSPORTES: %d participaciones revisadas, %d relevantes (ferroviario RD/Ley/Reglamento)",
+    logger.info("TRANSPORTES: %d participaciones revisadas, %d relevantes (ferroviario/carreteras RD/Ley/Reglamento)",
                 total, len(results))
     return results
 

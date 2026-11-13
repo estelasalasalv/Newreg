@@ -303,6 +303,7 @@
     .badge-acc       { background: rgba(0,184,176,.12);  color: var(--teal2); }
     .badge-auth      { background: rgba(99,102,241,.12); color: #4f46e5; }
     .badge-gas       { background: rgba(234,179,8,.15);  color: #92400e; }
+    .badge-infra     { background: rgba(120,113,108,.15); color: #57534e; } /* [Inclusión infraestructuras] */
     .badge-imp       { background: rgba(249,168,37,.2);  color: #b45309; }
 
     /* ── MODAL DE DETALLE ───────────────────────────────────────── */
@@ -577,6 +578,12 @@
           <input type="checkbox" id="chk-ocultar-gas" checked/>
           Ocultar gas, hidrog, combust...
         </label>
+        <!-- [Inclusión infraestructuras] -->
+        <label class="imp-label" title="Oculta en el Resumen mensual las leyes y reales decretos de carreteras, vías pecuarias y ferrocarril. En Normativa y Todas siguen visibles.">
+          <input type="checkbox" id="chk-ocultar-infra" checked/>
+          Ocultar carreteras, ferroc...
+        </label>
+        <!-- [Fin Inclusión infraestructuras] -->
       </div>
     </div>
 
@@ -1122,6 +1129,7 @@
         ${e.acceso_conexion === 'Sí' ? '<span class="badge badge-acc">🔌 Acceso/Conexión</span>' : ''}
         ${e.tramitaciones === 'Sí' ? '<span class="badge badge-auth">📋 Tramitación</span>' : ''}
         ${esGasOnly(e) ? '<span class="badge badge-gas">⛽ Gas</span>' : ''}
+        ${e.infraestructuras === 'Sí' ? '<span class="badge badge-infra">🛣️ Infraestructuras</span>' : ''}<!-- [Inclusión infraestructuras] -->
       </div>
       ${sec||sub ? `<div class="norm-section">${esc(sec)}${sub?' › '+esc(sub):''}</div>` : ''}
       ${kw  ? `<div style="font-size:10.5px;color:var(--gray3);margin:4px 0 6px">🔑 ${esc(kw)}</div>` : ''}
@@ -1184,11 +1192,13 @@
             ? `<span class="badge" style="background:rgba(46,125,50,.12);color:#2e7d32;font-size:.68rem">${esc(e.section)}</span>` : ''}
           ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.68rem">NUEVO</span>' : ''}
           ${e.es_prorrogada ? '<span class="badge" style="background:rgba(156,39,176,.15);color:#7b1fa2;font-size:.68rem">PRORROGADA</span>' : ''}
+          ${e.plazo_anterior && !e.es_prorrogada ? `<span class="badge" title="Plazo anterior: ${esc(e.plazo_anterior)}" style="background:rgba(156,39,176,.15);color:#7b1fa2;font-size:.68rem">📅 PLAZO AMPLIADO</span>` : ''}
         </div>
         <div class="consulta-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
         </div>
         ${e.plazo ? `<div class="consulta-fechas">📅 ${esc(e.plazo)}</div>` : ''}
+        ${e.plazo_anterior ? `<div class="consulta-fechas" style="color:var(--gray3)">Antes: <s>${esc(e.plazo_anterior)}</s></div>` : ''}
         ${e.scraped_at ? `<div style="font-size:10px;color:var(--gray3);margin-top:3px">🗄️ Cargado: ${esc(e.scraped_at)}</div>` : ''}
         ${resumen ? `<div class="norm-card-summary">${esc(resumen.slice(0,240))}</div>` : ''}
       </div>
@@ -1645,6 +1655,7 @@
     // BOE del período (sin CNMC_S/N que ya vienen por cnmcAllData)
     const boeNacional = allEntries.filter(e => {
       if (e.source === 'ACER' || e.source === 'CNMC_S' || e.source === 'CNMC_N' || e.source === 'CNMC_RSS') return false;
+      if (ocultarInfra && e.infraestructuras === 'Sí') return false;  // [Inclusión infraestructuras]
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
@@ -1975,6 +1986,7 @@
         e.tramitaciones === 'Sí' ? 'tramitacion tramitaciones' : '',
         e.acceso_conexion === 'Sí' ? 'acceso conexion' : '',
         esGasOnly(e) ? 'gas hidrogeno' : '',
+        e.infraestructuras === 'Sí' ? 'infraestructuras' : '',  // [Inclusión infraestructuras]
         e.tipo || '', e.filtro || e.source || '',
       ].join(' ');
       return matchQuery((e.title||'')+' '+(e.department||'')+' '+(e.section||'')+' '+(e.palabras_clave||'')+' '+etiquetas, q);
@@ -2018,6 +2030,7 @@
   let soloImportante        = false;
   let ocultarTramitaciones  = false;
   let ocultarGas            = true;
+  let ocultarInfra          = true;  // [Inclusión infraestructuras] solo afecta al Resumen mensual
 
   // Detecta si una entrada es de gas / hidrógeno / combustibles no eléctricos
   const _GAS_RE   = /gasoducto|biometano|\bgnl\b|regasif|metaniz|almacen.*gas|red de gas|instalaci[oó]n de gas|enagas|redexis|nedgia|gas natural|mercado.*gas|gas.*mercado|gas.*derivados?|sistema gasista|\bgasista\b|sector gasista|cuenta regulatoria.*gas|gestor t[eé]cnico.*gas|hidr[oó]geno|electrolizador|pila de combustible|amon[ií]aco|combustibles? renovables? de origen no biol[oó]gico|\bRFNBO\b|metanol renovable|fuel.?oil|gasoil|fuelóleo|fuel[oó]leo|carb[oó]n t[eé]rmico|\bcarb[oó]n\b.*generar|generar.*\bcarb[oó]n\b|energ[ií]a t[eé]rmica.*combustible|combustible.*energ[ií]a t[eé]rmica|fuel.*centr|centr.*fuel|grupo diesel|\bdiesel\b.*generar|turbin.*gas|gasif.*carb[oó]n|materias primas minerales|miner[ií]a.*sostenibilidad|calefacci[oó]n y refrigeraci[oó]n|calor residual/i;
@@ -2310,6 +2323,10 @@
   });
   document.getElementById('chk-ocultar-tramitaciones').addEventListener('change', function() {
     ocultarTramitaciones = this.checked; renderAll();
+  });
+  // [Inclusión infraestructuras]
+  document.getElementById('chk-ocultar-infra').addEventListener('change', function() {
+    ocultarInfra = this.checked; renderAll();
   });
   document.getElementById('chk-ocultar-gas').addEventListener('change', function() {
     ocultarGas = this.checked; renderAll();

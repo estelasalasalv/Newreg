@@ -168,6 +168,8 @@ Cada scraper tiene una fuente y responsabilidad clara. No mezclar scraping con p
 
 > **[Inclusión nuevas consultas]** Novedad del 26/10/2026 (fuentes `MPR` y `TRANSPORTES` en `regulatory_entries`, pestaña Consultas). Para revertirla, buscar el texto "Inclusión nuevas consultas" en `main.py`, `db/database.py`, `web/index.html`, este archivo y borrar `scraper/nuevas_consultas.py`. Los registros ya guardados se eliminan con `DELETE FROM regulatory_entries WHERE source IN ('MPR','TRANSPORTES')`.
 
+> **[Inclusión infraestructuras]** Novedad del 02/11/2026: `boe.py` incluye leyes, reales decretos y decretos-ley de carreteras, vías pecuarias y ferrocarril (regla por título), marcados con `boe_entries.infraestructuras = 'Sí'`. Se ven en Normativa y Todas con etiqueta "🛣️ Infraestructuras"; la casilla de la barra lateral los oculta solo en el Resumen mensual (activa por defecto). Para revertirla si resultan poco útiles, buscar el texto "Inclusión infraestructuras" en `scraper/boe.py`, `db/database.py`, `web/index.html` y este archivo, y borrar los registros con: `DELETE FROM ree_normativa_funciones WHERE normativa_tipo='boe' AND normativa_id IN (SELECT id FROM boe_entries WHERE infraestructuras='Sí'); DELETE FROM ree_analisis_pendiente WHERE normativa_tipo='boe' AND normativa_id IN (SELECT id FROM boe_entries WHERE infraestructuras='Sí'); DELETE FROM boe_entries WHERE infraestructuras='Sí';`. La columna puede quedarse en la tabla sin efecto.
+
 Al modificar un scraper:
 
 1. Guardar siempre la URL oficial.
