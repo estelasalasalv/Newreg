@@ -448,6 +448,8 @@
     .badge-art64-sin { background:#2e7d32;color:#fff;font-weight:700; }
     /* ── Badge NUEVO ── */
     .badge-new { background:#e53935;color:#fff;animation:pulse-new 1.5s ease-in-out infinite;font-weight:700; }
+    /* Consulta cuya fecha fin ha cambiado (plazo_anterior en BD): mismo estilo que NUEVO, otro color */
+    .badge-ampliado { background:#e65100;color:#fff;animation:pulse-new 1.5s ease-in-out infinite;font-weight:700; }
     @keyframes pulse-new { 0%,100%{opacity:1} 50%{opacity:.65} }
 
     /* ── Vista calendario consultas ── */
@@ -1195,7 +1197,7 @@
             ? `<span class="badge" style="background:rgba(46,125,50,.12);color:#2e7d32;font-size:.68rem">${esc(e.section)}</span>` : ''}
           ${e.es_nuevo ? '<span class="badge badge-new" style="font-size:.68rem">NUEVO</span>' : ''}
           ${e.es_prorrogada ? '<span class="badge" style="background:rgba(156,39,176,.15);color:#7b1fa2;font-size:.68rem">PRORROGADA</span>' : ''}
-          ${e.plazo_anterior && !e.es_prorrogada ? `<span class="badge" title="Plazo anterior: ${esc(e.plazo_anterior)}" style="background:rgba(156,39,176,.15);color:#7b1fa2;font-size:.68rem">📅 PLAZO AMPLIADO</span>` : ''}
+          ${e.plazo_anterior ? `<span class="badge badge-ampliado" title="Plazo anterior: ${esc(e.plazo_anterior)}" style="font-size:.68rem">AMPLIADO PLAZO</span>` : ''}
         </div>
         <div class="consulta-title">
           ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)}
@@ -2123,6 +2125,7 @@
             <div class="cal-meta">
               <span class="badge badge-${org==='CNMC'?'cnmc':'miterd'}" style="font-size:.68rem">${org}</span>
               ${e.es_nuevo?'<span class="badge badge-new" style="font-size:.68rem;margin-left:3px">NUEVO</span>':''}
+              ${e.plazo_anterior?`<span class="badge badge-ampliado" title="Plazo anterior: ${esc(e.plazo_anterior)}" style="font-size:.68rem;margin-left:3px">AMPLIADO PLAZO</span>`:''}
             </div>
             ${e.plazo?`<div class="cal-plazo">📅 ${esc(e.plazo)}</div>`:''}
           </div>
