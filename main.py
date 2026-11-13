@@ -101,6 +101,17 @@ def main():
         logger.warning("Nuevas consultas fallo: %s", exc)
     # ── [Fin Inclusión nuevas consultas] ──
 
+    # ── [Inclusión consultas CE] Comisión Europea "Have your say" (tema Energía) ──
+    logger.info("=== Scraping consultas Comisión Europea (Have your say) ===")
+    try:
+        from scraper import consultas_ce
+        ce_entries = consultas_ce.scrape()
+        ce_new     = upsert_entries(ce_entries)
+        logger.info("Consultas CE: %d entradas, %d nuevas en BD", len(ce_entries), ce_new)
+    except Exception as exc:
+        logger.warning("Consultas CE fallo: %s", exc)
+    # ── [Fin Inclusión consultas CE] ──
+
     # Intento 2 — después de MITERD si falló antes
     if cnmc_new < 0 and cnmc_intentos < MAX_INTENTOS:
         cnmc_intentos += 1

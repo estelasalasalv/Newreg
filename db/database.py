@@ -486,7 +486,8 @@ def fetch_cnmc_consultas() -> List[Dict]:
            (summary ILIKE '%prorrogado%' OR summary ILIKE '%prórroga%' OR summary ILIKE '%plazo prorrogado%') AS es_prorrogada
     FROM   regulatory_entries
     WHERE  source IN ('CNMC_C', 'MITERD',
-                      'MPR', 'TRANSPORTES')  -- [Inclusión nuevas consultas]
+                      'MPR', 'TRANSPORTES',  -- [Inclusión nuevas consultas]
+                      'CE')                  -- [Inclusión consultas CE]
       AND  tipo = 'consulta'
     ORDER  BY
            CASE WHEN COALESCE(estado,'Abierta') = 'Abierta' THEN 0 ELSE 1 END,
