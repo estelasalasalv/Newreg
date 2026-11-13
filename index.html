@@ -599,6 +599,7 @@
         <button class="src-btn" data-source="CNMC">CNMC</button>
         <button class="src-btn" data-source="MITERD">MITERD</button>
         <button class="src-btn" data-source="ACER">ACER</button>
+        <button class="src-btn" data-source="CE" title="Comisión Europea: consultas «Have your say» y normativa europea (DOUE)">CE</button>
       </div>
     </div>
   </aside>
@@ -931,11 +932,18 @@
   let espPage   = 1;
   let cnmcConsultas = [];
   let activeSource  = 'ALL';
-  // CNMC unifica CNMC_C y CNMC_N
+  // Agrupa los códigos de fuente en los botones de "Filtrar fuente" (mismo criterio en todas las pestañas):
+  // CNMC = CNMC_C/N/S/RSS (y BOE emitido por la CNMC, filtro CNMC_C); CE = consultas Have your say + DOUE
+  function grupoFuente(source) {
+    if (/^CNMC/.test(source)) return 'CNMC';
+    if (source === 'CE' || source === 'DOUE' || source === 'NoticiaCE') return 'CE';
+    return source;   // MITERD, ACER, BOE, MPR, TRANSPORTES…
+  }
   function srcMatch(source) {
-    if (activeSource === 'ALL') return true;
-    if (activeSource === 'CNMC') return source === 'CNMC_C' || source === 'CNMC_N' || source === 'CNMC_S' || source === 'CNMC_RSS';
-    return source === activeSource;
+    return activeSource === 'ALL' || grupoFuente(source || '') === activeSource;
+  }
+  function pasaFuente(e) {
+    return srcMatch(e.filtro || e.source || e.fuente || '');
   }
   let activePanel   = 'resumen';
 
@@ -1373,6 +1381,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
+      if (!pasaFuente(e)) return false;
       if (src && e.source !== src) return false;
       const f = e.fecha_real || e.published_date || '';
       if (f && f < cutoffISO) return false;
@@ -1435,7 +1444,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && !srcMatch(e.source||'')) return false;
+      if (!pasaFuente(e)) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
     }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
@@ -1465,7 +1474,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && !srcMatch(e.source||'')) return false;
+      if (!pasaFuente(e)) return false;
       if (yr && e.fecha_real && !e.fecha_real.startsWith(yr)) return false;
       return matchQuery((e.title||'') + ' ' + (e.summary||'') + ' ' + (e.section||''), q);
     }).sort((a,b) => {
@@ -1556,7 +1565,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
+      if (!pasaFuente(e)) return false;
       const f = e.fecha_real || e.published_date || '';
       if (f && f < cutoffISO) return false;
       if (f && f > maxISO) return false;
@@ -1637,7 +1646,6 @@
   }
 
   function renderResumen() {
-    const srcOK = src => activeSource === 'ALL' || (e => (e.filtro||e.source) === activeSource)(src);
 
     // Etiqueta de período
     const lbl = document.getElementById('resumen-periodo-label');
@@ -1661,7 +1669,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && !srcMatch(e.filtro||e.source||'')) return false;
+      if (!pasaFuente(e)) return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     });
 
@@ -1689,7 +1697,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
+      if (!pasaFuente(e)) return false;
       return isInResumenRange(e.fecha_real || e.fecha);
     }).sort((a,b) => (b.fecha_real||b.fecha||'').localeCompare(a.fecha_real||a.fecha||''));
     setResumenCount('eu', euFilt.length);
@@ -1716,7 +1724,7 @@
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && activeSource !== 'ACER') return false;
+      if (!pasaFuente(e)) return false;
       return isInResumenRange(e.fecha_real || e.published_date);
     }).sort((a,b) => (b.fecha_real||b.published_date||'').localeCompare(a.fecha_real||a.published_date||''));
     setResumenCount('acer', acerFilt.length);
@@ -1728,8 +1736,7 @@
       if (ocultarGas && esGasOnly(e)) return false;
       if (soloImportante && e.importante !== 'Sí') return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
-      if (activeSource !== 'ALL' && activeSource !== 'BOE' && !srcMatch(e.source||'')) return false;
-      if (activeSource === 'BOE' || activeSource === 'ACER') return false;
+      if (!pasaFuente(e)) return false;
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
       if (resumenPeriodo === 'mes-anterior') {
         // Mes anterior: mostrar las cargadas o cerradas en ese período
@@ -1823,7 +1830,7 @@
     }
 
     const filtered = eurlex.filter(e => {
-      if (activeSource !== 'ALL' && activeSource !== 'EU' && activeSource !== 'DOUE') return false;
+      if (!pasaFuente(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
       const f = e.fecha_real || '';
@@ -1871,7 +1878,7 @@
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      if (!pasaFuente(e)) return false;
       if (yr && String(e.anio) !== yr) return false;
       if (!q) return true;
       return ((e.title||'')+' '+(e.department||'')+' '+(e.acceso_conexion||'')).toLowerCase().includes(q);
@@ -1897,7 +1904,7 @@
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      if (!pasaFuente(e)) return false;
       if (todasYr && e.published_date && !e.published_date.endsWith(todasYr)) return false;
       const f = e.fecha_real || '';
       if (desde && f && f < desde) return false;
@@ -1980,7 +1987,7 @@
       if (soloImportante && !esImportante(e)) return false;
       if (ocultarTramitaciones && e.tramitaciones === 'Sí') return false;
       if (ocultarGas && esGasOnly(e)) return false;
-      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      if (!pasaFuente(e)) return false;
       const iso = e.fecha_real || '';
       if (!iso || iso < cutoffISO || iso > maxISO) return false;
       const etiquetas = [
@@ -1995,7 +2002,7 @@
     });
 
     // ── CNMC fusionado (mismo rango, usando scraped_at) ───────────────
-    const cnmcEspFilt = (activeSource === 'ALL' || srcMatch('CNMC_S') || srcMatch('CNMC_N') || srcMatch('CNMC_RSS'))
+    const cnmcEspFilt = srcMatch('CNMC_S')
       ? cnmcAllData.filter(e => {
           if (ocultarGas && esGasOnly(e)) return false;
           const iso = scrapedAtISO(e) || e.fecha_real || '';
@@ -2153,8 +2160,7 @@
       const esCerrada = (e.estado||'Abierta') === 'Cerrada' || daysRemaining(e.plazo) < 0;
       if (!mostrarCerradas && esCerrada) return false;
       // Filtro de fuente global (sidebar)
-      if (activeSource === 'BOE') return false;
-      if (activeSource !== 'ALL' && (e.filtro||e.source) !== activeSource) return false;
+      if (!pasaFuente(e)) return false;
       // Filtro propio de consultas
       if (activeOrg === 'Abierta' && (e.estado||'Abierta') !== 'Abierta') return false;
       if (activeOrg !== 'ALL' && activeOrg !== 'Abierta' && e.source !== activeOrg) return false;
